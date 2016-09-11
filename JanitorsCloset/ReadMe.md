@@ -1,5 +1,10 @@
 ﻿Janitor's Closet
 
+You are a serious player. You have dozens if not hundreds of mods install. Your part list is extreme!
+
+What do you do when the plumbing is clogged?  You call the janitor.  For the problem of too many parts, you use the Janitor's Closet
+
+
 Description
 This mod will allow you to block parts from being displayed in the Editor, either on a soft basis or hard basis.  The difference is that a soft basis doesn't do anything to the parts, it merely blocks the parts from being displayed.  In this case, the parts are still loaded.  This would be useful in an ongoing career, where you have ships with parts you don't use anymore, but are still active.
 A hard basis is where the files get renamed so that none of the parts or their assets will be loaded.  This can speed up loading a game, but is potentially game-breaking, in that if you prune a part and it is in use on a vessel, the vessel will be deleted the next time you start the game.
