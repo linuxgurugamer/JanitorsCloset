@@ -75,7 +75,7 @@ namespace JanitorsCloset
         void OnGUI()
         {
             if (isEnabled())
-            {                
+            {
                 switch (winState)
                 {
                     case winContent.menu:
@@ -91,7 +91,7 @@ namespace JanitorsCloset
                                                                                      new DialogGUIButton ("OK", () => {
                                                              winState = winContent.close;
                                                              pruner();
-                                                            
+
                                                         }),
                                                         new DialogGUIButton ("Cancel", () => {
                                                             winState = winContent.close;
@@ -156,11 +156,11 @@ namespace JanitorsCloset
             List<string> prunedParts = new List<string>();
             foreach (blackListPart blp in JanitorsCloset.blackList.Values)
             {
-                if (blp.where != blackListType.ALL)
+                if (blp.where != blackListType.ALL || blp.permapruned)
                     continue;
                 Log.Info("pruned part: " + blp.modName);
-                AvailablePart p = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
-                if (p == null)
+                AvailablePart part = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
+                if (part == null)
                     continue;
                 prunedParts.Add(blp.modName);
 
@@ -176,11 +176,11 @@ namespace JanitorsCloset
 
                 // Rename cfg file
 
-                string s1 = p.configFileFullName.Substring(p.configFileFullName.IndexOf("GameData") + 9);
+                string s1 = part.configFileFullName.Substring(part.configFileFullName.IndexOf("GameData") + 9);
 
-                RenameFile(s1, p.name);
+                RenameFile(s1, part.name);
 
-                string partPath = p.partUrl;
+                string partPath = part.partUrl;
 
                 for (int x = 0; x < 1; x++)
                 {
@@ -197,55 +197,85 @@ namespace JanitorsCloset
                 // Look for mesh =
                 //      with mesh, get patch from cfg file path
 
-                foreach (ConfigNode modelNode in p.partConfig.GetNodes("MODEL"))
-                {
-                    if (modelNode != null)
-                    {
-                        string model = modelNode.GetValue("model");
+                Log.Info("searching for model");
+                Log.Info("Part: " + part.name);
 
-                        // Make sure it isn't being used in another part
-                        bool b = false;
-                        foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                ConfigNode[] nodes = part.partConfig.GetNodes("MODEL");
+                ConfigNode[] nodes2;
+                bool b;
+                if (nodes != null)
+                {
+                    Log.Info("Nodes count: " + nodes.Length.ToString());
+                    foreach (ConfigNode modelNode in nodes)
+                    {
+                        
+                        b = false;
+                        if (modelNode != null)
                         {
-                            if (p != pSearch)
+                            Log.Info("modelNode: " + modelNode.name);
+                            string model = modelNode.GetValue("model");
+                            if (model != null)
                             {
-                                foreach (ConfigNode searchNode in pSearch.partConfig.GetNodes("MODEL"))
+                                Log.Info("model: " + model);
+                                // Make sure it isn't being used in another part
+                                b = false;
+                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
                                 {
-                                    if (searchNode.GetValue("model") == model)
+                                    Log.Info("pSearch: " + pSearch.name);
+                                    if (part != pSearch && pSearch.partConfig != null)
                                     {
-                                        b = true;
-                                        break;
+                                        nodes2 = pSearch.partConfig.GetNodes("MODEL");
+                                        if (nodes2 != null)
+                                        {
+                                            Log.Info("nodes2");
+                                            foreach (ConfigNode searchNode in nodes2)
+                                            {
+                                                if (searchNode != null)
+                                                {
+                                                    Log.Info("searchNode");
+                                                    string s = searchNode.GetValue("model");
+                                                    if (s != null)
+                                                        if (s == model)
+                                                        {
+                                                            b = true;
+                                                            break;
+                                                        }
+                                                }
+                                            }
+                                        }
                                     }
+                                    if (b)
+                                        break;
                                 }
                             }
-                            if (b)
-                                break;
-                        }
 
-                        //Log.Info("MODEL: " + model);
-                        string mURL = FindTexturePathFromModel.getModelURL(model);
-                        //Log.Info("MODEL URL: " + mURL);
-                        model = model + ".mu";
+                            Log.Info("MODEL: " + model);
+                            string mURL = FindTexturePathFromModel.getModelURL(model);
+                            Log.Info("MODEL URL: " + mURL);
+                            model = model + ".mu";
 
 
-                        if (!b)
-                        {
-                            
-                            RenameFile(model, p.name);
+                            if (!b)
+                            {
+
+                                RenameFile(model, part.name);
+                            }
                         }
                     }
                 }
-                string mesh = p.partConfig.GetValue("mesh");
+
+                Log.Info("searching for meshes");
+                string mesh = part.partConfig.GetValue("mesh");
                 if (mesh != null && mesh != "")
                 {
                     // Make sure it isn't being used in another part
-                    bool b = false;
+                    b = false;
                     foreach (AvailablePart pSearch in PartLoader.Instance.parts)
                     {
-                        if (p != pSearch)
+                        if (part != pSearch)
                         {
-                            string searchMesh = p.partConfig.GetValue("mesh");
-                            if (searchMesh == mesh)
+                            string searchMesh = part.partConfig.GetValue("mesh");
+                            if (searchMesh != null && searchMesh == mesh)
                             {
                                 b = true;
                                 break;
@@ -259,86 +289,87 @@ namespace JanitorsCloset
                         //Log.Info("mesh: " + mesh + "    partPath: " + partPath);
 
                         string mURL = FindTexturePathFromModel.getModelURL(mesh);
-                        //Log.Info("mesh partPath 1: " + partPath);
-                        //partPath = partPath.Substring(0, partPath.LastIndexOf("/"));
-                        //Log.Info("mesh partPath 2: " + partPath);
                         partPath = partPath.Substring(0, partPath.LastIndexOf("/")) + "/";
-                        //Log.Info("mesh partPath 3: " + partPath);
-
-                        //Log.Info("mesh URL: " + mURL);
                         if (!(mesh.Contains("/") || mesh.Contains("\\")))
                             mesh = partPath + mesh;
-                        //Log.Info("mesh Path: " + mesh);
-                        
-                        RenameFile(mesh, p.name);
+
+                        RenameFile(mesh, part.name);
                     }
                 }
 
                 // this gets the model
-                foreach (ConfigNode internalNode in p.partConfig.GetNodes("INTERNAL"))
-                {
-                    if (internalNode != null)
+                Log.Info("searching for model (INTERNAL)");
+                nodes = part.partConfig.GetNodes("INTERNAL");
+                if (nodes != null)
+                    foreach (ConfigNode internalNode in nodes)
                     {
-                        UrlDir.UrlConfig config;
-                        if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out config))
+                        if (internalNode != null)
                         {
-                            // Make sure it isn't being used in another part
-                            bool b = false;
-                            foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                            UrlDir.UrlConfig config;
+                            if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out config))
                             {
-                                if (p != pSearch)
+                                // Make sure it isn't being used in another part
+                                b = false;
+                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
                                 {
-                                    foreach (ConfigNode internalNodeSearch in p.partConfig.GetNodes("INTERNAL"))
+                                    if (part != pSearch)
                                     {
-                                        UrlDir.UrlConfig configSearch;
-                                        if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out configSearch))
-                                        {
-                                            if (configSearch.url == config.url)
+                                        nodes2 = part.partConfig.GetNodes("INTERNAL");
+                                        if (nodes2 != null)
+                                            foreach (ConfigNode internalNodeSearch in nodes2)
                                             {
-                                                b = true;
-                                                break;
+                                                UrlDir.UrlConfig configSearch;
+                                                if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out configSearch))
+                                                {
+                                                    if (configSearch.url == config.url)
+                                                    {
+                                                        b = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (b) break;
                                             }
-                                        }
-                                        if (b) break;
                                     }
+                                    if (b) break;
                                 }
-                                if (b) break;
+                                if (!b)
+                                {
+
+                                    //Log.Info("config.name: " + config.name);
+                                    //Log.Info("config.url: " + config.url);
+                                    string s = config.url.Substring(0, config.url.LastIndexOf("/")) + ".cfg";
+                                    //Log.Info("Relative path: " + s);
+                                    RenameFile(s, part.name);
+                                }
                             }
-                            if (!b)
+
+                            //
+                            // We aren't going to check to see if the different models inside the space are
+                            // used elsewhere.  An assumption that the same model won't be used by multiple spaces
+                            //
+                            Log.Info("searching for internal space nodes");
+                            ConfigNode cfgNode;
+                            bool b1 = GetInternalSpaceConfigUrl.FindInternalSpaceConfigNode(config.name, out cfgNode);
+                            if (b1)
                             {
+                                //Log.Info("Internal Space Config found: " + config.url);
+                                //Log.Info("cfgNode name: " + cfgNode.name );
+                                //Log.Info(cfgNode.ToString());
+                                nodes = cfgNode.GetNodes("MODEL");
+                                if (nodes != null)
+                                    foreach (ConfigNode modelNode in nodes)
+                                    {
+                                        string model = modelNode.GetValue("model");
+                                        //Log.Info("MODEL: " + model);
+                                        string mURL = FindTexturePathFromModel.getModelURL(model);
+                                        // Log.Info("MODEL URL: " + mURL);
+                                        model = model + ".mu";
+                                        RenameFile(model, part.name);
+                                    }
 
-                                //Log.Info("config.name: " + config.name);
-                                //Log.Info("config.url: " + config.url);
-                                string s = config.url.Substring(0, config.url.LastIndexOf("/")) + ".cfg";
-                                //Log.Info("Relative path: " + s);
-                                RenameFile(s, p.name);
                             }
-                        }
-
-                        //
-                        // We aren't going to check to see if the different models inside the space are
-                        // used elsewhere.  An assumption that the same model won't be used by multiple spaces
-                        //
-                        ConfigNode cfgNode;
-                        bool b1 = GetInternalSpaceConfigUrl.FindInternalSpaceConfigNode(config.name, out cfgNode);
-                        if (b1)
-                        {
-                            //Log.Info("Internal Space Config found: " + config.url);
-                            //Log.Info("cfgNode name: " + cfgNode.name );
-                            //Log.Info(cfgNode.ToString());
-                            foreach (ConfigNode modelNode in cfgNode.GetNodes("MODEL"))
-                            {
-                                string model = modelNode.GetValue("model");
-                                //Log.Info("MODEL: " + model);
-                                string mURL = FindTexturePathFromModel.getModelURL(model);
-                                // Log.Info("MODEL URL: " + mURL);
-                                model = model + ".mu";
-                                RenameFile(model, p.name);
-                            }
-
                         }
                     }
-                }
             }
             foreach (var s in prunedParts)
             {

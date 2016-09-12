@@ -4,3 +4,6 @@
 
 0.0.2	Added ChangeLog
 		Fixed import so it will be added to current list
+
+0.0.3	Fixed problem when you permapruned some parts, and then tried to do some more
+		Fixed a couiple of exceptions when parts aren't properly defined
