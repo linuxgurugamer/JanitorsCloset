@@ -7,3 +7,6 @@
 
 0.0.3	Fixed problem when you permapruned some parts, and then tried to do some more
 		Fixed a couiple of exceptions when parts aren't properly defined
+
+0.0.4	Fixed clickthrough issue, thanks @PapaJoesSoup
+		Fixed title of import screen

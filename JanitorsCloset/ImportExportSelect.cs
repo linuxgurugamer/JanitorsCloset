@@ -52,33 +52,7 @@ namespace JanitorsCloset
         public void show()
         {
             //getfileWin = true;
-            getFile("Import/Export", FileOperations.PRNLIST_SUFFIX, lastdir);
-            return;
-#if false
-            fileBrowserEnabled = true;
-            m_fileBrowser = new FileBrowser(
-               new Rect(Screen.width / 2 - BR_WIDTH / 2, Screen.height / 2 - BR_HEIGHT / 2, BR_WIDTH, BR_HEIGHT),
-               "Choose Text File",
-               FileSelectedCallback
-           );
-            // Linux change may needed here
-            m_fileBrowser.SelectionPattern = "*" + suffix;
-            //m_fileBrowser.DirectoryImage = m_directoryImage;
-            //m_fileBrowser.FileImage = m_fileImage;
-            //m_fileBrowser.showDrives = thisCI.configuration.showDrives;
-            m_fileBrowser.showDrives = true;
-            m_fileBrowser.ShowNonmatchingFiles = false;
-
-            if (dir != "")
-            {
-                m_fileBrowser.SetNewDirectory(dir);
-            }
-            else
-            {
-                if (m_textPath != "")
-                    m_fileBrowser.SetNewDirectory(m_textPath);
-            }
-#endif
+            getFile("Import", FileOperations.PRNLIST_SUFFIX, lastdir);            
         }
 
         public void hide()
@@ -148,7 +122,27 @@ namespace JanitorsCloset
             //getfileWin = false;
         }
 
+        bool _weLockedInputs = false;
+        private bool MouseIsOverWindow()
+        {
+            if (m_fileBrowser != null)               
+                return m_fileBrowser.m_screenRect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+            return false;
+        }
 
+        //Lifted this more or less directly from the Kerbal Engineer source. Thanks cybutek!
+        private void PreventEditorClickthrough()
+        {
+            bool mouseOverWindow = MouseIsOverWindow();
+            if (!_weLockedInputs && mouseOverWindow)
+            {
+                EditorLogic.fetch.Lock(true, true, true, "JanitorsCloset");
+                _weLockedInputs = true;
+            }
+            if (!_weLockedInputs || mouseOverWindow) return;
+            EditorLogic.fetch.Unlock("JanitorsCloset");
+            _weLockedInputs = false;
+        }
 
 
         void OnGUI()
@@ -191,6 +185,8 @@ namespace JanitorsCloset
                     //m_fileBrowser.m_screenRect = KSPUtil.ClampRectToScreen(GUILayout.Window(this.GetInstanceID(), m_fileBrowser.m_screenRect, _windowFunction, "Blocker Menu"));
                     // m_fileBrowser.m_screenRect = GUILayout.Window(GetInstanceID(), m_fileBrowser.m_screenRect, m_fileBrowser.Window, "");
                     m_fileBrowser.Window(GetInstanceID());
+                    // If the mouse is over our window, then lock the rest of the UI
+                    if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
                     return;
                 }
             }
