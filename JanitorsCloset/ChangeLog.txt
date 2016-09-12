@@ -1,0 +1,6 @@
+﻿ChangeLog
+
+0.0.1	Initial release
+
+0.0.2	Added ChangeLog
+		Fixed import so it will be added to current list

@@ -31,7 +31,7 @@ Import/Export will display a new menu with the following:
 	Cancel
 
 	Export will present a dialog where you can name the list of pruned parts you are exporting.  Export lists are always saved to the GameData/JanitorsCloset/PluginData directory, with a suffix of ".prnlst", and the full path is stored in the system clipboard after the export.
-	Import will present a file dialog where you can 
+	Import will present a file dialog where you can select a file for importation.
 
 Known Issues
 Clickthrough is a problem with the file selection dialog.  It starts in the PluginData directory, but you can go anywhere to find a file.  Again, it only displays files which have the suffix ".prnlst".

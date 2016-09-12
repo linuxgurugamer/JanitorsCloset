@@ -41,6 +41,3 @@ Import/Export will display a new menu with the following:
 Known Issues
 Clickthrough is a problem with the file selection dialog.  It starts in the PluginData directory, but you can go anywhere to find a file.  Again, it only displays files which have the suffix ".prnlst".
 
-
-TODO
-Listbox showing files renamed ???

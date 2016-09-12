@@ -78,6 +78,9 @@
     <None Include="JanitorsCloset.version" />
     <None Include="ReadMe.md" />
   </ItemGroup>
+  <ItemGroup>
+    <Content Include="ChangeLog.txt" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>start /D d:\Users\jbb\github\JanitorsCloset\JanitorsCloset /WAIT deploy.bat

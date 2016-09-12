@@ -103,7 +103,14 @@ namespace JanitorsCloset
 
         public Dictionary<string, blackListPart> importBlackListData(string fname)
         {
-            return loadData(fname);
+            Dictionary<string, blackListPart> blpD = loadData(fname);
+            foreach (KeyValuePair<string, blackListPart> entry in blpD)
+            {
+                // do something with entry.Value or entry.Key
+                if (!JanitorsCloset.blackList.ContainsKey(entry.Key))
+                    JanitorsCloset.blackList.Add(entry.Key, entry.Value);
+            }
+            return blpD;
         }
 
 
