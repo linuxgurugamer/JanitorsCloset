@@ -124,8 +124,9 @@ namespace JanitorsCloset
         }
 
         List<prunedPart> renamedFilesList = null;
-        void RenameFile(string path, string name)
+        public void RenameFile(string path, string name)
         {
+#if false
             Log.Info("RenameFile, path: " + path + "    name: " + name);
             if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + path))
             {
@@ -139,9 +140,13 @@ namespace JanitorsCloset
                 System.IO.File.Move(FileOperations.CONFIG_BASE_FOLDER + path, FileOperations.CONFIG_BASE_FOLDER + path + PRUNED);
                 prunedPart pp = new prunedPart();
                 pp.path = path + PRUNED;
-                pp.modName = name;
+                pp.partName = name;
                 renamedFilesList.Add(pp);
             }
+#endif 
+            prunedPart pp = FileOperations.Instance.RenameFile(path, name);
+            if (pp != null)
+                renamedFilesList.Add(pp);
         }
 
         const string PRUNED = ".prune";

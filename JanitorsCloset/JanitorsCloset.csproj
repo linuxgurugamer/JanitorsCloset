@@ -65,6 +65,7 @@
     <Compile Include="GetInternalSpaceConfigUrl .cs" />
     <Compile Include="ImportExport.cs" />
     <Compile Include="ImportExportSelect.cs" />
+    <Compile Include="JanitorsClosetLoader.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="PermaPrune.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

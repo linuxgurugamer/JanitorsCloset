@@ -28,6 +28,10 @@ namespace JanitorsCloset
 
         public static bool dataRead = false;
 
+        public FileOperations()
+        {
+            Instance = this;
+        }
         public static bool FileExists(string filePath)
         {
             try
@@ -143,6 +147,35 @@ namespace JanitorsCloset
 
 
         // /////////////////////////////////////////////////////////////////////////////////////////////////////
+        const string PRUNED = ".prune";
+        public prunedPart RenameFile(string path, string name, bool addToShowRenamed = true)
+        {
+            Log.Info("RenameFile, path: " + path + "    name: " + name);
+            if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + path))
+            {
+                if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + path + PRUNED))
+                {
+                    System.IO.File.Delete(FileOperations.CONFIG_BASE_FOLDER + path + PRUNED);
+                }
+
+                Log.Info("Renaming: " + path + "  to  " + path + PRUNED);
+                if (addToShowRenamed)
+                    ShowRenamed.Instance.addLine("Renaming: " + path + "  to  " + path + PRUNED);
+                System.IO.File.Move(FileOperations.CONFIG_BASE_FOLDER + path, FileOperations.CONFIG_BASE_FOLDER + path + PRUNED);
+                prunedPart pp = new prunedPart();
+                pp.path = path + PRUNED;
+                pp.partName = name;
+                return pp;
+                
+            }
+            return null;
+        }
+
+        public void RenameFile(string path)
+        {
+            Log.Info("RenameFile 2, path: " + path);
+            prunedPart p = RenameFile(path, "n/a", false);
+        }
 
         public List<prunedPart> loadRenamedFiles()
         {
@@ -157,7 +190,7 @@ namespace JanitorsCloset
                         prunedPart pp = new prunedPart();
                         string[] s = l.Split(',');
                         pp.path = s[0];
-                        pp.modName = s[1];
+                        pp.partName = s[1];
                         renamedFilesList.Add(pp);
                     }
                 }
@@ -173,7 +206,7 @@ namespace JanitorsCloset
 
                 foreach (prunedPart l in renamedFilesList)
                 {
-                    f.WriteLine(l.path + "," + l.modName);
+                    f.WriteLine(l.path + "," + l.partName);
                 }
             }
         }

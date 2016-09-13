@@ -10,3 +10,8 @@
 
 0.0.4	Fixed clickthrough issue, thanks @PapaJoesSoup
 		Fixed title of import screen
+
+0.0.5	Added code to check at game startup to see if files had been restored somehow.  
+		Usually would occur as a result of Steam updating files, or mod being updated
+		Assumption is that if the file exists in an unpruned state, it is newer than the pruned
+		file and will replace the pruned file

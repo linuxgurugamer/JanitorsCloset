@@ -167,8 +167,8 @@ namespace JanitorsCloset
 
         new private void Start()
         {
-            FileOperations f = new FileOperations();
-            FileOperations.Instance = f;
+            //FileOperations f = new FileOperations();
+           // FileOperations.Instance = f;
             Log.setTitle("Janitor's Closet");
             Log.Info("JanitorsCloset.Start");
             blackList = FileOperations.Instance.loadBlackListData();

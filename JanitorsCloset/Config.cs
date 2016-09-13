@@ -7,7 +7,7 @@ namespace JanitorsCloset
 {
     public class prunedPart
     {
-        public string modName;
+        public string partName;
         public string path;
     }
 
