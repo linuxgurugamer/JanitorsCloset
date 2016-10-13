@@ -204,8 +204,9 @@ namespace JanitorsCloset
         EditorPartIcon _icon;
         private void IconClicked(EditorPartIcon icon, EditorIconEvents.EditorIconClickEvent evt)
         {
-            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
-                return;
+//            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
+            if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
+                    return;
 
             Log.Info("Icon was clicked for " + icon.partInfo.name + " (" + icon.partInfo.title + ")");
             _icon = icon;
