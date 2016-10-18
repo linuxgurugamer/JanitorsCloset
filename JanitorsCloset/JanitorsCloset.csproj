@@ -85,9 +85,8 @@
   <PropertyGroup>
     <PostBuildEvent>start /D d:\Users\jbb\github\JanitorsCloset\JanitorsCloset /WAIT deploy.bat
 
-
 if $(ConfigurationName) == Release (
-start /D D:\Users\jbb\github\JanitorsCloset\JanitorsCloset/WAIT buildRelease.bat
+start /D D:\Users\jbb\github\JanitorsCloset\JanitorsCloset /WAIT buildRelease.bat
 )
 </PostBuildEvent>
   </PropertyGroup>
