@@ -126,6 +126,7 @@ namespace JanitorsCloset
         List<prunedPart> renamedFilesList = null;
         public void RenameFile(string path, string name)
         {
+            Log.Info("RenameFile, path: " + path + "    name: " + name);
 #if false
             Log.Info("RenameFile, path: " + path + "    name: " + name);
             if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + path))
@@ -157,14 +158,16 @@ namespace JanitorsCloset
             Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
             //Log.Info("pruner, sizeof blacklist:" + PartPruner.blackList.Count.ToString());
             ShowRenamed.Instance.Show();
-
+            
             List<string> prunedParts = new List<string>();
             foreach (blackListPart blp in JanitorsCloset.blackList.Values)
             {
                 if (blp.where != blackListType.ALL || blp.permapruned)
                     continue;
                 Log.Info("pruned part: " + blp.modName);
-                AvailablePart part = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
+;
+                //AvailablePart part = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
+                AvailablePart part = PartLoader.getPartInfoByName(blp.modName);
                 if (part == null)
                     continue;
                 prunedParts.Add(blp.modName);
