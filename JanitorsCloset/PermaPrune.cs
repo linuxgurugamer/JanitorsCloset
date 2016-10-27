@@ -1,11 +1,13 @@
 ﻿using System;
 using System.IO;
 using System.Collections.Generic;
+using System.Collections;
 using System.Linq;
 using System.Text;
 
 using UnityEngine;
-
+using KSP.UI;
+using KSP.UI.Screens;
 
 namespace JanitorsCloset
 {
@@ -19,7 +21,7 @@ namespace JanitorsCloset
             yMax = 50 //0 height, GUILayout resizes it
         };
 
-
+        public bool permapruneInProgress = false;
         string _windowTitle = string.Empty;
 
         public static PermaPruneWindow Instance { get; private set; }
@@ -51,7 +53,7 @@ namespace JanitorsCloset
         {
             this.enabled = false;
             winState = winContent.menu;
-            Log.Info("CloseWindow enabled: " + this.enabled.ToString());
+            Log.Info("PermaPruneWindow.CloseWindow enabled: " + this.enabled.ToString());
         }
 
         void OnDisable()
@@ -90,7 +92,8 @@ namespace JanitorsCloset
                         dialog = new MultiOptionDialog("This will permanently rename files to prevent them from being loaded", "Permanent Prune", HighLogic.UISkin, new DialogGUIBase[] {
                                                                                      new DialogGUIButton ("OK", () => {
                                                              winState = winContent.close;
-                                                             pruner();
+                                                             startPruner();
+                                                             // pruner();
 
                                                         }),
                                                         new DialogGUIButton ("Cancel", () => {
@@ -150,22 +153,43 @@ namespace JanitorsCloset
                 renamedFilesList.Add(pp);
         }
 
-        const string PRUNED = ".prune";
-        void pruner()
+        
+        public void stopPruner()
         {
+            permapruneInProgress = false;
+            //StopCoroutine(pruning());
+        }
+       
+        private void startPruner()
+        {
+            Log.Info("startPruner");
+
+            StartCoroutine(pruning());
+        }
+
+        const string PRUNED = ".prune";
+        public  IEnumerator pruning()
+        {
+            permapruneInProgress = true;
+
             Log.Info("PermaPrune.pruner");
             renamedFilesList = FileOperations.Instance.loadRenamedFiles();
             Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
-            //Log.Info("pruner, sizeof blacklist:" + PartPruner.blackList.Count.ToString());
+            Log.Info("pruner, sizeof blacklist:" + JanitorsCloset.blackList.Count.ToString());
             ShowRenamed.Instance.Show();
             
             List<string> prunedParts = new List<string>();
             foreach (blackListPart blp in JanitorsCloset.blackList.Values)
             {
+
+                yield return 0;
+                Log.Info("permapruneInProgress: " + permapruneInProgress.ToString());
+                if (!permapruneInProgress)
+                    break;
                 if (blp.where != blackListType.ALL || blp.permapruned)
                     continue;
                 Log.Info("pruned part: " + blp.modName);
-;
+
                 //AvailablePart part = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
                 AvailablePart part = PartLoader.getPartInfoByName(blp.modName);
                 if (part == null)
@@ -227,7 +251,13 @@ namespace JanitorsCloset
                                 Log.Info("model: " + model);
                                 // Make sure it isn't being used in another part
                                 b = false;
-                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                                Log.Info("Part count: " + PartLoader.LoadedPartsList.Count.ToString());
+
+                                //EditorPartList.Instance.p
+
+                                //PartCategorizer.Instance.filterGenericNothing
+//                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                                foreach (AvailablePart pSearch in PartLoader.LoadedPartsList)
                                 {
                                     Log.Info("pSearch: " + pSearch.name);
                                     if (part != pSearch && pSearch.partConfig != null)
@@ -272,13 +302,16 @@ namespace JanitorsCloset
                     }
                 }
 
+                yield return 0;
+                if (!permapruneInProgress)
+                    break;
                 Log.Info("searching for meshes");
                 string mesh = part.partConfig.GetValue("mesh");
                 if (mesh != null && mesh != "")
                 {
                     // Make sure it isn't being used in another part
                     b = false;
-                    foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                    foreach (AvailablePart pSearch in PartLoader.LoadedPartsList)
                     {
                         if (part != pSearch)
                         {
@@ -388,6 +421,9 @@ namespace JanitorsCloset
 
             Log.Info("before saveRenamedFiles");
             FileOperations.Instance.saveRenamedFiles(renamedFilesList);
+            permapruneInProgress = false;
+
+            yield break;
             //JanitorsCloset.Instance.clearBlackList();
         }
 
@@ -407,6 +443,13 @@ namespace JanitorsCloset
                         System.IO.File.Move(l.path, l.path.Substring(0, l.path.Length - PRUNED.Length));
                     else
                         System.IO.File.Delete(l.path);
+                }
+                if (JanitorsCloset.blackList.ContainsKey(l.partName))
+                {
+                    blackListPart blp;
+                    JanitorsCloset.blackList.TryGetValue(l.partName, out blp);
+                    blp.permapruned = false;
+                    
                 }
             }
             FileOperations.Instance.delRenamedFilesList();

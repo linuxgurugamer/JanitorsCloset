@@ -15,3 +15,7 @@
 		Usually would occur as a result of Steam updating files, or mod being updated
 		Assumption is that if the file exists in an unpruned state, it is newer than the pruned
 		file and will replace the pruned file
+
+0.1.1	Official release for 1.2
+
+0.1.2	Fixed bug with PermaPrune, where it was pruning models and meshes which were used by non-pruned parts

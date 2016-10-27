@@ -56,7 +56,7 @@ namespace JanitorsCloset
         {
             this.enabled = false;
 
-            Log.Info("CloseWindow enabled: " + this.enabled.ToString());
+            Log.Info("ShowRenamed.CloseWindow enabled: " + this.enabled.ToString());
         }
 
         void OnGUI()
@@ -64,9 +64,7 @@ namespace JanitorsCloset
             if (isEnabled())
             {
                 var tstyle = new GUIStyle(GUI.skin.window);
-                _windowRect = GUILayout.Window(this.GetInstanceID(), _windowRect, WindowContent, "Show Blocked Parts", tstyle);
-
-
+                _windowRect = GUILayout.Window(this.GetInstanceID(), _windowRect, WindowContent, "Show PermaPruned Parts", tstyle);
             }
         }
 
@@ -110,15 +108,27 @@ namespace JanitorsCloset
             GUILayout.FlexibleSpace();
             GUILayout.BeginHorizontal();
             GUILayout.FlexibleSpace();
-            if (GUILayout.Button(" Close "))
+            if (!PermaPruneWindow.Instance.permapruneInProgress)
             {
-                CloseWindow();
+                if (GUILayout.Button(" Close "))
+                {
+                    CloseWindow();
+                }
+                GUILayout.FlexibleSpace();
+                if (GUILayout.Button("Copy to clipboard"))
+                {
+                    GUIUtility.systemCopyBuffer = t;
+                }
             }
-            GUILayout.FlexibleSpace();
-            if (GUILayout.Button("Copy to clipboard"))
+            else
             {
-                GUIUtility.systemCopyBuffer = t;
+                if (GUILayout.Button(" Cancel "))
+                {
+                    PermaPruneWindow.Instance.stopPruner();
+                }
+
             }
+            
             GUILayout.EndHorizontal();
 
             GUILayout.EndVertical();

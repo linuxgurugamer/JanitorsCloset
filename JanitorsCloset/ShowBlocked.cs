@@ -55,7 +55,7 @@ namespace JanitorsCloset
         {
             this.enabled = false;
             
-            Log.Info("CloseWindow enabled: " + this.enabled.ToString());
+            Log.Info("ShowBlocked.CloseWindow enabled: " + this.enabled.ToString());
         }
 
         void OnGUI()
