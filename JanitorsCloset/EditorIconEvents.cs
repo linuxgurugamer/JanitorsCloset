@@ -22,7 +22,7 @@ namespace JanitorsCloset
         public class EditorIconClickEvent
         {
             public void Veto() { Vetoed = true; }
-            public bool Vetoed { get; private set; }
+            public bool Vetoed { get; private set ; }
         }
 
         [KSPAddon(KSPAddon.Startup.EditorAny, true)]
@@ -81,12 +81,11 @@ namespace JanitorsCloset
                 var evt = new EditorIconClickEvent();
 
                 OnEditorPartIconClicked.Fire(_icon, evt);
-
+                
                 if (evt.Vetoed) return;
-
                 _originalClickHandler.OnPointerClick(eventData);
 
-                if (_button.interactable) _icon.MouseInput_SpawnPart();
+                if (_button.interactable && eventData.button == PointerEventData.InputButton.Left) _icon.MouseInput_SpawnPart();
             }
 
             public void OnPointerDown(PointerEventData eventData)

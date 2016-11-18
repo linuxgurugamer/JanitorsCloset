@@ -420,7 +420,7 @@ namespace JanitorsCloset
             {
                 _mouseController.enabled = true;
                 return;
-            }
+            }                           
 
             _mouseController.enabled = false;
             Mouse.Left.ClearMouseState();

@@ -1,4 +1,4 @@
-﻿ChangeLog
+ChangeLog
 
 0.0.1	Initial release
 
@@ -19,3 +19,6 @@
 0.1.1	Official release for 1.2
 
 0.1.2	Fixed bug with PermaPrune, where it was pruning models and meshes which were used by non-pruned parts
+
+0.1.3	Fixed bug where right-clicks were spawning parts in the editor
+		Added code to update asssembly info with version
