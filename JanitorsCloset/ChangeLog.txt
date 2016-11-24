@@ -22,3 +22,6 @@ ChangeLog
 
 0.1.3	Fixed bug where right-clicks were spawning parts in the editor
 		Added code to update asssembly info with version
+
+0.1.4
+		Added window to filter mod parts

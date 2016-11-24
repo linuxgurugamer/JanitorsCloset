@@ -1,0 +1,312 @@
+﻿using System;
+using System.IO;
+using System.Collections.Generic;
+using System.Collections;
+using System.Linq;
+using System.Text;
+
+using UnityEngine;
+using KSP.UI;
+using KSP.UI.Screens;
+
+namespace JanitorsCloset
+{
+
+    class ModFilterWindow : MonoBehaviour
+    {
+
+        public class PartInfo
+        {
+            //-------------------------------------------------------------------------------------------------------------------------------
+            public PartInfo(AvailablePart part)
+            {
+                // if the attach points have different sizes then it's probably an adapter and we'll place
+                // it half way between the smallest and largest attach point of the things it connects
+                if (part.partPrefab.attachNodes == null)
+                {
+                    Log.Info( string.Format("{0} has no attach points", part.name));
+                    partSize = "No Size";
+                }
+                else if (part.partPrefab.attachNodes.Count < 0)
+                {
+                    Log.Info( string.Format("{0} has negative attach points", part.name));
+                    partSize = "No Size";
+                }
+                else if (part.partPrefab.attachNodes.Count < 1)
+                {
+                    Log.Info(string.Format("{0} has no attachNodes", part.name));
+                    partSize = "No Size";
+                }
+                else
+                {
+                    double small = 99999;
+                    double large = 0;
+                    foreach (var attach in part.partPrefab.attachNodes)
+                    {
+                        small = Math.Min(small, attach.size);
+                        large = Math.Max(large, attach.size);
+                    }
+                    sortSize = (small + large) / 2;
+                    if (small == large)
+                        partSize = Math.Round(small, 2).ToString("0.00");
+                    else
+                        partSize = Math.Round(small, 2).ToString("0.00") + " to " + Math.Round(large, 2).ToString("0.00");
+                    Log.Info(string.Format("{0} is sortSize {1} partSize {2}", part.name, sortSize, partSize));
+                }
+            }
+
+            //-------------------------------------------------------------------------------------------------------------------------------
+            public string partSize;
+            public double sortSize;
+
+            public int defaultPos;
+
+        };
+
+
+        Rect filterWindowRect = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
+        Rect modWindowRect;
+
+        private const int MOD_WINDOW_ID = 94;
+        private struct ToggleState
+        {
+            public bool enabled;
+            public bool latched;
+        }
+        private Dictionary<string, ToggleState> modButtons = new Dictionary<string, ToggleState>();
+        private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
+        private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
+        private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
+
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+        string FindPartMod(AvailablePart part)
+        {
+            Debug.Log("ModFilterWindow.FindPartMod");
+            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.'))));
+            if (config == null)
+                return "";
+            var id = new UrlDir.UrlIdentifier(config.url);
+            return id[0];
+        }
+
+        public void Show()
+        {
+           Debug.Log("ModFilterWindow.Show()");
+            this.enabled = !enabled;
+        }
+
+        string UsefulModuleName(string longName)
+        {
+            Debug.Log("ModFilterWindow.UsefulModuleName");
+
+            if (longName.StartsWith("Module"))
+                return longName.Substring(6);
+            if (longName.StartsWith("FXModule"))
+                return "FX" + longName.Substring(8);
+            return longName;
+        }
+
+
+        void InitialPartsScan(List<AvailablePart> loadedParts)
+        {
+            Debug.Log("ModFilterWindow.InitialPartsScan");
+
+            int index = 1;
+            foreach (var part in loadedParts)
+            {
+                Log.Info(string.Format("PROCESS {0}", part.name));
+
+                PartInfo partInfo = new PartInfo(part);
+                partInfos.Add(part, partInfo);
+
+                partInfo.defaultPos = index++;               
+
+                // the part's base directory name is used to filter entire mods in and out
+                string partModName = FindPartMod(part);
+                if (!modButtons.ContainsKey(partModName))
+                {
+                    Log.Info(string.Format("define new mod filter key {0}", partModName));
+                    modButtons.Add(partModName, new ToggleState() { enabled = true, latched = false });
+                    modHash.Add(partModName, new HashSet<AvailablePart>());
+                }
+                Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
+                modHash[partModName].Add(part);
+
+                // save all the module names that are anywhere in this part
+                if (part.partPrefab == null)
+                    continue;
+                if (part.partPrefab.Modules == null)
+                    continue;
+
+                foreach (PartModule module in part.partPrefab.Modules)
+                {
+                    string fullName = module.moduleName;
+                    if (fullName == null)
+                    {
+                        Log.Info(string.Format("{0} has a null moduleName, skipping it", part.name));
+                        continue;
+                    }
+                    Log.Info(string.Format("scan part '{0}' module [{2}]'{1}'", part.name, fullName, fullName.Length));
+                    string moduleName = UsefulModuleName(fullName);
+                    
+                }
+            }
+        }
+
+        Rect FilterWindowRect(string name, int buttons)
+        {
+           
+            var lineHeight = (int)HighLogic.Skin.GetStyle("Toggle").CalcHeight(new GUIContent("XXQ"), 20);
+
+            float height = lineHeight * buttons;
+            if (buttons > 20)
+                height = lineHeight * 20;
+            float top = filterWindowRect.yMin + Math.Min(0, 280 - height);
+            Rect answer = new Rect(200, 200, 350, height);
+            if (answer.yMin < 100)
+                answer.yMin = 100;
+            //Log(LogLevel.INFO, string.Format("defining window {4} at ({0},{1},{2},{3})", answer.xMin, answer.yMin, answer.width, answer.height, name));
+            return answer;
+        }
+
+        List<AvailablePart> GetPartsList()
+        {
+            List<AvailablePart> loadedParts = new List<AvailablePart>();
+            loadedParts.AddRange(PartLoader.LoadedPartsList); // make a copy we can manipulate
+
+            // these two parts are internal and just serve to mess up our lists and stuff
+            AvailablePart kerbalEVA = null;
+            AvailablePart flag = null;
+            foreach (var part in loadedParts)
+            {
+                if (part.name == "kerbalEVA")
+                    kerbalEVA = part;
+                else if (part.name == "flag")
+                    flag = part;
+            }
+
+            // still need to prevent errors with null refs when looking up these parts though
+            if (kerbalEVA != null)
+            {
+                loadedParts.Remove(kerbalEVA);
+                partInfos.Add(kerbalEVA, new PartInfo(kerbalEVA));
+            }
+            if (flag != null)
+            {
+                loadedParts.Remove(flag);
+                partInfos.Add(flag, new PartInfo(flag));
+            }
+            return loadedParts;
+        }
+
+        bool PartInFilteredButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            foreach (string name in buttons.Keys)
+            {
+                if (!buttons[name].enabled)
+                    continue;
+                if (filterHash[name].Contains(part))
+                    return true;
+            }
+            return false;
+        }
+
+        void DefineFilters()
+        {
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
+            //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => !PartInFilteredButtons(part, sizeButtons, sizeHash))));
+            //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
+            EditorPartList.Instance.Refresh();
+        }
+
+        public void Start()
+        {
+            List<AvailablePart> loadedParts = GetPartsList();
+            InitialPartsScan(loadedParts);
+            DefineFilters();
+            modWindowRect = FilterWindowRect("Mods", modButtons.Count);
+            enabled = false;
+        }
+        string _windowTitle = string.Empty;
+        public void OnGUI()
+        {
+            if (Event.current.type == EventType.Repaint)
+                GUI.skin = HighLogic.Skin;
+            if (!enabled)
+                return;
+
+            _windowTitle = string.Format("Mod Filter");
+            var tstyle = new GUIStyle(GUI.skin.window);
+
+            modWindowRect = GUILayout.Window(this.GetInstanceID(), modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
+        }
+
+        Vector2 scrollPosition;
+
+        private void FilterChildWindowHandler(int id)
+        {
+            Dictionary<string, ToggleState> states;
+
+            states = modButtons;
+            GUILayout.BeginHorizontal();
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            if (GUILayout.Button( "Show All"))
+            {
+                var names = new List<string>(states.Keys);
+                foreach (string name in names)
+                {
+                    ToggleState state = states[name];
+                    state.enabled = true;
+                    states[name] = state;
+                }
+               // SaveConfig();
+            }
+            if (GUILayout.Button( "Hide All"))
+            {
+                var names = new List<string>(states.Keys);
+                foreach (string name in names)
+                {
+                    ToggleState state = states[name];
+                    state.enabled = false;
+                    states[name] = state;
+                }
+              //  SaveConfig();
+            }
+            GUILayout.EndHorizontal();
+            
+            var keys = new List<string>(states.Keys);
+            keys.Sort();
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+            foreach (string name in keys)
+            {
+                ToggleState state = states[name];
+                string truncatedName = (name.Length > 32) ? name.Remove(31) : name;
+                bool before = state.enabled;
+                GUILayout.BeginHorizontal();
+                state.enabled = GUILayout.Toggle(state.enabled, truncatedName);
+                GUILayout.EndHorizontal();
+               // if (before != state.enabled)
+               //     SaveConfig();
+               
+
+                if (state.enabled && !state.latched)
+                {
+                    state.latched = true;
+                    states[name] = state;
+                    EditorPartList.Instance.Refresh();
+                }
+                else if (!state.enabled && state.latched)
+                {
+                    state.latched = false;
+                    states[name] = state;
+                    EditorPartList.Instance.Refresh();
+                }
+            }
+            GUILayout.EndScrollView();
+            GUI.DragWindow();
+        }
+
+    }
+}

@@ -155,12 +155,14 @@ namespace JanitorsCloset
             }
         }
         PermaPruneWindow permaPruneWindow = null;
+        ModFilterWindow modFilterWindow = null;
         ShowBlocked showBlocked = null;
         ShowRenamed showRenamed = null;
 
         void InitializeGUI()
         {
             permaPruneWindow = this.gameObject.AddComponent<PermaPruneWindow>();
+            modFilterWindow = this.gameObject.AddComponent<ModFilterWindow>();
             showBlocked = this.gameObject.AddComponent<ShowBlocked>();
             showRenamed = this.gameObject.AddComponent<ShowRenamed>();
         }
@@ -395,7 +397,10 @@ namespace JanitorsCloset
             {
                 permaPruneWindow.Show();
             }
-
+            if (GUILayout.Button("Mod Filter"))
+            {
+                modFilterWindow.Show();
+            }
 
 
             if (GUILayout.Button("Export/Import"))
