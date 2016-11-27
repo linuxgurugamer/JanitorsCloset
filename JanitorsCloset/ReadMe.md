@@ -18,6 +18,7 @@ There is a toolbar button, of a broom & dustbin.  Hovering the mouse over it wil
 ShowBlocked
 Unblock
 PermaPrune
+Mod Filter
 Export/Import
 
 ShowBlocked will display a list of all parts blocked, and, if a soft basis, a button so you can unblock a single part
@@ -29,6 +30,8 @@ PermaPrune will display a new menu with the following:
 
 	Permanent Prune will permanently rename files to prevent them from being loaded.  It will only do this to parts which are blocked everywhere.
 	Undo Permanent Prune will undo all the permanently pruned files
+
+Mod Filter will display a new dialog where you can filter by the installed mods, and by size, independent of the stock filters (and also independent of Filter Extensions)
 
 Import/Export will display a new menu with the following:
 	Export

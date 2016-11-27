@@ -25,3 +25,6 @@ ChangeLog
 
 0.1.4
 		Added window to filter mod parts
+
+0.1.5
+		Added filter by size

@@ -17,6 +17,7 @@ namespace JanitorsCloset
 
         public class PartInfo
         {
+            string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
             //-------------------------------------------------------------------------------------------------------------------------------
             public PartInfo(AvailablePart part)
             {
@@ -47,10 +48,29 @@ namespace JanitorsCloset
                         large = Math.Max(large, attach.size);
                     }
                     sortSize = (small + large) / 2;
-                    if (small == large)
-                        partSize = Math.Round(small, 2).ToString("0.00");
+                    int smallSize = (int)small;
+                    string smallSizeStr;
+                    if (smallSize < partSizeDescr.Length)
+                        smallSizeStr = partSizeDescr[smallSize];
                     else
-                        partSize = Math.Round(small, 2).ToString("0.00") + " to " + Math.Round(large, 2).ToString("0.00");
+                        smallSizeStr = ">" + partSizeDescr[partSizeDescr.Length - 1];
+                    if (small == large)
+                    {
+                        partSize = smallSizeStr;
+                        //partSize = Math.Round(small, 2).ToString("0.00");
+                    }
+                    else
+                    {
+                        int largeSize = (int)large;
+                        string largeSizeStr;
+                        if (largeSize < partSizeDescr.Length)
+                            largeSizeStr = partSizeDescr[largeSize];
+                        else
+                            largeSizeStr = ">" + partSizeDescr[partSizeDescr.Length - 1];
+
+                        partSize = smallSizeStr + " to " + largeSizeStr;
+                        //partSize = Math.Round(small, 2).ToString("0.00") + " to " + Math.Round(large, 2).ToString("0.00");
+                    }
                     Log.Info(string.Format("{0} is sortSize {1} partSize {2}", part.name, sortSize, partSize));
                 }
             }
@@ -68,14 +88,18 @@ namespace JanitorsCloset
         Rect modWindowRect;
 
         private const int MOD_WINDOW_ID = 94;
+        private const int SIZE_WINDOW_ID = 95;
+
         private struct ToggleState
         {
             public bool enabled;
             public bool latched;
         }
         private Dictionary<string, ToggleState> modButtons = new Dictionary<string, ToggleState>();
+        private Dictionary<string, ToggleState> sizeButtons = new Dictionary<string, ToggleState>();
         private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
         private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
+        private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
         private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
 
 
@@ -120,7 +144,18 @@ namespace JanitorsCloset
                 PartInfo partInfo = new PartInfo(part);
                 partInfos.Add(part, partInfo);
 
-                partInfo.defaultPos = index++;               
+                partInfo.defaultPos = index++;
+
+                // add the size to the list of all sizes known if it's the first time we've seen this part size
+                if (!sizeButtons.ContainsKey(partInfo.partSize))
+                {
+                    Log.Info( string.Format("define new size filter key {0}", partInfo.partSize));
+                    sizeButtons.Add(partInfo.partSize, new ToggleState() { enabled = true, latched = false });
+                    sizeHash.Add(partInfo.partSize, new HashSet<AvailablePart>());
+                }
+                Log.Info( string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
+                sizeHash[partInfo.partSize].Add(part);
+
 
                 // the part's base directory name is used to filter entire mods in and out
                 string partModName = FindPartMod(part);
@@ -215,7 +250,7 @@ namespace JanitorsCloset
         void DefineFilters()
         {
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
-            //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => !PartInFilteredButtons(part, sizeButtons, sizeHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();
         }
@@ -225,7 +260,7 @@ namespace JanitorsCloset
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             DefineFilters();
-            modWindowRect = FilterWindowRect("Mods", modButtons.Count);
+            modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
             enabled = false;
         }
         string _windowTitle = string.Empty;
@@ -243,13 +278,28 @@ namespace JanitorsCloset
         }
 
         Vector2 scrollPosition;
+        string[] filterType = new string[] { "Mod Name", "Module Size" };
+        int selFilter = 0;
 
         private void FilterChildWindowHandler(int id)
         {
-            Dictionary<string, ToggleState> states;
+            Dictionary<string, ToggleState> states = modButtons;
 
-            states = modButtons;
+            
             GUILayout.BeginHorizontal();
+            GUILayout.Space(10);
+            GUILayout.EndHorizontal();
+            GUILayout.BeginHorizontal();
+            selFilter = GUILayout.SelectionGrid(selFilter, filterType, filterType.Length);
+            switch (selFilter)
+            {
+                case 0:
+                    states = modButtons;
+                    break;
+                case 1:
+                    states = sizeButtons;
+                    break;
+            }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button( "Show All"))
@@ -274,6 +324,26 @@ namespace JanitorsCloset
                 }
               //  SaveConfig();
             }
+            if (GUILayout.Button("Reset All"))
+            {
+                var names = new List<string>(modButtons.Keys);
+                states = modButtons;
+                foreach (string name in names)
+                {
+                    ToggleState state = states[name];
+                    state.enabled = true;
+                    states[name] = state;
+                }
+                names = new List<string>(sizeButtons.Keys);
+                states = sizeButtons;
+                foreach (string name in names)
+                {
+                    ToggleState state = states[name];
+                    state.enabled = true;
+                    states[name] = state;
+                }
+                //  SaveConfig();
+            }
             GUILayout.EndHorizontal();
             
             var keys = new List<string>(states.Keys);
@@ -282,7 +352,7 @@ namespace JanitorsCloset
             foreach (string name in keys)
             {
                 ToggleState state = states[name];
-                string truncatedName = (name.Length > 32) ? name.Remove(31) : name;
+                string truncatedName = (name.Length > 35) ? name.Remove(34) : name;
                 bool before = state.enabled;
                 GUILayout.BeginHorizontal();
                 state.enabled = GUILayout.Toggle(state.enabled, truncatedName);
