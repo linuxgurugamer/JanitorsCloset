@@ -167,6 +167,46 @@ namespace JanitorsCloset
             StartCoroutine(pruning());
         }
 
+        /// <summary>
+        /// Get the partURL for the mesh
+        /// </summary>
+        /// <param name="pSearch"></param>
+        /// <returns>string</returns>
+        string GetMeshURL(AvailablePart pSearch)
+        {
+            if (pSearch == null)
+            {
+                Log.Info("GetMeshURL, pSearch is null");
+                return "";
+            }
+            if (pSearch.partConfig == null)
+            {
+                Log.Info("GetMeshURL, pSearch.partConfig is null");
+                return "";
+            }
+            string s = pSearch.partConfig.GetValue("mesh");
+
+            if (s != null && s != "")
+            {
+                string partUrl = pSearch.partUrlConfig.parent.url.Substring(0, pSearch.partUrlConfig.parent.url.LastIndexOf('/'));
+                s = partUrl + "/" + s.Substring(0, s.Length - 3);
+            }
+            return s;
+        }
+        
+        /// <summary>
+        /// Get the partURL for the part
+        /// </summary>
+        /// <param name="part"></param>
+        /// <param name="modelNode"></param>
+        /// <returns>string</returns>
+        string GetModelURL(AvailablePart part, ConfigNode modelNode)
+        { 
+            string model = modelNode.GetValue("model");
+
+            return model;
+        }
+
         const string PRUNED = ".prune";
         public  IEnumerator pruning()
         {
@@ -235,6 +275,7 @@ namespace JanitorsCloset
                 ConfigNode[] nodes = part.partConfig.GetNodes("MODEL");
                 ConfigNode[] nodes2;
                 bool b;
+#if true
                 if (nodes != null)
                 {
                     Log.Info("Nodes count: " + nodes.Length.ToString());
@@ -245,18 +286,16 @@ namespace JanitorsCloset
                         if (modelNode != null)
                         {
                             Log.Info("modelNode: " + modelNode.name);
-                            string model = modelNode.GetValue("model");
+                            string model = GetModelURL(part, modelNode);
+                            Log.Info("ModelUrl: " + GetModelURL(part, modelNode));
                             if (model != null)
                             {
                                 Log.Info("model: " + model);
                                 // Make sure it isn't being used in another part
                                 b = false;
                                 Log.Info("Part count: " + PartLoader.LoadedPartsList.Count.ToString());
-
-                                //EditorPartList.Instance.p
-
-                                //PartCategorizer.Instance.filterGenericNothing
-//                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                                
+                                string s;
                                 foreach (AvailablePart pSearch in PartLoader.LoadedPartsList)
                                 {
                                     Log.Info("pSearch: " + pSearch.name);
@@ -271,15 +310,22 @@ namespace JanitorsCloset
                                                 if (searchNode != null)
                                                 {
                                                     Log.Info("searchNode");
-                                                    string s = searchNode.GetValue("model");
-                                                    if (s != null)
-                                                        if (s == model)
-                                                        {
-                                                            b = true;
-                                                            break;
-                                                        }
+                                                    if (model == GetModelURL(pSearch, searchNode))
+                                                    {
+                                                        b = true;
+                                                        break;
+                                                    }
                                                 }
                                             }
+                                        }
+                                        
+                                        s = GetMeshURL(pSearch);
+                                        Log.Info("Mesh URL: " + GetMeshURL(pSearch) + "   ModelUrl: " + GetModelURL(part, modelNode));
+                                       
+                                        if (GetMeshURL(pSearch) == model)
+                                        {
+                                            b = true;
+                                            break;
                                         }
                                     }
                                     if (b)
@@ -287,26 +333,24 @@ namespace JanitorsCloset
                                 }
                             }
 
-                            Log.Info("MODEL: " + model);
-                            string mURL = FindTexturePathFromModel.getModelURL(model);
-                            Log.Info("MODEL URL: " + mURL);
-                            model = model + ".mu";
-
-
                             if (!b)
                             {
+                                Log.Info("MODEL: " + model);
+                                string mURL = FindTexturePathFromModel.getModelURL(model);
+                                Log.Info("MODEL URL: " + mURL);
+                                model = model + ".mu";
 
                                 RenameFile(model, part.name);
                             }
                         }
                     }
                 }
-
+#endif
                 yield return 0;
                 if (!permapruneInProgress)
                     break;
                 Log.Info("searching for meshes");
-                string mesh = part.partConfig.GetValue("mesh");
+                string mesh = GetMeshURL(part); 
                 if (mesh != null && mesh != "")
                 {
                     // Make sure it isn't being used in another part
@@ -315,19 +359,41 @@ namespace JanitorsCloset
                     {
                         if (part != pSearch)
                         {
-                            string searchMesh = part.partConfig.GetValue("mesh");
-                            if (searchMesh != null && searchMesh == mesh)
+                            string searchMesh = GetMeshURL(pSearch); 
+
+                            if (searchMesh == mesh)
                             {
                                 b = true;
                                 break;
                             }
-                            if (b)
-                                break;
+
+
+                            if (pSearch.partConfig != null)
+                            {
+                                nodes2 = pSearch.partConfig.GetNodes("MODEL");
+                                if (nodes2 != null)
+                                {
+                                    foreach (ConfigNode searchNode in nodes2)
+                                    {
+                                        if (searchNode != null)
+                                        {
+                                            string model = GetModelURL(pSearch, searchNode);
+                                            
+                                            if (mesh ==  model)
+                                            {
+                                                b = true;
+                                                break;
+                                            }
+                                            
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                     if (!b)
                     {
-                        //Log.Info("mesh: " + mesh + "    partPath: " + partPath);
+                        Log.Info("Renaming mesh: " + mesh + "    partPath: " + partPath);
 
                         string mURL = FindTexturePathFromModel.getModelURL(mesh);
                         partPath = partPath.Substring(0, partPath.LastIndexOf("/")) + "/";

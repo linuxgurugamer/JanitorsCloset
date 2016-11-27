@@ -28,3 +28,8 @@ ChangeLog
 
 0.1.5
 		Added filter by size
+
+0.1.6
+		Fixed issue when same model file referenced both as a mesh and a model, too 
+		many files were being pruned.  Replaced some rather messy code with a more universal 
+		way of comparing files, by using the partURL everywhere
