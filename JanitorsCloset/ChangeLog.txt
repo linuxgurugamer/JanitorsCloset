@@ -33,3 +33,12 @@ ChangeLog
 		Fixed issue when same model file referenced both as a mesh and a model, too 
 		many files were being pruned.  Replaced some rather messy code with a more universal 
 		way of comparing files, by using the partURL everywhere
+
+0.1.7
+		Fixed sort of sizes
+		Added text "Adapter" to adapter sizes
+		Moved initial window position right 100 pixels
+		Added code so that window will have a minimum height of 10 buttons, and a maximum height of 20
+		Fixed sort so that:
+			The line with "larger" appears at the end
+			Lines beginning with "Adapter" appear after the other lines

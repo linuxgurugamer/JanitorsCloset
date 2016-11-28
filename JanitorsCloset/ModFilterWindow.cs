@@ -53,7 +53,7 @@ namespace JanitorsCloset
                     if (smallSize < partSizeDescr.Length)
                         smallSizeStr = partSizeDescr[smallSize];
                     else
-                        smallSizeStr = ">" + partSizeDescr[partSizeDescr.Length - 1];
+                        smallSizeStr = partSizeDescr[partSizeDescr.Length - 1] + " and larger";
                     if (small == large)
                     {
                         partSize = smallSizeStr;
@@ -66,9 +66,9 @@ namespace JanitorsCloset
                         if (largeSize < partSizeDescr.Length)
                             largeSizeStr = partSizeDescr[largeSize];
                         else
-                            largeSizeStr = ">" + partSizeDescr[partSizeDescr.Length - 1];
+                            largeSizeStr = partSizeDescr[partSizeDescr.Length - 1];
 
-                        partSize = smallSizeStr + " to " + largeSizeStr;
+                        partSize = "Adapter: " + smallSizeStr + " to " + largeSizeStr;
                         //partSize = Math.Round(small, 2).ToString("0.00") + " to " + Math.Round(large, 2).ToString("0.00");
                     }
                     Log.Info(string.Format("{0} is sortSize {1} partSize {2}", part.name, sortSize, partSize));
@@ -191,16 +191,17 @@ namespace JanitorsCloset
 
         Rect FilterWindowRect(string name, int buttons)
         {
-           
             var lineHeight = (int)HighLogic.Skin.GetStyle("Toggle").CalcHeight(new GUIContent("XXQ"), 20);
 
-            float height = lineHeight * buttons;
             if (buttons > 20)
-                height = lineHeight * 20;
-            float top = filterWindowRect.yMin + Math.Min(0, 280 - height);
-            Rect answer = new Rect(200, 200, 350, height);
-            if (answer.yMin < 100)
-                answer.yMin = 100;
+                buttons = 20;
+            if (buttons < 10)
+                buttons = 10;
+
+            float height = lineHeight * buttons;
+
+            Rect answer = new Rect(300, 200, 350, height);
+           
             //Log(LogLevel.INFO, string.Format("defining window {4} at ({0},{1},{2},{3})", answer.xMin, answer.yMin, answer.width, answer.height, name));
             return answer;
         }
@@ -277,6 +278,25 @@ namespace JanitorsCloset
             modWindowRect = GUILayout.Window(this.GetInstanceID(), modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
         }
 
+        int CompareEntries(string left, string right)
+        {
+            if (left == right)
+                return 0;
+            if (left.Contains("Adapter") && right.Contains("larger"))
+                return 1;
+            if (right.Contains("Adapter") && left.Contains("larger"))
+                return -1;
+            if (left.Contains("larger"))
+                return 1;
+            if (right.Contains("larger"))
+                return -1;
+            if (left.Contains("Adapter") && !right.Contains("Adapter"))
+                return 1;
+            if (right.Contains("Adapter") && !left.Contains("Adapter"))
+                return -1;
+
+            return String.Compare(left, right);
+        }
         Vector2 scrollPosition;
         string[] filterType = new string[] { "Mod Name", "Module Size" };
         int selFilter = 0;
@@ -295,6 +315,7 @@ namespace JanitorsCloset
             {
                 case 0:
                     states = modButtons;
+                    
                     break;
                 case 1:
                     states = sizeButtons;
@@ -347,7 +368,9 @@ namespace JanitorsCloset
             GUILayout.EndHorizontal();
             
             var keys = new List<string>(states.Keys);
-            keys.Sort();
+
+            keys.Sort(CompareEntries);
+
             scrollPosition = GUILayout.BeginScrollView(scrollPosition);
             foreach (string name in keys)
             {
