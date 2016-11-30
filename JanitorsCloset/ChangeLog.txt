@@ -24,7 +24,7 @@ ChangeLog
 		Added code to update asssembly info with version
 
 0.1.4
-		Added window to filter mod parts
+		Added window to filter mod parts.  Most of the new code is from an old mod:  Simple Part Organizer
 
 0.1.5
 		Added filter by size
@@ -42,3 +42,7 @@ ChangeLog
 		Fixed sort so that:
 			The line with "larger" appears at the end
 			Lines beginning with "Adapter" appear after the other lines
+
+0.1.8
+		Removed limitation on width of displayable lines in the mod filter
+		Added check for null part  in the InitialPartScan(), needed in case other mods mess up during loading and put a null part into the loadedParts list

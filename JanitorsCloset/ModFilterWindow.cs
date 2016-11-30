@@ -107,7 +107,7 @@ namespace JanitorsCloset
         string FindPartMod(AvailablePart part)
         {
             Debug.Log("ModFilterWindow.FindPartMod");
-            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.'))));
+            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ','.'))));
             if (config == null)
                 return "";
             var id = new UrlDir.UrlIdentifier(config.url);
@@ -139,6 +139,8 @@ namespace JanitorsCloset
             int index = 1;
             foreach (var part in loadedParts)
             {
+                if (part == null)
+                    continue;
                 Log.Info(string.Format("PROCESS {0}", part.name));
 
                 PartInfo partInfo = new PartInfo(part);
@@ -375,10 +377,10 @@ namespace JanitorsCloset
             foreach (string name in keys)
             {
                 ToggleState state = states[name];
-                string truncatedName = (name.Length > 35) ? name.Remove(34) : name;
+                //string truncatedName = (name.Length > 35) ? name.Remove(34) : name;
                 bool before = state.enabled;
                 GUILayout.BeginHorizontal();
-                state.enabled = GUILayout.Toggle(state.enabled, truncatedName);
+                state.enabled = GUILayout.Toggle(state.enabled, name);
                 GUILayout.EndHorizontal();
                // if (before != state.enabled)
                //     SaveConfig();
