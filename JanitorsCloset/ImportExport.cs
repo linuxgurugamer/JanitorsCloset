@@ -42,9 +42,13 @@ namespace JanitorsCloset
             InitializeGUI();
         }
 
+        int configWindowID;
+
         public void SetVisible(bool b)
         {
             isVisible = b;
+            if (b)
+                configWindowID = JanitorsCloset.getNextID();
         }
 
         void OnGUI()
@@ -56,7 +60,7 @@ namespace JanitorsCloset
                 var tstyle = new GUIStyle(GUI.skin.window);
 
                 configBounds.yMax = _windowRect.yMin;
-                configBounds = GUILayout.Window(this.GetInstanceID(), configBounds, ConfigWindow, _windowTitle, tstyle);
+                configBounds = GUILayout.Window(configWindowID, configBounds, ConfigWindow, _windowTitle, tstyle);
             }
         }
 

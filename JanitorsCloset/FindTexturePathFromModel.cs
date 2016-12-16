@@ -11,7 +11,8 @@ namespace JanitorsCloset
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
     class FindTexturePathFromModel  : MonoBehaviour
     {
-#if true
+
+#if false
 
         private void Start()
         {
@@ -22,6 +23,7 @@ namespace JanitorsCloset
             PrintTextureDependenciesOf("Squad/Spaces/mk1PodCockpit/model");
         }
 #endif
+
         public static string getModelURL(string name)
         {
             foreach (GameObject go in GameDatabase.Instance.databaseModel)
@@ -36,7 +38,7 @@ namespace JanitorsCloset
             return "";
         }
 
-
+#if false
         private static void PrintTextureDependenciesOf(string modelUrl)
         {
             var model = GameDatabase.Instance.GetModel(modelUrl);
@@ -140,6 +142,7 @@ namespace JanitorsCloset
             return textures;
         }
 
+#endif
 
         // Try to get a texture. The passed in material might not have such a property or it might not be set in
         // which case return false

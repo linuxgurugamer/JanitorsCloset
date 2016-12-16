@@ -58,14 +58,17 @@ namespace JanitorsCloset
             Log.Info("ShowBlocked.CloseWindow enabled: " + this.enabled.ToString());
         }
 
+        int blockedWindowContentID = 0;
+
         void OnGUI()
         {
             if (isEnabled())
             {
+                if (blockedWindowContentID == 0)
+                    blockedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
-
                 
-                _windowRect = GUILayout.Window(this.GetInstanceID(), _windowRect, WindowContent, "Show Blocked Parts", tstyle);
+                _windowRect = GUILayout.Window(blockedWindowContentID, _windowRect, BlockedWindowContent, "Show Blocked Parts", tstyle);
 
 
             }
@@ -80,7 +83,7 @@ namespace JanitorsCloset
         bool sortAscending = true;
         string lastSort = "";
 
-        void WindowContent(int windowID)
+        void BlockedWindowContent(int windowID)
         {
             string unblock = "";  
             GUILayout.BeginVertical();

@@ -17,7 +17,7 @@ namespace JanitorsCloset
 
         List<string> renamedList;
 
-        Rect _windowRect = new Rect()
+        Rect renamedWindowRect = new Rect()
         {
             xMin = 0,
             xMax = UnityEngine.Screen.width - 300,
@@ -33,7 +33,7 @@ namespace JanitorsCloset
             Log.Info("ShowRenamed Awake()");
             this.enabled = false;
             Instance = this;
-            _windowRect.center = new Vector2(UnityEngine.Screen.width * 0.5f, UnityEngine.Screen.height * 0.5f);
+            renamedWindowRect.center = new Vector2(UnityEngine.Screen.width * 0.5f, UnityEngine.Screen.height * 0.5f);
         }
 
         public void Show()
@@ -59,12 +59,15 @@ namespace JanitorsCloset
             Log.Info("ShowRenamed.CloseWindow enabled: " + this.enabled.ToString());
         }
 
+        int renamedWindowContentID = 0;
         void OnGUI()
         {
             if (isEnabled())
             {
+                if (renamedWindowContentID == 0)
+                    renamedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
-                _windowRect = GUILayout.Window(this.GetInstanceID(), _windowRect, WindowContent, "Show PermaPruned Parts", tstyle);
+                renamedWindowRect = GUILayout.Window(renamedWindowContentID, renamedWindowRect, ShowRenamedWindowContent, "Show PermaPruned Parts", tstyle);
             }
         }
 
@@ -76,7 +79,7 @@ namespace JanitorsCloset
 
         private Rect innerCoords;
 
-        void WindowContent(int windowID)
+        void ShowRenamedWindowContent(int windowID)
         {
             innerCoords = new Rect(0, LINEHEIGHT, UnityEngine.Screen.width - 300, HEIGHT - 2 * LINEHEIGHT);
             

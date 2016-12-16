@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Security.Cryptography;
 using System.Linq;
 using System.Text;
 
@@ -9,9 +10,11 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+using System.IO;
 
 namespace JanitorsCloset
 {
+    #region defines
     public enum blackListType
     {
         VAB,
@@ -26,102 +29,64 @@ namespace JanitorsCloset
         public bool permapruned;
     }
 
+    #endregion
 
-    [KSPAddon(KSPAddon.Startup.EditorAny, false)]
-    class JanitorsCloset :  BaseRaycaster
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
+    partial class JanitorsCloset : BaseRaycaster
     {
         private static JanitorsCloset instance;
-        private ApplicationLauncherButton button = null;
-        const string texPathDefault = "JanitorsCloset/Textures/AppLauncherIcon";
+
+        static int lastUsedID = 6050;
+
+        public static int getNextID()
+        {
+            lastUsedID++;
+            Log.Info("lastUsedID: " + lastUsedID.ToString());
+            return lastUsedID;
+        }
 
         static public Dictionary<string, blackListPart> blackList;
 
         public readonly static string MOD = Assembly.GetAssembly(typeof(JanitorsCloset)).GetName().Name;
         public static EditorPartListFilter<AvailablePart> searchFilterParts;
 
-        private void OnGuiAppLauncherReady()
-        {
-            if (this.button == null)
-            {
-                try
-                {
-                    this.button = ApplicationLauncher.Instance.AddModApplication(
-                        () => {
-                            JanitorsCloset.Instance.Show();
-                        },  //RUIToggleButton.onTrue
-                        () => {
-                            JanitorsCloset.Instance.Hide();
-                        },  //RUIToggleButton.onFalse
-                        () => {
-                            JanitorsCloset.Instance.ShowMenu();
-                        }, //RUIToggleButton.OnHover
-                        () => {
-                            JanitorsCloset.Instance.HideMenu();
-                        }, //RUIToggleButton.onHoverOut
-                        null, //RUIToggleButton.onEnable
-                        null, //RUIToggleButton.onDisable
-                        ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH, //visibleInScenes
-                        GameDatabase.Instance.GetTexture(texPathDefault, false) //texture
-                    );
-                    Log.Info("Added ApplicationLauncher button");
-                }
-                catch (Exception ex)
-                {
-                    Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
-                }
-            }
 
-        }
-
-        //bool Visible = false;
-        //show the addon's GUI
-        public void Show()
-        {
-
-            //this.Visible = true;
-            Log.Info("Show()");
-            //if (!_settingsWindow.enabled) {
-            //	_settingsWindow.Show (cfg, _configFilePath, pluginVersion);
-            //}
-        }
-
-        //hide the addon's GUI
-        public void Hide()
-        {
-
-            //this.Visible = false;
-            //Log.Debug ("Hide()");
-            //if (_settingsWindow.enabled) {
-            //	_settingsWindow.enabled = false;
-            //}
-        }
 
         bool _showMenu = false;
         Rect _menuRect = new Rect();
         const float _menuWidth = 100.0f;
-        const float _menuHeight = 125.0f;
+        const float _menuHeight = 150.0f;
+        //const float _menuHeight = 165.0f;
         const int _toolbarHeight = 42;
         //37
 
         public void ShowMenu()
         {
-            Vector3 position = Input.mousePosition;
-            int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
-            _menuRect = new Rect()
-            {
-                xMin = position.x - _menuWidth / 2,
-                xMax = position.x + _menuWidth / 2,
-                yMin = Screen.height - toolbarHeight - _menuHeight,
-                yMax = Screen.height - toolbarHeight
-            };
-            
-            _showMenu = true;
+            if (HighLogic.LoadedScene == GameScenes.EDITOR && 
+                (helpPopup == null ||
+                (helpPopup != null && !helpPopup.showMenu)))
+            { 
+                Vector3 position = Input.mousePosition;
+                int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
+                _menuRect = new Rect()
+                {
+                    xMin = position.x - _menuWidth / 2,
+                    xMax = position.x + _menuWidth / 2,
+                    yMin = Screen.height - toolbarHeight - _menuHeight,
+                    yMax = Screen.height - toolbarHeight
+                };
+
+                _showMenu = true;
+                menuContentID = JanitorsCloset.getNextID();
+            }
         }
 
         public void HideMenu()
         {
             Log.Info("HideMenu");
+           // _menuRect = new Rect();
             _showMenu = false;
+            showToolbar = ShowMenuState.hidden;
         }
 
 
@@ -137,7 +102,7 @@ namespace JanitorsCloset
             {
                 blackListPart blp;
                 blackList.TryGetValue(part.name, out blp);
-                if ( (blp.where == blackListType.ALL) ||
+                if ((blp.where == blackListType.ALL) ||
                     (blp.where == blackListType.SPH && EditorDriver.editorFacility == EditorFacility.SPH) ||
                     (blp.where == blackListType.VAB && EditorDriver.editorFacility == EditorFacility.VAB)
                     )
@@ -165,75 +130,74 @@ namespace JanitorsCloset
             modFilterWindow = this.gameObject.AddComponent<ModFilterWindow>();
             showBlocked = this.gameObject.AddComponent<ShowBlocked>();
             showRenamed = this.gameObject.AddComponent<ShowRenamed>();
+            
         }
 
-        new private void Start()
+        void OnSceneLoadedGUIReady(GameScenes scene)
         {
-            //FileOperations f = new FileOperations();
-           // FileOperations.Instance = f;
+            Log.Info("OnSceneLoadedGUIReady");
+            if (HighLogic.LoadedSceneIsEditor)
+            {
+                blackList = FileOperations.Instance.loadBlackListData();
+
+                EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
+
+                Func<AvailablePart, bool> _criteria = (_aPart) => FindPart(_aPart);
+                searchFilterParts = new EditorPartListFilter<AvailablePart>(MOD, _criteria);
+                EditorPartList.Instance.ExcludeFilters.AddFilter(searchFilterParts);
+
+                InitializeGUI();
+            }
+            else
+            {
+                EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
+            }
+        }
+
+        new void Start()
+        {
             Log.setTitle("Janitor's Closet");
             Log.Info("JanitorsCloset.Start");
-            blackList = FileOperations.Instance.loadBlackListData();
-
-            EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
-
-            Func<AvailablePart, bool> _criteria = (_aPart) => FindPart(_aPart);
-            searchFilterParts = new EditorPartListFilter<AvailablePart>(MOD, _criteria);
-            EditorPartList.Instance.ExcludeFilters.AddFilter(searchFilterParts);
-
-            if (button == null)
-            {
-                OnGuiAppLauncherReady();
-            }
-            InitializeGUI();
+            lastUsedID = this.GetInstanceID();
+            StartToolbar();            
         }
 
-        protected new virtual void OnDestroy()
+        new void OnDestroy()
         {
             Log.Info("JanitorsCloset.OnDestroy");
             FileOperations.Instance.saveBlackListData(blackList);
-            EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
-            if (this.button != null)
-            {
-                Log.Info("Removng button");
-                ApplicationLauncher.Instance.RemoveModApplication(this.button);
 
-            }
-
-            //if (_mouseController) _mouseController.enabled = true;
+            OnDestroyToolbar();
         }
 
         EditorPartIcon _icon;
         private void IconClicked(EditorPartIcon icon, EditorIconEvents.EditorIconClickEvent evt)
         {
-//            if (!Input.GetKey(KeyCode.LeftAlt) && !Input.GetKey(KeyCode.RightAlt))
             if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
-                    return;
+                return;
 
             Log.Info("Icon was clicked for " + icon.partInfo.name + " (" + icon.partInfo.title + ")");
             _icon = icon;
             ShowPruneMenu();
-            
-            
 
             evt.Veto(); // prevent part from being spawned
         }
 
+
+
         protected override void Awake()
         {
             instance = this;
-           // DontDestroyOnLoad(this);
-
-            //getConfigs();
-            getPartData();
+            DontDestroyOnLoad(this);
+            
+            //getPartData();
 
             _windowFunction = PruneMenuContent;
+            AwakeToolbar();
 
             _mouseController = HighLogic.fetch.GetComponent<Mouse>();
-
-           
         }
-
+#if false
         private void getPartData()
         {
             List<string> modNames = new List<string>();
@@ -252,24 +216,29 @@ namespace JanitorsCloset
                 //Log.InfoWarning("Part title: " + p.title);
             }
         }
-        enum ShowMenuState { hidden, starting, visible};
+#endif
+
+        enum ShowMenuState { hidden, starting, visible, hiding };
         ShowMenuState _showPruneMenu = ShowMenuState.hidden;
         Rect _pruneMenuRect = new Rect();
         const float _pruneMenuWidth = 100.0f;
         const float _pruneMenuHeight = 73.0f;
 
+        
+
         // these two save a bit on garbage created in OnGUI
-        private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
+    //    private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
         private GUI.WindowFunction _windowFunction;
+
 
         // enable/disable this to prevent the "No Target" from popping up by double-clicking on the window 
         private Mouse _mouseController;
 
-
+#region PruneParts
         public void ShowPruneMenu()
         {
             InputLockManager.SetControlLock(ControlTypes.EDITOR_ICON_PICK | ControlTypes.EDITOR_ICON_HOVER, "Pruner");
-            
+
             Vector3 position = Input.mousePosition;
             //Log.Info("X, Y: " + position.x.ToString() + ", " + position.y.ToString());
 
@@ -285,6 +254,7 @@ namespace JanitorsCloset
                 yMax = Screen.height - position.y
             };
             _showPruneMenu = ShowMenuState.starting;
+            pruneMenuID = JanitorsCloset.getNextID();
         }
 
         public void HidePruneMenu()
@@ -294,22 +264,31 @@ namespace JanitorsCloset
             InputLockManager.RemoveControlLock("Pruner");
         }
 
+        #endregion
+
+        int pruneMenuID;
+        int menuContentID;
+        
+
         //Unity GUI loop
         void OnGUI()
         {
-           // if (HighLogic.LoadedScene != GameScenes.EDITOR)
-           //     return;
-
-            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition) ))
-                _pruneMenuRect = KSPUtil.ClampRectToScreen(GUILayout.Window(this.GetInstanceID(), _pruneMenuRect, _windowFunction, "Blocker Menu"));
+            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
+                _pruneMenuRect = KSPUtil.ClampRectToScreen(GUILayout.Window(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
             else
+                if (_showPruneMenu != ShowMenuState.hidden)
                 HidePruneMenu();
-            
-            if (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f))
-                _menuRect = GUILayout.Window(this.GetInstanceID(), _menuRect, MenuContent, "Janitor's Closet");
+
+            OnGUIToolbar();
+
+            if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f)))
+                _menuRect = GUILayout.Window(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
             else
                 _menuRect = new Rect();
+
         }
+
+ 
 
         void addToBlackList(string p, blackListType type)
         {
@@ -332,7 +311,7 @@ namespace JanitorsCloset
                     blp.where = blackListType.ALL;
                 }
             }
-            
+
 
             blackList.Add(p, blp);
             EditorPartList.Instance.Refresh();
@@ -375,6 +354,7 @@ namespace JanitorsCloset
         }
 
 
+
         float lastTimeShown = 0.0f;
 
         void MenuContent(int WindowID)
@@ -385,8 +365,6 @@ namespace JanitorsCloset
             if (GUILayout.Button("Show Blocked"))
             {
                 // Dialog to show list of blocked parts, with buttons to temp/perm unblock a part
-
-                // _partInfoWindow.Show();
                 showBlocked.Show();
             }
             if (GUILayout.Button("Unblock"))
@@ -402,15 +380,11 @@ namespace JanitorsCloset
                 modFilterWindow.Show();
             }
 
-
             if (GUILayout.Button("Export/Import"))
             {
                 ImportExport.Instance.SetVisible(true);
-                // Import dialog
-                //_fineAdjustWindow.Show();
-
             }
-            
+
             GUILayout.EndVertical();
         }
 
@@ -425,7 +399,7 @@ namespace JanitorsCloset
             {
                 _mouseController.enabled = true;
                 return;
-            }                           
+            }
 
             _mouseController.enabled = false;
             Mouse.Left.ClearMouseState();

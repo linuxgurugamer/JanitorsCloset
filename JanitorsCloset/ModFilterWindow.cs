@@ -21,6 +21,12 @@ namespace JanitorsCloset
             //-------------------------------------------------------------------------------------------------------------------------------
             public PartInfo(AvailablePart part)
             {
+                Log.Info("partSizeDescr.Length: " + partSizeDescr.Length.ToString());
+                if (part.partPrefab == null)
+                {
+                    Log.Info(string.Format("{0} has no partPrefab", part.name));
+                    partSize = "No Size";
+                } else
                 // if the attach points have different sizes then it's probably an adapter and we'll place
                 // it half way between the smallest and largest attach point of the things it connects
                 if (part.partPrefab.attachNodes == null)
@@ -47,6 +53,13 @@ namespace JanitorsCloset
                         small = Math.Min(small, attach.size);
                         large = Math.Max(large, attach.size);
                     }
+                    if (small < 0)
+                    {
+                        Log.Error(string.Format("{0} has attach point with size < 0", part.name));
+                        small = 0;
+                    }
+                    
+                    Log.Info("small: " + small.ToString() + "   large: " + large.ToString());
                     sortSize = (small + large) / 2;
                     int smallSize = (int)small;
                     string smallSizeStr;
@@ -54,6 +67,7 @@ namespace JanitorsCloset
                         smallSizeStr = partSizeDescr[smallSize];
                     else
                         smallSizeStr = partSizeDescr[partSizeDescr.Length - 1] + " and larger";
+                    Log.Info("smallSizeStr: " + smallSizeStr);
                     if (small == large)
                     {
                         partSize = smallSizeStr;
@@ -258,26 +272,57 @@ namespace JanitorsCloset
             EditorPartList.Instance.Refresh();
         }
 
+        static GUIStyle styleButton = null;
+        static GUIStyle styleButtonSettings;
         public void Start()
         {
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             DefineFilters();
             modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
+
+            modwindowRectID = JanitorsCloset.getNextID();
             enabled = false;
         }
+        void InitStyles()
+        { 
+            styleButton = new GUIStyle(GUI.skin.button);
+            styleButton.name = "ButtonGeneral";
+            styleButton.normal.background = GUI.skin.button.normal.background;
+            styleButton.hover.background = GUI.skin.button.hover.background;
+            styleButton.normal.textColor = new Color(207, 207, 207);
+            styleButton.fontStyle = FontStyle.Normal;
+            styleButton.fixedHeight = 20;
+            styleButton.padding.top = 2;
+
+            styleButtonSettings = new GUIStyle(styleButton);
+            styleButtonSettings.name = "ButtonSettings";
+            styleButtonSettings.padding = new RectOffset(1, 1, 1, 1);
+            styleButtonSettings.onNormal.background = styleButtonSettings.active.background;
+            styleButtonSettings.alignment = TextAnchor.MiddleCenter;
+            styleButtonSettings.normal.textColor = new Color32(177, 193, 205, 255);
+            styleButtonSettings.fontStyle = FontStyle.Bold;
+        }
+       
+
+
         string _windowTitle = string.Empty;
+        int modwindowRectID;
+
         public void OnGUI()
         {
+
             if (Event.current.type == EventType.Repaint)
                 GUI.skin = HighLogic.Skin;
             if (!enabled)
                 return;
+            if (styleButton == null)
+                InitStyles();
 
             _windowTitle = string.Format("Mod Filter");
             var tstyle = new GUIStyle(GUI.skin.window);
 
-            modWindowRect = GUILayout.Window(this.GetInstanceID(), modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
+            modWindowRect = GUILayout.Window(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
         }
 
         int CompareEntries(string left, string right)
@@ -307,7 +352,11 @@ namespace JanitorsCloset
         {
             Dictionary<string, ToggleState> states = modButtons;
 
-            
+            if (GUI.Button(new Rect(modWindowRect.width - 32, 2, 30, 20), "X", styleButtonSettings))
+            {
+                enabled = false;
+                //  Visible = false;
+            }
             GUILayout.BeginHorizontal();
             GUILayout.Space(10);
             GUILayout.EndHorizontal();

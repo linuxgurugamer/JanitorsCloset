@@ -35,7 +35,7 @@ namespace JanitorsCloset
         }
 
         // Need for the 
-        private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
+       // private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
         // private GUI.WindowFunction _windowFunction;
         // enable/disable this to prevent the "No Target" from popping up by double-clicking on the window 
         private Mouse _mouseController;
@@ -75,6 +75,7 @@ namespace JanitorsCloset
         {
             fileBrowserEnabled = true;
             selectionType = suffix;
+            browserWindowID = JanitorsCloset.getNextID();
 
             m_fileBrowser = new FileBrowser(
                     new Rect(Screen.width / 2 - BR_WIDTH / 2, Screen.height / 2 - BR_HEIGHT / 2, BR_WIDTH, BR_HEIGHT),
@@ -144,14 +145,10 @@ namespace JanitorsCloset
             _weLockedInputs = false;
         }
 
+        int browserWindowID;
 
         void OnGUI()
         {
-            //if (getfileWin)
-            //{
-            //    getFile("Import/Export", FileOperations.PRNLIST_SUFFIX, lastdir);
-
-            //} else
             if (m_fileBrowser != null)
             {
                 if (!fileBrowserEnabled)
@@ -184,14 +181,12 @@ namespace JanitorsCloset
 #endif
                     //m_fileBrowser.m_screenRect = KSPUtil.ClampRectToScreen(GUILayout.Window(this.GetInstanceID(), m_fileBrowser.m_screenRect, _windowFunction, "Blocker Menu"));
                     // m_fileBrowser.m_screenRect = GUILayout.Window(GetInstanceID(), m_fileBrowser.m_screenRect, m_fileBrowser.Window, "");
-                    m_fileBrowser.Window(GetInstanceID());
+                    m_fileBrowser.Window(browserWindowID);
                     // If the mouse is over our window, then lock the rest of the UI
                     if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
                     return;
                 }
             }
-
-
         }
 
         protected void FileSelectedCallback(string path)
@@ -214,8 +209,5 @@ namespace JanitorsCloset
             JanitorsCloset.blackList = FileOperations.Instance.importBlackListData(m_textPath);
             EditorPartList.Instance.Refresh();
         }
-
     }
-
-
 }

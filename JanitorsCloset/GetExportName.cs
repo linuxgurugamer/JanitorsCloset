@@ -47,7 +47,7 @@ namespace JanitorsCloset
         public void Invoke()
         {
             blackListName = "";
-            myWindowId = GetInstanceID(); // Use the Id of this MonoBehaviour to guarantee unique window ID.
+            myWindowId = JanitorsCloset.getNextID(); // GetInstanceID(); // Use the Id of this MonoBehaviour to guarantee unique window ID.
 
             windowRect = new Rect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
             windowRect.center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
@@ -80,6 +80,7 @@ namespace JanitorsCloset
             //	Log.Info("PDPNWindow.OnGUI");
             GUI.skin = HighLogic.Skin;
             windowRect = GUILayout.Window(myWindowId, windowRect, Window, "Enter Export Blacklist Name");
+
         }
 
         bool IsValidFilename(string testName)

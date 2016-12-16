@@ -71,21 +71,25 @@ namespace JanitorsCloset
         }
 
 
+        int windowContentID = 0;
 
         winContent winState = winContent.menu;
         MultiOptionDialog dialog;
         void OnGUI()
         {
+
             if (isEnabled())
             {
                 switch (winState)
                 {
                     case winContent.menu:
+                        if (windowContentID == 0)
+                            windowContentID = JanitorsCloset.getNextID();
                         _windowTitle = string.Format("PermaPrune");
                         var tstyle = new GUIStyle(GUI.skin.window);
 
                         _windowRect.yMax = _windowRect.yMin;
-                        _windowRect = GUILayout.Window(this.GetInstanceID(), _windowRect, WindowContent, _windowTitle, tstyle);
+                        _windowRect = GUILayout.Window(windowContentID, _windowRect, WindowContent, _windowTitle, tstyle);
                         break;
 
                     case winContent.permaprune:

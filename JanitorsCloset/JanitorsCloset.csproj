@@ -61,22 +61,27 @@
       <DependentUpon>AssemblyFileVersion.tt</DependentUpon>
     </Compile>
     <Compile Include="Config.cs" />
+    <Compile Include="Crc32.cs" />
     <Compile Include="EditorIconEvents.cs" />
     <Compile Include="FileBrowser.cs" />
     <Compile Include="FileOperations.cs" />
     <Compile Include="FindTexturePathFromModel.cs" />
     <Compile Include="GetExportName.cs" />
     <Compile Include="GetInternalSpaceConfigUrl .cs" />
+    <Compile Include="HelpPopup.cs" />
     <Compile Include="ImportExport.cs" />
     <Compile Include="ImportExportSelect.cs" />
     <Compile Include="JanitorsClosetLoader.cs" />
+    <Compile Include="JanitorsToolbar.cs" />
     <Compile Include="Log.cs" />
     <Compile Include="ModFilterWindow.cs" />
     <Compile Include="PermaPrune.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="JanitorsCloset.cs" />
+    <Compile Include="SaveLoad.cs" />
     <Compile Include="ShowBlocked.cs" />
     <Compile Include="ShowRenamed.cs" />
+    <Compile Include="ToolbarIconEvents.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="buildRelease.bat" />
