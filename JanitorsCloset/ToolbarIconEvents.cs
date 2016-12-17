@@ -36,6 +36,8 @@ namespace JanitorsCloset
 
             private void Start()
             {
+                if (!JanitorsCloset.NoIncompatabilities)
+                    return;
                 // GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
                 // GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
                 DontDestroyOnLoad(this);
@@ -49,6 +51,9 @@ namespace JanitorsCloset
 
             private void FixedUpdate()
             {
+                if (!JanitorsCloset.NoIncompatabilities)
+                    return;
+
                 if (HighLogic.LoadedScene != lastScene)
                 {
                     //Log.Info("InstallToolIconEvents.FixedUpdate, new scene: " + HighLogic.LoadedScene.ToString());
@@ -318,6 +323,9 @@ namespace JanitorsCloset
 
             private void Start()
             {
+                if (!JanitorsCloset.NoIncompatabilities)
+                    return;
+
                 appButton = GetComponent<ApplicationLauncherButton>();
 
                 if (appButton == null)

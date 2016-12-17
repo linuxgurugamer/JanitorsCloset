@@ -16,7 +16,7 @@ namespace JanitorsCloset
         private string text = string.Empty;
         private bool textInitialized = false;
         public string windowTitle = string.Empty;
-        public Rect windowRect = new Rect(500f, 300f, 600f, 500f);
+        Rect windowRect = new Rect(500f, 300f, 600f, 500f);
         private Rect scrollRect;
         private Rect textRect;
         public bool scrollBar = true;
@@ -30,12 +30,21 @@ namespace JanitorsCloset
 
         private float textAreaHeight;
 
-        public HelpPopup(string _windowTitle, string _text, int layer)
+        void doHelpPopup(string _windowTitle, string _text, int layer)
         {
             text = _text;
             windowTitle = _windowTitle;
             GUIlayer = layer;
            // windowRect = new Rect(500f, 300f, 300f, 500f);
+        }
+        public HelpPopup(string _windowTitle, string _text, int layer)
+        {
+            doHelpPopup(_windowTitle, _text, layer);
+        }
+        public HelpPopup(string _windowTitle, string _text, int layer, Rect winRect)
+        {
+            windowRect = winRect;
+            doHelpPopup(_windowTitle, _text, layer);
         }
 
         public void setText(string _text)

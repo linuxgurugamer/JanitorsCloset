@@ -68,8 +68,6 @@ namespace JanitorsCloset
     partial class JanitorsCloset// : BaseRaycaster
     {
 
-
-
         const string TexturePath = "JanitorsCloset/Textures/";
         const string mainIcon = "AppLauncherIcon";
         string[] folderIcons = new string[]{
@@ -128,7 +126,7 @@ namespace JanitorsCloset
         ShowMenuState showToolbar = ShowMenuState.hidden;
         const int iconSize = 41;
 
-
+        public static bool NoIncompatabilities = true;
 
 
         /// <summary>
@@ -167,9 +165,7 @@ namespace JanitorsCloset
             foreach (AssemblyLoader.LoadedAssembly a in AssemblyLoader.loadedAssemblies)
             {
                 if (modIdent == a.name)
-                {
                     return a.assembly.GetName().Version.ToString();
-                }
 
             }
             return "";
@@ -180,16 +176,19 @@ namespace JanitorsCloset
             ToolbarIconEvents.OnToolbarIconClicked.Add(ToolbarClicked);
             if (primaryAppButton == null)
             {
-                string textureReplacerVersion = hasMod("TextureReplacer");
-#if false
+                string textureReplacerVersion = hasMod("Texture Replacer");
+
                 if (textureReplacerVersion != "")
                 {
-                    if (textureReplacerVersion <= "2.5.3.8")
+                    if (String.Compare(textureReplacerVersion, "2.5.4.0", StringComparison.Ordinal) < 0)
                     {
                         Log.Error("***** Incompatible version of TextureReplacer installed ******");
+                        helpPopup = new HelpPopup("Janitor's Toolbar Warning", "Incompatible version of Texture Replacer is installed (needs to be 2.5.4 or greater)\n\nToolbar functionality disabled!", JanitorsCloset.getNextID());
+                        helpPopup.showMenu = true;
+                        NoIncompatabilities = false;
                     }
                 }
-#endif
+
                 OnGuiAppLauncherReady();
 
                 folderIconHashes = new string[folderIcons.Count()];
@@ -240,6 +239,10 @@ namespace JanitorsCloset
         {
             if (this.primaryAppButton == null)
             {
+                ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
+                if (!NoIncompatabilities)
+                    validScenes = ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB;
+
                 ButtonBarItem buttonBarEntry = new ButtonBarItem();
                 buttonBarEntry.buttonHash = "";
                 buttonBarEntry.buttonBlockList = new Dictionary<string, ButtonSceneBlock>();
@@ -265,8 +268,7 @@ namespace JanitorsCloset
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
-                        ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION,
-
+                        validScenes,
                         GameDatabase.Instance.GetTexture(TexturePath + mainIcon, false) //texture
                     );
                     Log.Info("Added ApplicationLauncher button");
@@ -727,6 +729,30 @@ namespace JanitorsCloset
             }
         }
 
+        int getNextAvailableFolder()
+        {
+            int i = -1;
+            //  buttonBarList[(int)curScene].Add(buttonBarEntry.buttonHash, buttonBarEntry);
+            for (int i2 = 0; i2 < folderIcons.Count(); i2++)
+            {
+                i = -1;
+                foreach (var j in buttonBarList[(int)curScene])
+                {
+                    if (j.Value.folderIcon == i2)
+                    {
+                        i = -2;
+                        break;
+                    }
+                }
+                if (i == -1)
+                {
+                    i = i2;
+                    break;
+                }
+            }
+            return i;
+        }
+
         void HideToolbarButtonMenu(int WindowID)
         {
             showToolbarMenu = ShowMenuState.visible;
@@ -782,38 +808,23 @@ namespace JanitorsCloset
 
 
             }
-            if (GUILayout.Button("Move to new folder"))
+            int i = getNextAvailableFolder();
+            if (i >= 0)
             {
-                int i = -1;
-                //  buttonBarList[(int)curScene].Add(buttonBarEntry.buttonHash, buttonBarEntry);
-                for (int i2 = 0; i2 < folderIcons.Count(); i2++)
+                if (GUILayout.Button("Move to new folder"))
                 {
-                    i = -1;
-                    foreach (var j in buttonBarList[(int)curScene])
-                    {
-                        if (j.Value.folderIcon == i2)
-                        {
-                            i = -2;
-                            break;
-                        }
-                    }
-                    if (i == -1)
-                    {
-                        i = i2;
-                        break;
-                    }
+                    Log.Info("new toolbarbutton index: " + i.ToString());
+                    var newToolbarFolderButton = AddAdditionalToolbarButton(i);
+                    addToButtonBlockList(newToolbarFolderButton.buttonBlockList, ClickedButton);
+
+                    if (ClickedButton.gameObject.activeSelf)
+                        ClickedButton.gameObject.SetActive(false);
+                    if (ClickedButton.enabled)
+                        ClickedButton.onDisable();
+
+                    saveButtonData();
+                    return;
                 }
-                Log.Info("new toolbarbutton index: " + i.ToString());
-                var newToolbarFolderButton = AddAdditionalToolbarButton(i);
-                addToButtonBlockList(newToolbarFolderButton.buttonBlockList, ClickedButton);
-
-                if (ClickedButton.gameObject.activeSelf)
-                    ClickedButton.gameObject.SetActive(false);
-                if (ClickedButton.enabled)
-                    ClickedButton.onDisable();
-
-                saveButtonData();
-                return;
             }
 
             //int cnt = 0;
