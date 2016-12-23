@@ -324,12 +324,15 @@ namespace JanitorsCloset
                             if (showByHover)
                                ToolbarHide();
                             if (showToolbar == ShowMenuState.hidden)
+                            {
+                                lasttimeToolBarRectShown = Time.fixedTime;
                                 ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList, true);
+                            }
                         }, //RUIToggleButton.OnHover
                         () =>
                         {
                             if (showByHover)
-                                ToolbarHide();
+                                ToolbarHide(true);
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
@@ -519,9 +522,13 @@ namespace JanitorsCloset
                 //Log.Info("ToolbarRect:  x: " + toolbarRect.x.ToString() + ", y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
                 if (toolbarRect.Contains(Event.current.mousePosition))
                 {
+                    Log.Info("ToolbarHide, mouse in rect");
                     lasttimeToolBarRectShown = Time.fixedTime;
                     return;
                 }
+
+                Log.Info("Time.fixedTime" + Time.fixedTime.ToString() + "   lasttimeToolBarRectShown: " + lasttimeToolBarRectShown.ToString());
+                Log.Info("Time.fixedTime - lasttimeToolBarRectShown: " + (Time.fixedTime - lasttimeToolBarRectShown).ToString());
                 if (Time.fixedTime - lasttimeToolBarRectShown < 0.5)
                     return;
             }
@@ -594,19 +601,18 @@ namespace JanitorsCloset
             }
             catch (UnityException _e)
             {
+
                 img.filterMode = FilterMode.Point;
                 RenderTexture rt = RenderTexture.GetTemporary(img.width, img.height);
                 rt.filterMode = FilterMode.Point;
+                RenderTexture origrt = RenderTexture.active;
                 RenderTexture.active = rt;
                 Graphics.Blit(img, rt);
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.ReadPixels(new Rect(0, 0, img.width, img.height), 0, 0);
                 Log.Info("GetPixels32 had Exception, img name: " + img.name);
-                if (img.name == "TextureReplacer/Plugins/AppIcon")
-                {
-                    // img2 = GameDatabase.Instance.GetTexture(TexturePath + mainIcon, false);
-                    //return GetButtonTexture(img2);
-                }
+                RenderTexture.ReleaseTemporary(rt);
+                RenderTexture.active = origrt;
             }
             img2.Apply();
             return img2;
@@ -880,10 +886,7 @@ namespace JanitorsCloset
                 gs.margin.bottom = 0;
                 gs.padding = new RectOffset(0, 0, 0, 0);
                 showToolbar = ShowMenuState.visible;
-
                
-
-
                 GUI.Window(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
             }
         }
@@ -901,7 +904,7 @@ namespace JanitorsCloset
         {
             Log.Info("JCtoolBar, button count: " + activeButtonBlockList.Count.ToString());
             ButtonSceneBlock toRevert = null;
-            lasttimeToolBarRectShown = Time.fixedTime;
+           // lasttimeToolBarRectShown = Time.fixedTime;
 
             int cnt = 0;
             foreach (var curButton in activeButtonBlockList)
@@ -916,14 +919,14 @@ namespace JanitorsCloset
                         brect = new Rect(41 * cnt, 0, 41, 41);
 
 
-                    Log.Info("scene: " + HighLogic.LoadedScene.ToString() + "   cnt: " + cnt.ToString());
-                    Log.Info("brect, x,y: " + brect.x.ToString() + ", " + brect.y.ToString() + "   width, height: " + brect.width.ToString() + ", " + brect.height.ToString());
+                    Log.Info("scene: " + HighLogic.LoadedScene.ToString() + "   cnt: " + cnt.ToString() + "   brect, x,y: " + brect.x.ToString() + ", " + brect.y.ToString() + "   width, height: " + brect.width.ToString() + ", " + brect.height.ToString());
 
                     cnt++;
 
                     // In case original button texture is changed
 
-                    if (curButton.Value.origButton.sprite.texture.name != "TextureReplacer/Plugins/AppIcon")
+                   // if (curButton.Value.origButton.sprite.texture.name != "TextureReplacer/Plugins/AppIcon" &&
+                   //     curButton.Value.origButton.sprite.texture.name != "Chatterer/Textures/chatterer_button_idle")
                     {
                         if (curButton.Value.buttonTexture != GetButtonTexture(curButton.Value.origButton.sprite))
                             curButton.Value.buttonTexture = GetButtonTexture(curButton.Value.origButton.sprite);

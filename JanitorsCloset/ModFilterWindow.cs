@@ -120,7 +120,7 @@ namespace JanitorsCloset
         //-------------------------------------------------------------------------------------------------------------------------------------------
         string FindPartMod(AvailablePart part)
         {
-            Debug.Log("ModFilterWindow.FindPartMod");
+            Log.Info("ModFilterWindow.FindPartMod");
             UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ','.'))));
             if (config == null)
                 return "";
@@ -130,13 +130,13 @@ namespace JanitorsCloset
 
         public void Show()
         {
-           Debug.Log("ModFilterWindow.Show()");
+            Log.Info("ModFilterWindow.Show()");
             this.enabled = !enabled;
         }
 
         string UsefulModuleName(string longName)
         {
-            Debug.Log("ModFilterWindow.UsefulModuleName");
+            Log.Info("ModFilterWindow.UsefulModuleName");
 
             if (longName.StartsWith("Module"))
                 return longName.Substring(6);
@@ -148,7 +148,7 @@ namespace JanitorsCloset
 
         void InitialPartsScan(List<AvailablePart> loadedParts)
         {
-            Debug.Log("ModFilterWindow.InitialPartsScan");
+            Log.Info("ModFilterWindow.InitialPartsScan");
 
             int index = 1;
             foreach (var part in loadedParts)
@@ -175,32 +175,35 @@ namespace JanitorsCloset
 
                 // the part's base directory name is used to filter entire mods in and out
                 string partModName = FindPartMod(part);
-                if (!modButtons.ContainsKey(partModName))
+                if (partModName != "")
                 {
-                    Log.Info(string.Format("define new mod filter key {0}", partModName));
-                    modButtons.Add(partModName, new ToggleState() { enabled = true, latched = false });
-                    modHash.Add(partModName, new HashSet<AvailablePart>());
-                }
-                Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
-                modHash[partModName].Add(part);
-
-                // save all the module names that are anywhere in this part
-                if (part.partPrefab == null)
-                    continue;
-                if (part.partPrefab.Modules == null)
-                    continue;
-
-                foreach (PartModule module in part.partPrefab.Modules)
-                {
-                    string fullName = module.moduleName;
-                    if (fullName == null)
+                    if (!modButtons.ContainsKey(partModName))
                     {
-                        Log.Info(string.Format("{0} has a null moduleName, skipping it", part.name));
-                        continue;
+                        Log.Info(string.Format("define new mod filter key {0}", partModName));
+                        modButtons.Add(partModName, new ToggleState() { enabled = true, latched = false });
+                        modHash.Add(partModName, new HashSet<AvailablePart>());
                     }
-                    Log.Info(string.Format("scan part '{0}' module [{2}]'{1}'", part.name, fullName, fullName.Length));
-                    string moduleName = UsefulModuleName(fullName);
-                    
+                    Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
+                    modHash[partModName].Add(part);
+
+                    // save all the module names that are anywhere in this part
+                    if (part.partPrefab == null)
+                        continue;
+                    if (part.partPrefab.Modules == null)
+                        continue;
+
+                    foreach (PartModule module in part.partPrefab.Modules)
+                    {
+                        string fullName = module.moduleName;
+                        if (fullName == null)
+                        {
+                            Log.Info(string.Format("{0} has a null moduleName, skipping it", part.name));
+                            continue;
+                        }
+                        Log.Info(string.Format("scan part '{0}' module [{2}]'{1}'", part.name, fullName, fullName.Length));
+                        string moduleName = UsefulModuleName(fullName);
+
+                    }
                 }
             }
         }

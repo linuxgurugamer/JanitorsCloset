@@ -53,3 +53,9 @@ ChangeLog
 0.2.1
 		Added check for no more available folders
 		Added check for compatible version of Texture Replacer
+
+0.2.2
+		Fixed popup and autohide of toolbar
+		Fixed issue where some buttons were causing odd behaviour
+		Removed log spam from mod filter 
+		Possible fix for blank line in Mod filtyer list
