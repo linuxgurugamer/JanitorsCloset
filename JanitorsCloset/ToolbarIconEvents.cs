@@ -263,22 +263,27 @@ namespace JanitorsCloset
 
                 foreach (var i in JanitorsCloset.allBlockedButtonsList)
                 {
-                    var v = i.Value;
-                    if (v.scene == HighLogic.LoadedScene || v.blocktype == Blocktype.hideEverywhere)
+                    //if (i != null)
                     {
-                        foreach (var a1 in appListMod)
-                            if (JanitorsCloset.buttonId(a1) == v.buttonHash)
+                        var v = i.Value;
+                        if (v != null && ( v.scene == HighLogic.LoadedScene || v.blocktype == Blocktype.hideEverywhere))
+                        {
+                            foreach (var a1 in appListMod)
                             {
-
-                                if (v.origButton.gameObject.activeSelf)
-                                    v.origButton.gameObject.SetActive(false);
-                                if (v.origButton.enabled)
-                                    v.origButton.onDisable();
+                                if (a1 != null)
+                                {
+                                    if (JanitorsCloset.buttonId(a1, false) == v.buttonHash && v.origButton != null && v.origButton.gameObject != null)
+                                    {
+                                        if (v.origButton.gameObject.activeSelf)
+                                            v.origButton.gameObject.SetActive(false);
+                                        if (v.origButton.enabled)
+                                            v.origButton.onDisable();
+                                    }
+                                }
                             }
-
+                        }
                     }
                 }
-
 
                 foreach (var btm in buttonsToModify)
                 {

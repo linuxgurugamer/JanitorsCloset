@@ -135,7 +135,7 @@ namespace JanitorsCloset
         /// </summary>
         /// <param name="btn"></param>
         /// <returns></returns>
-        public static string buttonId(ApplicationLauncherButton btn)
+        public static string buttonId(ApplicationLauncherButton btn, bool addIfNotFound = true)
         {
             string hash;
             var b = buttonDictionary.TryGetValue(btn, out hash);
@@ -149,6 +149,8 @@ namespace JanitorsCloset
                     Log.Info("buttonDictionary hash: " + v.Value);
                 }
 #endif
+                if (!addIfNotFound)
+                    return "NotFound";
                 hash = Button32hash(btn.sprite);
             }
 
@@ -252,19 +254,24 @@ namespace JanitorsCloset
                     this.primaryAppButton = ApplicationLauncher.Instance.AddModApplication(
                         () =>
                         {
+                            hidable = false;
+                            showByHover = false;
                             JanitorsCloset.Instance.ToolbarShow(this.primaryAppButton, "", buttonBarEntry.buttonBlockList);
                         },  //RUIToggleButton.onTrue
                         () =>
                         {
+                            hidable = true;
                             JanitorsCloset.Instance.ToolbarHide();
                         },  //RUIToggleButton.onFalse
                         () =>
                         {
-                            JanitorsCloset.Instance.ShowMenu();
+                            if (showToolbar == ShowMenuState.hidden)
+                                JanitorsCloset.Instance.ShowMenu();
                         }, //RUIToggleButton.OnHover
                         () =>
                         {
-                            JanitorsCloset.Instance.HideMenu();
+                            if (showToolbar == ShowMenuState.hidden)
+                                JanitorsCloset.Instance.HideMenu();
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
@@ -312,12 +319,15 @@ namespace JanitorsCloset
                         () =>
                         {
                             ToolbarHide();
+                            hidable = false;
+                            showByHover = false;
                             ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList);
                         },  //RUIToggleButton.onTrue
                         () =>
                         {
                             //JanitorsCloset.Instance.
                             ToolbarHide();
+                            hidable = true;
                         },  //RUIToggleButton.onFalse
                         () =>
                         {
@@ -328,11 +338,15 @@ namespace JanitorsCloset
                                 lasttimeToolBarRectShown = Time.fixedTime;
                                 ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList, true);
                             }
+                            hidable = false;
                         }, //RUIToggleButton.OnHover
                         () =>
                         {
                             if (showByHover)
-                                ToolbarHide(true);
+                            {
+                               hidable = true;
+                               ToolbarHide(true);
+                            }
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
@@ -378,6 +392,8 @@ namespace JanitorsCloset
         }
 
         bool showByHover = false;
+        bool hidable = true;
+
         public HelpPopup helpPopup = null;
          string[] helpText = {
 "The button for The Janitor’s Closet is now available on all screens.   There are several modes of",
@@ -454,14 +470,7 @@ namespace JanitorsCloset
                 showByHover = false;
                 return;
             }
-#if false
-            if (helpPopup != null && helpPopup.showMenu)
-            {
-                HideMenu();
-                showByHover = false;
-                return;
-            }
-#endif
+
             if (showByHover)
                 HideMenu();
             showByHover = hover;
@@ -518,8 +527,6 @@ namespace JanitorsCloset
         {
             if (hover)
             {
-                //Log.Info("At Hide: X, Y: " + Event.current.mousePosition.x.ToString() + ", " + Event.current.mousePosition.y.ToString());
-                //Log.Info("ToolbarRect:  x: " + toolbarRect.x.ToString() + ", y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
                 if (toolbarRect.Contains(Event.current.mousePosition))
                 {
                     Log.Info("ToolbarHide, mouse in rect");
@@ -527,10 +534,15 @@ namespace JanitorsCloset
                     return;
                 }
 
-                Log.Info("Time.fixedTime" + Time.fixedTime.ToString() + "   lasttimeToolBarRectShown: " + lasttimeToolBarRectShown.ToString());
-                Log.Info("Time.fixedTime - lasttimeToolBarRectShown: " + (Time.fixedTime - lasttimeToolBarRectShown).ToString());
+                //Log.Info("Time.fixedTime" + Time.fixedTime.ToString() + "   lasttimeToolBarRectShown: " + lasttimeToolBarRectShown.ToString());
+                //Log.Info("Time.fixedTime - lasttimeToolBarRectShown: " + (Time.fixedTime - lasttimeToolBarRectShown).ToString());
                 if (Time.fixedTime - lasttimeToolBarRectShown < 0.5)
                     return;
+                if (!hidable)
+                {
+                    lasttimeToolBarRectShown = Time.fixedTime;
+                    return;
+                }
             }
             Log.Info("Hiding");
             showToolbar = ShowMenuState.hidden;
@@ -597,7 +609,7 @@ namespace JanitorsCloset
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.SetPixels32(pixelBlock);
 
-                Log.Info("GetPixels32 loaded image");
+                //Log.Info("GetPixels32 loaded image");
             }
             catch (UnityException _e)
             {
@@ -610,7 +622,7 @@ namespace JanitorsCloset
                 Graphics.Blit(img, rt);
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.ReadPixels(new Rect(0, 0, img.width, img.height), 0, 0);
-                Log.Info("GetPixels32 had Exception, img name: " + img.name);
+                //Log.Info("GetPixels32 had Exception, img name: " + img.name);
                 RenderTexture.ReleaseTemporary(rt);
                 RenderTexture.active = origrt;
             }

@@ -59,3 +59,7 @@ ChangeLog
 		Fixed issue where some buttons were causing odd behaviour
 		Removed log spam from mod filter 
 		Possible fix for blank line in Mod filtyer list
+
+0.2.3
+		Fixed popups going away too fast
+		Fixed hiding
