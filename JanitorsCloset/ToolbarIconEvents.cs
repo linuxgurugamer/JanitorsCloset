@@ -315,15 +315,25 @@ namespace JanitorsCloset
         public class ReplacementToolbarClickHandler : MonoBehaviour
         {
             private ApplicationLauncherButton appButton;
-            // private Button _button;
 
-            public delegate void Del();
-            //Del savedHandler;
+           // delegate Callback Del();
+            public Callback savedHandler = delegate
+            { };
 
             void onRightClick()
             {
                 Log.Info("ToolbarIconEvents.OnRightClick");
-                OnToolbarIconClicked.Fire(appButton);
+                if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary))
+                {
+                    Log.Info("Calling savedHandler");
+                    savedHandler();
+                }
+                else
+                {
+                    Log.Info("Mod key pressed, not calling savedHandler");
+
+                    OnToolbarIconClicked.Fire(appButton);
+                }
             }
 
             private void Start()
@@ -338,15 +348,12 @@ namespace JanitorsCloset
                     Log.Error("Couldn't find an expected component");
                     Destroy(this);
                     return;
-                }                
-
-                Del handler = onRightClick;
+                }
+                
+                savedHandler = appButton.onRightClick;
                 appButton.onRightClick = onRightClick;
 
-
             }
-
-
         }
     }
 }

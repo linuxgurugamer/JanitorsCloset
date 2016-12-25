@@ -485,7 +485,7 @@ namespace JanitorsCloset
 
             Camera camera = UIMasterController.Instance.appCanvas.worldCamera;
             Vector3 screenPos = camera.WorldToScreenPoint(activeButton.transform.position);
-            Debug.Log("target location is " + screenPos.x.ToString() + ", " + screenPos.y.ToString());
+            Log.Info("target location is " + screenPos.x.ToString() + ", " + screenPos.y.ToString());
 
             screenPos.y = Screen.height - screenPos.y;
 
@@ -976,6 +976,7 @@ namespace JanitorsCloset
                             Log.Info("Mouse1");
                             if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
                             {
+#if false
                                 if (curButton.Value.active)
                                 //                                if (curButton.Value.origButton.toggleButton.Value == true)
                                 {
@@ -987,6 +988,7 @@ namespace JanitorsCloset
                                     curButton.Value.origButton.onTrue();
                                     curButton.Value.active = true;
                                 }
+#endif
                                 curButton.Value.origButton.onRightClick();
                             }
                             else

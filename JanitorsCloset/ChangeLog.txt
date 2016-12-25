@@ -63,3 +63,7 @@ ChangeLog
 0.2.3
 		Fixed popups going away too fast
 		Fixed hiding
+
+0.2.4
+		Fixed problem with buttons which had right-clicks responses
+		Removed some more log spam
