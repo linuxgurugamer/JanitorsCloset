@@ -500,30 +500,6 @@ namespace JanitorsCloset
             //ShipConstruct ship; // = new ShipConstruct ();
             for (int i = 0; i < m_filesWithImages.Length; ++i)
             {
-
-#if false
-				//if (i == 0)
-				if (m_files [i].Contains (".craft")) {
-					string f = m_newDirectory + "/" + m_files [i];
-					Log.Info ("f: " + f);
-					if (System.IO.File.Exists (f)) {
-
-						//var configFile = ConfigNode.Load (f);
-
-						ShipConstruct ship = ShipConstruction.LoadShip (f);
-
-						ThumbnailHelper.CaptureThumbnail (ship, 256, "tmp", m_files [i] + i.ToString());
-						//ShipConstruction.CaptureThumbnail (ship, "tmp", m_files [i] + "-2-" + i.ToString ());
-
-
-						foreach (var p in ship.Parts)
-							UnityEngine.Object.Destroy(p.gameObject);
-						
-						//configFile = null;
-						//ship = null;
-					}
-				}
-#endif
                 m_filesWithImages[i] = new GUIContent(m_files[i], FileImage);
             }
             m_nonMatchingFilesWithImages = new GUIContent[m_nonMatchingFiles.Length];

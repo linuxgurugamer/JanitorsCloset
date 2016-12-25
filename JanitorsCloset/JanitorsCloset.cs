@@ -25,6 +25,7 @@ namespace JanitorsCloset
     public class blackListPart
     {
         public string modName;
+        public string title;
         public blackListType where;
         public bool permapruned;
     }
@@ -290,14 +291,16 @@ namespace JanitorsCloset
 
  
 
-        void addToBlackList(string p, blackListType type)
+        void addToBlackList(string p, string title, blackListType type)
         {
             blackListPart blp = new blackListPart();
 
             blp.modName = p;
             blp.where = type;
+            blp.title = title;
             blp.permapruned = false;
 
+            Log.Info("addToBlackList: " + p);
             // If it's already there, then delete it and chagne the "where" to ALL
 
             blackListPart p1;
@@ -318,7 +321,7 @@ namespace JanitorsCloset
             HidePruneMenu();
             FileOperations.Instance.saveBlackListData(blackList);
         }
-
+#if false
         public void clearBlackList()
         {
             blackList.Clear();
@@ -326,6 +329,7 @@ namespace JanitorsCloset
             HidePruneMenu();
             FileOperations.Instance.saveBlackListData(blackList);
         }
+#endif
 
         void PruneMenuContent(int WindowID)
         {
@@ -334,21 +338,22 @@ namespace JanitorsCloset
             {
                 if (!blackList.ContainsKey(_icon.partInfo.name))
                 {
-                    addToBlackList(_icon.partInfo.name, blackListType.ALL);
+                    addToBlackList(_icon.partInfo.name, _icon.partInfo.title, blackListType.ALL);
                 }
             }
             if (EditorDriver.editorFacility == EditorFacility.VAB)
             {
                 if (GUILayout.Button("Block VAB"))
                 {
-                    addToBlackList(_icon.partInfo.name, blackListType.VAB);
+                    Log.Info("Block VAB: " + _icon.partInfo.name);
+                    addToBlackList(_icon.partInfo.name, _icon.partInfo.title, blackListType.VAB);
                 }
             }
             if (EditorDriver.editorFacility == EditorFacility.SPH)
             {
                 if (GUILayout.Button("Block SPH"))
                 {
-                    addToBlackList(_icon.partInfo.name, blackListType.SPH);
+                    addToBlackList(_icon.partInfo.name, _icon.partInfo.title, blackListType.SPH);
                 }
             }
         }
@@ -367,10 +372,12 @@ namespace JanitorsCloset
                 // Dialog to show list of blocked parts, with buttons to temp/perm unblock a part
                 showBlocked.Show();
             }
+#if false
             if (GUILayout.Button("Unblock"))
             {
                 clearBlackList();
             }
+#endif
             if (GUILayout.Button("PermaPrune"))
             {
                 permaPruneWindow.Show();

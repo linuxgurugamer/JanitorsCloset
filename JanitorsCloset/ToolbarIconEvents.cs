@@ -36,7 +36,7 @@ namespace JanitorsCloset
 
             private void Start()
             {
-                if (!JanitorsCloset.NoIncompatabilities)
+                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     return;
                 // GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
                 // GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
@@ -51,7 +51,7 @@ namespace JanitorsCloset
 
             private void FixedUpdate()
             {
-                if (!JanitorsCloset.NoIncompatabilities)
+                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     return;
 
                 if (HighLogic.LoadedScene != lastScene)
@@ -315,8 +315,7 @@ namespace JanitorsCloset
         public class ReplacementToolbarClickHandler : MonoBehaviour
         {
             private ApplicationLauncherButton appButton;
-
-           // delegate Callback Del();
+            
             public Callback savedHandler = delegate
             { };
 
@@ -338,7 +337,7 @@ namespace JanitorsCloset
 
             private void Start()
             {
-                if (!JanitorsCloset.NoIncompatabilities)
+                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     return;
 
                 appButton = GetComponent<ApplicationLauncherButton>();

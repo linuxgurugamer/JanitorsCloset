@@ -242,7 +242,7 @@ namespace JanitorsCloset
             if (this.primaryAppButton == null)
             {
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
-                if (!NoIncompatabilities)
+                if (!NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     validScenes = ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB;
 
                 ButtonBarItem buttonBarEntry = new ButtonBarItem();
@@ -254,9 +254,11 @@ namespace JanitorsCloset
                     this.primaryAppButton = ApplicationLauncher.Instance.AddModApplication(
                         () =>
                         {
+                            showToolbarRightClickToggle();
                             hidable = false;
                             showByHover = false;
                             JanitorsCloset.Instance.ToolbarShow(this.primaryAppButton, "", buttonBarEntry.buttonBlockList);
+                          
                         },  //RUIToggleButton.onTrue
                         () =>
                         {
@@ -265,13 +267,19 @@ namespace JanitorsCloset
                         },  //RUIToggleButton.onFalse
                         () =>
                         {
-                            if (showToolbar == ShowMenuState.hidden)
-                                JanitorsCloset.Instance.ShowMenu();
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().editorMenuPopupEnabled)
+                            {
+                                if (showToolbar == ShowMenuState.hidden)
+                                    JanitorsCloset.Instance.ShowMenu();
+                            }
                         }, //RUIToggleButton.OnHover
                         () =>
                         {
-                            if (showToolbar == ShowMenuState.hidden)
-                                JanitorsCloset.Instance.HideMenu();
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().editorMenuPopupEnabled)
+                            {
+                                if (showToolbar == ShowMenuState.hidden)
+                                    JanitorsCloset.Instance.HideMenu();
+                            }
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
@@ -279,6 +287,7 @@ namespace JanitorsCloset
                         GameDatabase.Instance.GetTexture(TexturePath + mainIcon, false) //texture
                     );
                     Log.Info("Added ApplicationLauncher button");
+                    this.primaryAppButton.onRightClick = showToolbarRightClickToggle;
 
                     buttonBarEntry.button = primaryAppButton;
                     buttonBarList[0].Add(buttonBarEntry.buttonHash, buttonBarEntry);
@@ -288,6 +297,18 @@ namespace JanitorsCloset
                 {
                     Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
                 }
+            }
+        }
+
+        void showToolbarRightClickToggle()
+        {
+            if (!_showMenu)
+            {
+                    JanitorsCloset.Instance.ShowMenu();
+            }
+            else
+            {
+                    JanitorsCloset.Instance.HideMenu();
             }
         }
 
@@ -331,21 +352,27 @@ namespace JanitorsCloset
                         },  //RUIToggleButton.onFalse
                         () =>
                         {
-                            if (showByHover)
-                               ToolbarHide();
-                            if (showToolbar == ShowMenuState.hidden)
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarPopupsEnabled)
                             {
-                                lasttimeToolBarRectShown = Time.fixedTime;
-                                ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList, true);
+                                if (showByHover)
+                                    ToolbarHide();
+                                if (showToolbar == ShowMenuState.hidden)
+                                {
+                                    lasttimeToolBarRectShown = Time.fixedTime;
+                                    ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList, true);
+                                }
+                                hidable = false;
                             }
-                            hidable = false;
                         }, //RUIToggleButton.OnHover
                         () =>
                         {
-                            if (showByHover)
+                            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarPopupsEnabled)
                             {
-                               hidable = true;
-                               ToolbarHide(true);
+                                if (showByHover)
+                                {
+                                    hidable = true;
+                                    ToolbarHide(true);
+                                }
                             }
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
@@ -536,7 +563,7 @@ namespace JanitorsCloset
 
                 //Log.Info("Time.fixedTime" + Time.fixedTime.ToString() + "   lasttimeToolBarRectShown: " + lasttimeToolBarRectShown.ToString());
                 //Log.Info("Time.fixedTime - lasttimeToolBarRectShown: " + (Time.fixedTime - lasttimeToolBarRectShown).ToString());
-                if (Time.fixedTime - lasttimeToolBarRectShown < 0.5)
+                if (Time.fixedTime - lasttimeToolBarRectShown < HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().hoverTimeout)
                     return;
                 if (!hidable)
                 {
@@ -881,7 +908,7 @@ namespace JanitorsCloset
             }
             if (
                 (showToolbarMenu == ShowMenuState.starting) ||
-                (showToolbarMenu == ShowMenuState.visible && (Time.fixedTime - lastTimeShown < 2.5f || toolbarMenuRect.Contains(Event.current.mousePosition)))
+                (showToolbarMenu == ShowMenuState.visible && (Time.fixedTime - lastTimeShown < HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().hoverTimeout || toolbarMenuRect.Contains(Event.current.mousePosition)))
                 )
                 KSPUtil.ClampRectToScreen(GUILayout.Window(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
             else
@@ -975,22 +1002,7 @@ namespace JanitorsCloset
                         {
                             Log.Info("Mouse1");
                             if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
-                            {
-#if false
-                                if (curButton.Value.active)
-                                //                                if (curButton.Value.origButton.toggleButton.Value == true)
-                                {
-                                    curButton.Value.origButton.onFalse();
-                                    curButton.Value.active = false;
-                                }
-                                else
-                                {
-                                    curButton.Value.origButton.onTrue();
-                                    curButton.Value.active = true;
-                                }
-#endif
                                 curButton.Value.origButton.onRightClick();
-                            }
                             else
                                 toRevert = curButton.Value;
                         }

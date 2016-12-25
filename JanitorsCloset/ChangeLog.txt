@@ -67,3 +67,21 @@ ChangeLog
 0.2.4
 		Fixed problem with buttons which had right-clicks responses
 		Removed some more log spam
+
+0.2.5
+		Added Settings page
+			Toolbar Functionality enabled/disabled
+			enable/disable Menu popup on mouseover for toolbar button folders
+			Enable/disable popup menu in Editor
+			Configurable time for hover menus
+
+			If popup menu in editor is disabled, then right-click on button brings it up
+		Removed the Unblock All from the popup menu
+		Added new button to Show Blocked window, "Unblock All"
+		Fixed bug on "Show Unblock" window, where individual item could not be unblocked
+		Changed display from internal partname to the parttitle on the "Show Blocked" window
+
+	TODO
+	Blacklist filter
+		Hide all parts which match filter.  Not Permaprune
+

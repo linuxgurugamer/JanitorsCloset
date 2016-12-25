@@ -69,9 +69,15 @@ namespace JanitorsCloset
                 var tstyle = new GUIStyle(GUI.skin.window);
                 
                 _windowRect = GUILayout.Window(blockedWindowContentID, _windowRect, BlockedWindowContent, "Show Blocked Parts", tstyle);
-
-
             }
+        }
+
+
+        public void clearBlackList()
+        {
+            JanitorsCloset.blackList.Clear();
+            EditorPartList.Instance.Refresh();
+            FileOperations.Instance.saveBlackListData(JanitorsCloset.blackList);
         }
 
         Vector2 sitesScrollPosition;
@@ -85,7 +91,9 @@ namespace JanitorsCloset
 
         void BlockedWindowContent(int windowID)
         {
-            string unblock = "";  
+            string unblock = "";
+            blackListPart unblockBlp = null;
+             
             GUILayout.BeginVertical();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Mod Name", GUILayout.Width(MODNAMEWIDTH)))
@@ -95,9 +103,9 @@ namespace JanitorsCloset
                 else
                     sortAscending = !sortAscending;
                 if (sortAscending)
-                    blpList.Sort((x, y) => x.modName.CompareTo(y.modName));
+                    blpList.Sort((x, y) => x.title.CompareTo(y.title));
                 else
-                    blpList.Sort((y, x) => x.modName.CompareTo(y.modName));
+                    blpList.Sort((y, x) => x.title.CompareTo(y.title));
                 lastSort = "modname";
             }
             if (GUILayout.Button("Where", GUILayout.Width(WHEREWIDTH)))
@@ -112,6 +120,11 @@ namespace JanitorsCloset
                     blpList.Sort((y, x) => x.where.CompareTo(y.where));
                 lastSort = "where";
             }
+            if (GUILayout.Button("Unblock All"))
+            {
+                clearBlackList();
+                CloseWindow();
+            }
             GUILayout.EndHorizontal();
             sitesScrollPosition = GUILayout.BeginScrollView(sitesScrollPosition, false, true, GUILayout.Height(HEIGHT - LINEHEIGHT));
 
@@ -119,16 +132,20 @@ namespace JanitorsCloset
            foreach (var blp in blpList)
             {
                 GUILayout.BeginHorizontal();
-                GUILayout.Label(blp.modName, GUILayout.Width(MODNAMEWIDTH));
+                GUILayout.Label(blp.title, GUILayout.Width(MODNAMEWIDTH));
                 GUILayout.Label(blp.where.ToString(), GUILayout.Width(WHEREWIDTH));
                 
                 GUILayout.FlexibleSpace();
-                AvailablePart p = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
+                //AvailablePart p = PartLoader.Instance.parts.Find(item => item.name.Equals(blp.modName));
+                AvailablePart p = PartLoader.getPartInfoByName(blp.modName);
+  
+               
                 if (p == null || blp.permapruned)
                     GUI.enabled = false;
                 if (GUILayout.Button("Unblock", GUILayout.ExpandWidth(true)))
                 {
                     unblock = blp.modName;
+                    unblockBlp = blp;
                 }
                 GUI.enabled = true;
                 GUILayout.EndHorizontal();
@@ -151,6 +168,7 @@ namespace JanitorsCloset
             {
                 JanitorsCloset.blackList.Remove(unblock);
                 EditorPartList.Instance.Refresh();
+                blpList.Remove(unblockBlp);
 
             }
 
