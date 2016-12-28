@@ -81,6 +81,11 @@ ChangeLog
 		Fixed bug on "Show Unblock" window, where individual item could not be unblocked
 		Changed display from internal partname to the parttitle on the "Show Blocked" window
 
+0.2.6
+		Added 10 buttons to Modfilter window, to save settings
+		fixed issue where if editor was exited with the mod filter window showing, it stayed showing
+		Fixed issue where if menu popup was showing when exiting editor, it would be reshown when reentering
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

@@ -152,6 +152,8 @@ namespace JanitorsCloset
             else
             {
                 EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
+                modFilterWindow.Hide();
+                _showMenu = false;
             }
         }
 

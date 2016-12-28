@@ -8,6 +8,8 @@ using System.Text;
 using UnityEngine;
 using KSP.UI;
 using KSP.UI.Screens;
+using KSP.IO;
+
 
 namespace JanitorsCloset
 {
@@ -18,6 +20,8 @@ namespace JanitorsCloset
         public class PartInfo
         {
             string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
+
+            
             //-------------------------------------------------------------------------------------------------------------------------------
             public PartInfo(AvailablePart part)
             {
@@ -26,17 +30,18 @@ namespace JanitorsCloset
                 {
                     Log.Info(string.Format("{0} has no partPrefab", part.name));
                     partSize = "No Size";
-                } else
+                }
+                else
                 // if the attach points have different sizes then it's probably an adapter and we'll place
                 // it half way between the smallest and largest attach point of the things it connects
                 if (part.partPrefab.attachNodes == null)
                 {
-                    Log.Info( string.Format("{0} has no attach points", part.name));
+                    Log.Info(string.Format("{0} has no attach points", part.name));
                     partSize = "No Size";
                 }
                 else if (part.partPrefab.attachNodes.Count < 0)
                 {
-                    Log.Info( string.Format("{0} has negative attach points", part.name));
+                    Log.Info(string.Format("{0} has negative attach points", part.name));
                     partSize = "No Size";
                 }
                 else if (part.partPrefab.attachNodes.Count < 1)
@@ -58,7 +63,7 @@ namespace JanitorsCloset
                         Log.Error(string.Format("{0} has attach point with size < 0", part.name));
                         small = 0;
                     }
-                    
+
                     Log.Info("small: " + small.ToString() + "   large: " + large.ToString());
                     sortSize = (small + large) / 2;
                     int smallSize = (int)small;
@@ -116,12 +121,13 @@ namespace JanitorsCloset
         private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
         private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
 
+        int selectedFilterList = 1;
 
         //-------------------------------------------------------------------------------------------------------------------------------------------
         string FindPartMod(AvailablePart part)
         {
             Log.Info("ModFilterWindow.FindPartMod");
-            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ','.'))));
+            UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));
             if (config == null)
                 return "";
             var id = new UrlDir.UrlIdentifier(config.url);
@@ -132,6 +138,11 @@ namespace JanitorsCloset
         {
             Log.Info("ModFilterWindow.Show()");
             this.enabled = !enabled;
+        }
+        public void Hide()
+        {
+            Log.Info("ModFilterWindow.Hide()");
+            this.enabled = false;
         }
 
         string UsefulModuleName(string longName)
@@ -165,11 +176,11 @@ namespace JanitorsCloset
                 // add the size to the list of all sizes known if it's the first time we've seen this part size
                 if (!sizeButtons.ContainsKey(partInfo.partSize))
                 {
-                    Log.Info( string.Format("define new size filter key {0}", partInfo.partSize));
+                    Log.Info(string.Format("define new size filter key {0}", partInfo.partSize));
                     sizeButtons.Add(partInfo.partSize, new ToggleState() { enabled = true, latched = false });
                     sizeHash.Add(partInfo.partSize, new HashSet<AvailablePart>());
                 }
-                Log.Info( string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
+                Log.Info(string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
                 sizeHash[partInfo.partSize].Add(part);
 
 
@@ -220,8 +231,8 @@ namespace JanitorsCloset
             float height = lineHeight * buttons;
 
             Rect answer = new Rect(300, 200, 350, height);
-           
-            //Log(LogLevel.INFO, string.Format("defining window {4} at ({0},{1},{2},{3})", answer.xMin, answer.yMin, answer.width, answer.height, name));
+
+            //Log.Info( string.Format("defining window {4} at ({0},{1},{2},{3})", answer.xMin, answer.yMin, answer.width, answer.height, name));
             return answer;
         }
 
@@ -281,6 +292,7 @@ namespace JanitorsCloset
         {
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
+            LoadValuesFromConfig(selectedFilterList);
             DefineFilters();
             modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
 
@@ -288,7 +300,7 @@ namespace JanitorsCloset
             enabled = false;
         }
         void InitStyles()
-        { 
+        {
             styleButton = new GUIStyle(GUI.skin.button);
             styleButton.name = "ButtonGeneral";
             styleButton.normal.background = GUI.skin.button.normal.background;
@@ -306,7 +318,7 @@ namespace JanitorsCloset
             styleButtonSettings.normal.textColor = new Color32(177, 193, 205, 255);
             styleButtonSettings.fontStyle = FontStyle.Bold;
         }
-       
+
 
 
         string _windowTitle = string.Empty;
@@ -347,6 +359,27 @@ namespace JanitorsCloset
 
             return String.Compare(left, right);
         }
+
+        void resetAll()
+        {
+            var names = new List<string>(modButtons.Keys);
+            Dictionary<string, ToggleState>  states = modButtons;
+            foreach (string name in names)
+            {
+                ToggleState state = states[name];
+                state.enabled = true;
+                states[name] = state;
+            }
+            names = new List<string>(sizeButtons.Keys);
+            states = sizeButtons;
+            foreach (string name in names)
+            {
+                ToggleState state = states[name];
+                state.enabled = true;
+                states[name] = state;
+            }
+        }
+
         Vector2 scrollPosition;
         string[] filterType = new string[] { "Mod Name", "Module Size" };
         int selFilter = 0;
@@ -369,7 +402,7 @@ namespace JanitorsCloset
             {
                 case 0:
                     states = modButtons;
-                    
+
                     break;
                 case 1:
                     states = sizeButtons;
@@ -377,7 +410,7 @@ namespace JanitorsCloset
             }
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
-            if (GUILayout.Button( "Show All"))
+            if (GUILayout.Button("Show All"))
             {
                 var names = new List<string>(states.Keys);
                 foreach (string name in names)
@@ -386,9 +419,9 @@ namespace JanitorsCloset
                     state.enabled = true;
                     states[name] = state;
                 }
-               // SaveConfig();
+                SaveConfig(selectedFilterList);
             }
-            if (GUILayout.Button( "Hide All"))
+            if (GUILayout.Button("Hide All"))
             {
                 var names = new List<string>(states.Keys);
                 foreach (string name in names)
@@ -397,10 +430,12 @@ namespace JanitorsCloset
                     state.enabled = false;
                     states[name] = state;
                 }
-              //  SaveConfig();
+                SaveConfig(selectedFilterList);
             }
             if (GUILayout.Button("Reset All"))
             {
+                resetAll();
+#if false
                 var names = new List<string>(modButtons.Keys);
                 states = modButtons;
                 foreach (string name in names)
@@ -417,10 +452,30 @@ namespace JanitorsCloset
                     state.enabled = true;
                     states[name] = state;
                 }
-                //  SaveConfig();
+#endif
+                SaveConfig(selectedFilterList);
             }
             GUILayout.EndHorizontal();
-            
+
+            // saved filter lists
+            var oldColor = GUI.backgroundColor;
+            GUILayout.BeginHorizontal();
+            for (int cnt = 1; cnt <= 10; cnt++)
+            {
+                if (selectedFilterList == cnt)
+                {
+                    GUI.backgroundColor = Color.green;
+                }
+                if (GUILayout.Button(cnt.ToString(), GUILayout.Width(30)))
+                {
+                    selectedFilterList = cnt;
+                    LoadValuesFromConfig(selectedFilterList);
+
+                }
+                GUI.backgroundColor = oldColor;
+            }
+            GUILayout.EndHorizontal();
+
             var keys = new List<string>(states.Keys);
 
             keys.Sort(CompareEntries);
@@ -434,10 +489,7 @@ namespace JanitorsCloset
                 GUILayout.BeginHorizontal();
                 state.enabled = GUILayout.Toggle(state.enabled, name);
                 GUILayout.EndHorizontal();
-               // if (before != state.enabled)
-               //     SaveConfig();
                
-
                 if (state.enabled && !state.latched)
                 {
                     state.latched = true;
@@ -450,10 +502,118 @@ namespace JanitorsCloset
                     states[name] = state;
                     EditorPartList.Instance.Refresh();
                 }
+                if (before != state.enabled)
+                    SaveConfig(selectedFilterList);
             }
             GUILayout.EndScrollView();
             GUI.DragWindow();
         }
+
+        private static readonly String CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
+        private static String JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
+        private static String JC_NODE = "JanitorsCloset";
+        private static String JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter";
+
+        private static ConfigNode configFile = null;
+        private static ConfigNode configFileNode = null;
+        private static ConfigNode configSectionNode = null;
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+        void SaveConfig(int selectedCfg) //string sorting = null)
+        {
+            Log.Info("SaveConfig");
+            //PluginConfiguration config = PluginConfiguration.CreateForType<ModFilterWindow>();
+
+            Log.Info("SaveConfig");
+            configFile = new ConfigNode();
+            configFileNode = new ConfigNode();
+
+
+#if false
+            if (sorting != null)
+                config.SetValue("Sorting", sorting);
+#endif
+            configSectionNode = new ConfigNode("MOD");
+            int i = 0;
+            foreach (var mod in modButtons)
+            {
+                if (!mod.Value.enabled)
+                    //config.SetValue("Mod" + (i++).ToString(), mod.Key);
+                    configSectionNode.SetValue("Mod" + (i++).ToString(), mod.Key,true);
+            }
+            configFileNode.SetNode("MOD", configSectionNode, true);
+
+            configSectionNode = new ConfigNode("SIZE");
+            i = 0;
+            foreach (var size in sizeButtons)
+            {
+                if (!size.Value.enabled)
+                    //config.SetValue("Size" + (i++).ToString(), size.Key);
+                    configSectionNode.SetValue("Size" + (i++).ToString(), size.Key,true);
+            }
+            configFileNode.SetNode("SIZE", configSectionNode, true);
+#if false
+            i = 0;
+            foreach (var module in moduleButtons)
+            {
+                if (module.Value.enabled)
+                    config.SetValue("Module" + (i++).ToString(), module.Key);
+            }
+#endif
+            //config.save();
+            configFile.SetNode(JC_NODE, configFileNode, true);
+            //configFile.AddNode (KRASH_CUSTOM_NODE, configFileNode);
+            configFile.Save(JC_CFG_FILE + selectedCfg.ToString()+".cfg");
+        }
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+        private void LoadValuesFromConfig(int selectedCfg)
+        {
+            Log.Info("LoadValuesFromConfig");
+            resetAll();
+            if (System.IO.File.Exists(JC_CFG_FILE + selectedCfg.ToString() + ".cfg"))
+            {
+                configFile = ConfigNode.Load(JC_CFG_FILE + selectedCfg.ToString() + ".cfg");
+                configFileNode = configFile.GetNode(JC_NODE);
+                if (configFileNode != null)
+                {
+                    //PluginConfiguration config = PluginConfiguration.CreateForType<ModFilterWindow>();
+                    //config.load();
+                    //LoadConfigSection(config, "Module", moduleButtons);
+                    configSectionNode = configFileNode.GetNode("MOD");
+                    if (configSectionNode != null)
+                    LoadConfigSection(configSectionNode, "Mod", modButtons);
+                    configSectionNode = configFileNode.GetNode("SIZE");
+                    LoadConfigSection(configSectionNode, "Size", sizeButtons);
+
+#if false
+            string sorting = config.GetValue<string>("Sorting");
+            if (!String.IsNullOrEmpty(sorting))
+                RunSort(sorting);
+#endif
+                }
+            }
+        }
+
+        //-------------------------------------------------------------------------------------------------------------------------------------------
+        void LoadConfigSection(ConfigNode cfgNode, string prefix, Dictionary<string, ToggleState> buttons)
+        {
+            Log.Info(string.Format("LoadConfigSection {0}", prefix));
+            for (int i = 0; ; i++)
+            {
+                string sectionName = prefix + i.ToString();
+                string entryName = cfgNode.GetValue(sectionName); //  config.GetValue<string>(sectionName);
+                if (String.IsNullOrEmpty(entryName))
+                    return;
+                if (!buttons.ContainsKey(entryName))
+                    continue;
+
+                ToggleState s = buttons[entryName];
+                s.enabled = false;
+                buttons[entryName] = s;
+            }
+        }
+
+
 
     }
 }
