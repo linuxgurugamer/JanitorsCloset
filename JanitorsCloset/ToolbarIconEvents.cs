@@ -49,6 +49,7 @@ namespace JanitorsCloset
             }
 
 
+            bool mapIsEnabled = false;
             private void FixedUpdate()
             {
                 if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
@@ -61,8 +62,21 @@ namespace JanitorsCloset
                     lastTime = Time.fixedTime;
                     appListModCount = 0;
                     appListModHiddenCount = 0;
+                    if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                        mapIsEnabled = MapView.MapIsEnabled;
                 }
                 bool doit = false;
+                if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                {
+                    if (mapIsEnabled != MapView.MapIsEnabled)
+                    {
+                        lastTime = Time.fixedTime;
+                        appListModCount = 0;
+                        appListModHiddenCount = 0;
+                        mapIsEnabled = MapView.MapIsEnabled;
+                    }
+
+                }
                 // Keep checking for 10 seconds to be sure all mods have finished installinng their buttons
                 if (Time.fixedTime - lastTime < 10)
                 {

@@ -86,6 +86,9 @@ ChangeLog
 		fixed issue where if editor was exited with the mod filter window showing, it stayed showing
 		Fixed issue where if menu popup was showing when exiting editor, it would be reshown when reentering
 
+0.2.7
+		Fixed issue with Mapview not showing button folders
+		Fixed issue with mapview and mods which show their buttons on the mapview only (ie:  PreciseManeuver)
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

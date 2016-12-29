@@ -152,7 +152,8 @@ namespace JanitorsCloset
             else
             {
                 EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
-                modFilterWindow.Hide();
+                if (modFilterWindow != null)
+                    modFilterWindow.Hide();
                 _showMenu = false;
             }
         }
@@ -276,6 +277,7 @@ namespace JanitorsCloset
         //Unity GUI loop
         void OnGUI()
         {
+            //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
             if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
                 _pruneMenuRect = KSPUtil.ClampRectToScreen(GUILayout.Window(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
             else

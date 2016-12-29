@@ -239,6 +239,7 @@ namespace JanitorsCloset
         /// </summary>
         private void OnGuiAppLauncherReady()
         {
+            
             if (this.primaryAppButton == null)
             {
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
@@ -329,7 +330,7 @@ namespace JanitorsCloset
                 case GameScenes.EDITOR:
                     appScene = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH; break;
                 case GameScenes.FLIGHT:
-                    appScene = ApplicationLauncher.AppScenes.FLIGHT; break;
+                    appScene = ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW; break;
                 case GameScenes.TRACKSTATION:
                     appScene = ApplicationLauncher.AppScenes.TRACKSTATION; break;
             }
@@ -410,9 +411,10 @@ namespace JanitorsCloset
             int cnt = 0;
             foreach (var b in buttonBlockList)
             {
-                if (b.Value.blocktype == Blocktype.moveToFolder ||
-                    b.Value.blocktype == Blocktype.hideEverywhere ||
-                    b.Value.scene == HighLogic.LoadedScene)
+                if ((b.Value.blocktype == Blocktype.moveToFolder ||
+                    b.Value.blocktype == Blocktype.hideEverywhere) &&
+                    ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
+                    //b.Value.scene == HighLogic.LoadedScene)
                     cnt++;
             }
             return cnt;
@@ -766,7 +768,7 @@ namespace JanitorsCloset
                     case GameScenes.EDITOR:
                         return ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
                     case GameScenes.FLIGHT:
-                        return ApplicationLauncher.AppScenes.FLIGHT;
+                        return ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW;
                     case GameScenes.TRACKSTATION:
                         return ApplicationLauncher.AppScenes.TRACKSTATION;
                 }
@@ -948,8 +950,10 @@ namespace JanitorsCloset
             int cnt = 0;
             foreach (var curButton in activeButtonBlockList)
             {
+
                 if (curButton.Value.blocktype == Blocktype.hideEverywhere ||
-                    curButton.Value.scene == HighLogic.LoadedScene)
+                    ApplicationLauncher.Instance.ShouldBeVisible(curButton.Value.origButton))
+                    //curButton.Value.scene == HighLogic.LoadedScene)
                 {
                     Rect brect;
                     if (!ApplicationLauncher.Instance.IsPositionedAtTop)
@@ -976,6 +980,7 @@ namespace JanitorsCloset
 
                         if (Input.GetMouseButtonUp(0))
                         {
+#if false
                             Log.Info("Mouse0");
                             Log.Info("curButton.Value.origButton.toggleButton.CurState: " + curButton.Value.origButton.toggleButton.CurrentState.ToString());
                             Log.Info("curButton.Value.origButton.toggleButton.CurState: " + curButton.Value.origButton.IsEnabled.ToString());
@@ -983,7 +988,7 @@ namespace JanitorsCloset
 
                             Log.Info("curButton.Value.origButton.toggleButton.Value: " + curButton.Value.origButton.toggleButton.Value.ToString());
                             Log.Info("curButton.Value.origButton.toggleButton.StartState: " + curButton.Value.origButton.toggleButton.StartState.ToString());
-
+#endif
                             if (curButton.Value.active)
                             //                            if (curButton.Value.origButton.toggleButton.Value == true)
                             {
