@@ -27,7 +27,7 @@
 	int i2 = 0;
 	string s;
 
-	string projectPath = Host.ResolveAssemblyReference("$(ProjectDir)");
+	var projectPath = Host.ResolveAssemblyReference("$(ProjectDir)");
     //string versionfile =  projectPath + @"GameData\TimeControl\TimeControl.version";
 	//string versionfile =  projectPath + @"JanitorsCloset.version";
 	string versionfile =   @"D:\Users\jbb\github\JanitorsCloset\JanitorsCloset\JanitorsCloset.version";
@@ -95,4 +95,4 @@
  using System.Reflection;
 
  [assembly: AssemblyVersion("<#= major #>.<#= minor #>.<#= patch #>.<#= build #>")]
- [assembly: AssemblyDescription(" <#= projectPath #>")]
+ [assembly: AssemblyDescription("<#= projectPath #>")]

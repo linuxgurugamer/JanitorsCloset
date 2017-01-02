@@ -89,6 +89,10 @@ ChangeLog
 0.2.7
 		Fixed issue with Mapview not showing button folders
 		Fixed issue with mapview and mods which show their buttons on the mapview only (ie:  PreciseManeuver)
+
+0.2.8
+		Fixed issue with part names having spaces, weren't being allowed to be seen 
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

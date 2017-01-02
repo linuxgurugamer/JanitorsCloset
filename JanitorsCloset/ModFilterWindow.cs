@@ -126,10 +126,14 @@ namespace JanitorsCloset
         //-------------------------------------------------------------------------------------------------------------------------------------------
         string FindPartMod(AvailablePart part)
         {
-            Log.Info("ModFilterWindow.FindPartMod");
+            Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
             UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));
             if (config == null)
-                return "";
+            {
+                config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name)));
+                if (config == null)
+                    return "";
+            }
             var id = new UrlDir.UrlIdentifier(config.url);
             return id[0];
         }
@@ -186,6 +190,7 @@ namespace JanitorsCloset
 
                 // the part's base directory name is used to filter entire mods in and out
                 string partModName = FindPartMod(part);
+                Log.Info("partModName: " + partModName);
                 if (partModName != "")
                 {
                     if (!modButtons.ContainsKey(partModName))
