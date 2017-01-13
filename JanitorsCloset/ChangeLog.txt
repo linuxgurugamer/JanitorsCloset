@@ -93,6 +93,9 @@ ChangeLog
 0.2.8
 		Fixed issue with part names having spaces, weren't being allowed to be seen 
 
+0.2.9
+		Fixed problem with hidden buttons not being displayed
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

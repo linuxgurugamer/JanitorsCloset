@@ -259,7 +259,9 @@ namespace JanitorsCloset
                             hidable = false;
                             showByHover = false;
                             JanitorsCloset.Instance.ToolbarShow(this.primaryAppButton, "", buttonBarEntry.buttonBlockList);
-                          
+
+                           // JanitorsCloset.Instance.ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList);
+
                         },  //RUIToggleButton.onTrue
                         () =>
                         {
@@ -411,8 +413,8 @@ namespace JanitorsCloset
             int cnt = 0;
             foreach (var b in buttonBlockList)
             {
-                if ((b.Value.blocktype == Blocktype.moveToFolder ||
-                    b.Value.blocktype == Blocktype.hideEverywhere) &&
+                if ( (b.Value.blocktype == Blocktype.moveToFolder /* ||
+                    b.Value.blocktype == Blocktype.hideEverywhere*/ ) &&
                     ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
                     //b.Value.scene == HighLogic.LoadedScene)
                     cnt++;
@@ -499,7 +501,7 @@ namespace JanitorsCloset
                 showByHover = false;
                 return;
             }
-
+            
             if (showByHover)
                 HideMenu();
             showByHover = hover;
@@ -521,8 +523,12 @@ namespace JanitorsCloset
 
             showToolbar = ShowMenuState.starting;
 
-            int btnCnt = DisabledButtonsInToolbarCnt(buttonBlockList);
-
+            int btnCnt;
+            if (this.primaryAppButton != button)
+                btnCnt = DisabledButtonsInToolbarCnt(buttonBlockList);
+            else
+                btnCnt = buttonBlockList.Count();
+            Log.Info("btnCnt: " + btnCnt);
             if (ApplicationLauncher.Instance.IsPositionedAtTop)
             {
                 // Assume vertical menu, therefor this needs to be horizontal
@@ -927,7 +933,8 @@ namespace JanitorsCloset
                 gs.margin.bottom = 0;
                 gs.padding = new RectOffset(0, 0, 0, 0);
                 showToolbar = ShowMenuState.visible;
-               
+
+                Log.Info("toolbarRect.x: " + toolbarRect.x.ToString() + " y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
                 GUI.Window(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
             }
         }
