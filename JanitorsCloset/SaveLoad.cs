@@ -67,7 +67,7 @@ namespace JanitorsCloset
 
             for (int i = 0; i < (int)GameScenes.PSYSTEM; i++)
             {
-               
+
                 var bbl = buttonBarList[i];
                 if (bbl.Count > 0)
                 {
@@ -84,7 +84,7 @@ namespace JanitorsCloset
                             button.AddValue("scene", bBlockl.Value.scene.ToString());
                             button.AddValue("blocktype", bBlockl.Value.blocktype.ToString());
                             button.AddValue("buttonHash", bBlockl.Value.buttonHash);
-                           
+
 
                             configButtonNode.AddNode(bBlockl.Value.buttonHash, button);
 
@@ -92,11 +92,36 @@ namespace JanitorsCloset
                         configBarNode.AddNode(bbi.Value.buttonHash, configButtonNode);
                     }
                     janitorsClosetNode.AddNode(((GameScenes)i).ToString(), configBarNode);
-                   
+
                 }
 
             }
-            
+
+#if false
+
+        public class ButtonSceneBlock
+        {
+            public GameScenes scene;
+            public Blocktype blocktype;
+            public string buttonHash;
+            public ApplicationLauncherButton origButton;
+            public bool active;
+            public Texture buttonTexture;
+        }
+#endif
+            configBarNode = new ConfigNode("Hidden");
+            foreach (var bbi in primaryButtonBlockList)
+            {
+                configButtonNode = new ConfigNode(bbi.Value.buttonHash); // button on main toolbar
+                configButtonNode.AddValue("buttonHash", bbi.Value.buttonHash);
+                configButtonNode.AddValue("scene", bbi.Value.scene);
+                configButtonNode.AddValue("blocktype", bbi.Value.blocktype);
+                configButtonNode.AddValue("buttonHash", bbi.Value.buttonHash);
+                configButtonNode.AddValue("active", bbi.Value.active);
+                configBarNode.AddNode(bbi.Value.buttonHash, configButtonNode);
+            }
+            janitorsClosetNode.AddNode("Hidden", configBarNode);
+
             configFile = new ConfigNode();
             configFile.AddNode(JC_NODE, janitorsClosetNode);
             configFile.Save(JC_CFG_FILE);
@@ -105,7 +130,9 @@ namespace JanitorsCloset
         void loadButtonData()
         {
             loadedCfgs = new Dictionary<string, Cfg>();
+            loadedHiddenCfgs = new Dictionary<string, ButtonSceneBlock>();
             Cfg cfg;
+
             if (File.Exists(JC_CFG_FILE))
             {
                 configFile = ConfigNode.Load(JC_CFG_FILE);
@@ -114,18 +141,21 @@ namespace JanitorsCloset
                 {
                     foreach (var n in janitorsClosetNode.GetNodes())  // n = scenes
                     {
-                        foreach (var n1 in n.GetNodes()) 
+                        Log.Info("Node.name: " + n.name);
+                        if (n.name != "Hidden")
                         {
-                            foreach (var n2 in n1.GetNodes())
+                            foreach (var n1 in n.GetNodes())
                             {
-                                cfg = new Cfg();
-                                cfg.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
-                                cfg.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
-                                cfg.buttonHash = n2.GetValue("buttonHash");
-                                cfg.folderIcon = System.Int32.Parse(n1.GetValue("folderIcon"));
+                                foreach (var n2 in n1.GetNodes())
+                                {
+                                    cfg = new Cfg();
+                                    cfg.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
+                                    cfg.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
+                                    cfg.buttonHash = n2.GetValue("buttonHash");
+                                    cfg.folderIcon = System.Int32.Parse(n1.GetValue("folderIcon"));
 
-                                cfg.toolbarButtonHash = n1.name;
-                                cfg.toolbarButtonIndex = cfg.folderIcon;
+                                    cfg.toolbarButtonHash = n1.name;
+                                    cfg.toolbarButtonIndex = cfg.folderIcon;
 #if false
                                 for (int i = 0; i < folderIcons.Count(); i++)
                                 {
@@ -137,8 +167,44 @@ namespace JanitorsCloset
                                     }
                                 }
 #endif
-                                loadedCfgs.Add(cfg.scene + cfg.buttonHash, cfg);
+                                    loadedCfgs.Add(cfg.scene + cfg.buttonHash, cfg);
+                                }
                             }
+                        }
+                        else
+                        {
+                            // Hidden
+
+#if false
+
+        public class ButtonSceneBlock
+        {
+            public GameScenes scene;
+            public Blocktype blocktype;
+            public string buttonHash;
+            public ApplicationLauncherButton origButton;
+            public bool active;
+            public Texture buttonTexture;
+        }
+#endif
+                            ButtonSceneBlock bsb;
+                            Log.Info("Loading Hidden");
+                            
+                            foreach (var n2 in n.GetNodes())
+                            {
+                                bsb = new ButtonSceneBlock();
+                                bsb.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
+                                bsb.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
+                                bsb.buttonHash = n2.GetValue("buttonHash");
+                                bsb.active = Boolean.Parse(n2.GetValue("active"));
+                                Log.Info("hidden button: " + bsb.buttonHash + "  blocktype: " + bsb.blocktype.ToString());
+                                if (bsb.blocktype == Blocktype.hideHere)
+                                    loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
+                                else
+                                    loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                            }
+                            
+
                         }
                     }
                 }

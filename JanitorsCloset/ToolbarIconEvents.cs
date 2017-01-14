@@ -207,10 +207,10 @@ namespace JanitorsCloset
                 Log.Info("CheckToolbarbuttons, LoadedScene: " + HighLogic.LoadedScene.ToString());
                 Log.Info("buttons in scene: " + JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene].Count.ToString());
 
-               // foreach (var bbl in JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene])
-               //     Log.Info("bbl hashkey: " + bbl.Key);
+                // foreach (var bbl in JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene])
+                //     Log.Info("bbl hashkey: " + bbl.Key);
 
-                ButtonSceneBlock s;
+                ButtonSceneBlock s, s1, s2;
 
                 bool done = true;
                 do
@@ -226,7 +226,7 @@ namespace JanitorsCloset
 
                             if (JanitorsCloset.loadedCfgs.TryGetValue(HighLogic.LoadedScene.ToString() + JanitorsCloset.Button32hash(a1.sprite), out cfg))
                             {
-                                Log.Info("button found in save file");
+                                Log.Info("button to folder found in save file");
                                 ButtonSceneBlock bsb = new ButtonSceneBlock();
                                 bsb.scene = cfg.scene;
                                 bsb.blocktype = cfg.blocktype;
@@ -234,7 +234,7 @@ namespace JanitorsCloset
                                 bsb.origButton = a1;
 
                                 bsb.buttonTexture = JanitorsCloset.GetButtonTexture(a1.sprite);
-                               // var zz = JanitorsCloset.buttonBarList[(int)bsb.scene];
+                                // var zz = JanitorsCloset.buttonBarList[(int)bsb.scene];
                                 ButtonBarItem bbi;
                                 if (!JanitorsCloset.buttonBarList[(int)bsb.scene].TryGetValue(cfg.toolbarButtonHash, out bbi))
                                 {
@@ -248,6 +248,27 @@ namespace JanitorsCloset
                                 done = false;
                                 break;
                             }
+                            if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString(), out s))
+                            {
+                                Log.Info("Button hidden, scene found in save file: " + JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
+                                s.origButton = a1;
+                                s.buttonTexture = JanitorsCloset.GetButtonTexture(a1.sprite);
+                                JanitorsCloset.primaryButtonBlockList.Add(s.buttonHash + s.scene.ToString(), s);
+                                JanitorsCloset.allBlockedButtonsList.Add(s.buttonHash + s.scene.ToString(), s);
+                                JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
+                            }
+                            else
+                            if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Button32hash(a1.sprite), out s))
+                            {
+                                Log.Info("Button hidden, everywhere found in save file: " + JanitorsCloset.Button32hash(a1.sprite));
+
+                                s.origButton = a1;
+                                s.buttonTexture = JanitorsCloset.GetButtonTexture(a1.sprite);
+
+                                JanitorsCloset.primaryButtonBlockList.Add(s.buttonHash, s);
+                                JanitorsCloset.allBlockedButtonsList.Add(s.buttonHash, s);
+                                JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Button32hash(a1.sprite));
+                            }
                         }
                     }
                 } while (!done);
@@ -258,7 +279,10 @@ namespace JanitorsCloset
                     {
                         if (a1 != bbl.Value.button)
                         {
-                            if (bbl.Value.buttonBlockList.TryGetValue(JanitorsCloset.buttonId(a1), out s))
+                            if (bbl.Value.buttonBlockList.TryGetValue(JanitorsCloset.buttonId(a1), out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.buttonId(a1), out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.buttonId(a1) + HighLogic.LoadedScene.ToString(), out s)
+                                )
                             {
                                 s.origButton = a1;
                                 buttonsToModify.Add(s);
@@ -270,6 +294,10 @@ namespace JanitorsCloset
                                 {
                                     Log.Info("buttonBlockList hash: " + v.Value.buttonHash);
                                 }
+                                foreach (var v in JanitorsCloset.primaryButtonBlockList)
+                                {
+                                    Log.Info("primaryButtonBlockList hash: " + v.Value.buttonHash);
+                                }
                             }
                         }
                     }
@@ -280,7 +308,7 @@ namespace JanitorsCloset
                     //if (i != null)
                     {
                         var v = i.Value;
-                        if (v != null && ( v.scene == HighLogic.LoadedScene || v.blocktype == Blocktype.hideEverywhere))
+                        if (v != null && (v.scene == HighLogic.LoadedScene || v.blocktype == Blocktype.hideEverywhere))
                         {
                             foreach (var a1 in appListMod)
                             {
@@ -329,7 +357,7 @@ namespace JanitorsCloset
         public class ReplacementToolbarClickHandler : MonoBehaviour
         {
             private ApplicationLauncherButton appButton;
-            
+
             public Callback savedHandler = delegate
             { };
 
@@ -362,7 +390,7 @@ namespace JanitorsCloset
                     Destroy(this);
                     return;
                 }
-                
+
                 savedHandler = appButton.onRightClick;
                 appButton.onRightClick = onRightClick;
 

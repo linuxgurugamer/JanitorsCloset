@@ -86,6 +86,7 @@ namespace JanitorsCloset
         string[] folderIconHashes;
 
         public static Dictionary<string, Cfg> loadedCfgs;
+        public static Dictionary<string, ButtonSceneBlock> loadedHiddenCfgs;
 
         /// <summary>
         /// A dictionary of all buttons.  When a new button is found on the toolbar, the dictionary is searched, first
@@ -107,7 +108,7 @@ namespace JanitorsCloset
         public static Dictionary<string, ButtonBarItem>[] buttonBarList;
 
         private ApplicationLauncherButton primaryAppButton = null;
-        Dictionary<string, ButtonSceneBlock> primaryButtonBlockList;
+        public static Dictionary<string, ButtonSceneBlock> primaryButtonBlockList;
 
         Dictionary<string, ButtonSceneBlock> activeButtonBlockList;
         ApplicationLauncherButton activeButton;
@@ -408,16 +409,22 @@ namespace JanitorsCloset
         /// </summary>
         /// <param name="buttonBlockList"></param>
         /// <returns></returns>
-        int DisabledButtonsInToolbarCnt(Dictionary<string, ButtonSceneBlock> buttonBlockList)
+        int DisabledButtonsInToolbarCnt(Dictionary<string, ButtonSceneBlock> buttonBlockList, bool hide)
         {
             int cnt = 0;
             foreach (var b in buttonBlockList)
             {
-                if ( (b.Value.blocktype == Blocktype.moveToFolder /* ||
-                    b.Value.blocktype == Blocktype.hideEverywhere*/ ) &&
-                    ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
-                    //b.Value.scene == HighLogic.LoadedScene)
-                    cnt++;
+                if (ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
+                {
+                    if ((!hide && b.Value.blocktype == Blocktype.moveToFolder) ||
+                        (hide && b.Value.blocktype != Blocktype.moveToFolder))
+                        cnt++;
+                }
+//                if ( (b.Value.blocktype == Blocktype.moveToFolder /* ||
+//                    b.Value.blocktype == Blocktype.hideEverywhere*/ ) &&
+//                    ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
+//                    //b.Value.scene == HighLogic.LoadedScene)
+//                    cnt++;
             }
             return cnt;
         }
@@ -524,10 +531,10 @@ namespace JanitorsCloset
             showToolbar = ShowMenuState.starting;
 
             int btnCnt;
-            if (this.primaryAppButton != button)
-                btnCnt = DisabledButtonsInToolbarCnt(buttonBlockList);
-            else
-                btnCnt = buttonBlockList.Count();
+            //if (this.primaryAppButton != button)
+                btnCnt = DisabledButtonsInToolbarCnt(buttonBlockList, this.primaryAppButton == button);
+            //else
+                //btnCnt = buttonBlockList.Count();
             Log.Info("btnCnt: " + btnCnt);
             if (ApplicationLauncher.Instance.IsPositionedAtTop)
             {
@@ -828,11 +835,12 @@ namespace JanitorsCloset
                 if (ClickedButton.enabled)
                     ClickedButton.onDisable();
 
-                primaryButtonBlockList.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
                 Log.Info("primaryButtonBlockList count: " + primaryButtonBlockList.Count.ToString());
 
+                primaryButtonBlockList.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);               
                 allBlockedButtonsList.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
                 showToolbarMenu = ShowMenuState.hiding;
+                saveButtonData();
                 return;
 
             }
