@@ -80,6 +80,7 @@ namespace JanitorsCloset
 
             private void CallbackLevelWasLoaded(GameScenes scene)
             {
+                lasttimecheck = 0;
                 Log.Info("CallbackLevelWasLoaded");
                
             }
@@ -292,6 +293,7 @@ namespace JanitorsCloset
                         }
                     }
                 } while (!done);
+
                 //  for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
                 //      updateButtonDictionary(JanitorsCloset.hiddenButtonBlockList[i].Select(i1 => i1.Value.origButton).ToList());
 
@@ -324,7 +326,7 @@ namespace JanitorsCloset
                         }
                     }
                 }
-                bool found;
+
                 int[] il = { 0, (int)JanitorsCloset.appScene };
                 foreach (int i in il)
                 {

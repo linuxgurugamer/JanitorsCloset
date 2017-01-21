@@ -337,19 +337,6 @@ namespace JanitorsCloset
             if (scene != GameScenes.LOADING)
                 curScene = scene;
 
-#if false
-            switch (HighLogic.LoadedScene)
-            {
-                case GameScenes.SPACECENTER:
-                    appScene = ApplicationLauncher.AppScenes.SPACECENTER; break;
-                case GameScenes.EDITOR:
-                    appScene = ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH; break;
-                case GameScenes.FLIGHT:
-                    appScene = ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW; break;
-                case GameScenes.TRACKSTATION:
-                    appScene = ApplicationLauncher.AppScenes.TRACKSTATION; break;
-            }
-#endif
             try
             {
                 buttonBarEntry.button = ApplicationLauncher.Instance.AddModApplication(
@@ -393,7 +380,7 @@ namespace JanitorsCloset
                         }, //RUIToggleButton.onHoverOut
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
-                        appScene,
+                        GameSceneToLoadedScene(),
 
                         GameDatabase.Instance.GetTexture(TexturePath + "38_" + folderIcons[folderNum], false) //texture
                     );
@@ -804,7 +791,7 @@ namespace JanitorsCloset
             showToolbarMenu = ShowMenuState.hiding;
         }
 
-        public static ApplicationLauncher.AppScenes LoadedSceneToGameScene(GameScenes scene = GameScenes.LOADING)
+        public static ApplicationLauncher.AppScenes GameSceneToLoadedScene(GameScenes scene = GameScenes.LOADING)
         {
             if (scene == GameScenes.LOADING)
                 scene = HighLogic.LoadedScene;
@@ -822,11 +809,11 @@ namespace JanitorsCloset
             return ApplicationLauncher.AppScenes.NEVER;
         }
 
-        public static ApplicationLauncher.AppScenes appScene
+        public static GameScenes appScene
         {
             get
             {
-                return LoadedSceneToGameScene(HighLogic.LoadedScene);
+                return HighLogic.LoadedScene;
             }
         }
 
