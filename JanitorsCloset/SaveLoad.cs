@@ -110,16 +110,20 @@ namespace JanitorsCloset
         }
 #endif
             configBarNode = new ConfigNode("Hidden");
-            foreach (var bbi in primaryButtonBlockList)
+            for (int i = 0;  i < (int)GameScenes.PSYSTEM + 1; i++)
             {
-                configButtonNode = new ConfigNode(bbi.Value.buttonHash); // button on main toolbar
-                configButtonNode.AddValue("buttonHash", bbi.Value.buttonHash);
-                configButtonNode.AddValue("scene", bbi.Value.scene);
-                configButtonNode.AddValue("blocktype", bbi.Value.blocktype);
-                configButtonNode.AddValue("buttonHash", bbi.Value.buttonHash);
-                configButtonNode.AddValue("active", bbi.Value.active);
-                configBarNode.AddNode(bbi.Value.buttonHash, configButtonNode);
+               
+                foreach (var bbi in JanitorsCloset.hiddenButtonBlockList[i])
+                {
+                    configButtonNode = new ConfigNode(bbi.Value.buttonHash); // button on main toolbar
+                    configButtonNode.AddValue("buttonHash", bbi.Value.buttonHash);
+                    configButtonNode.AddValue("scene", bbi.Value.scene);
+                    configButtonNode.AddValue("blocktype", bbi.Value.blocktype);
+                    configButtonNode.AddValue("active", bbi.Value.active);
+                    configBarNode.AddNode(bbi.Value.buttonHash, configButtonNode);
+                }
             }
+
             janitorsClosetNode.AddNode("Hidden", configBarNode);
 
             configFile = new ConfigNode();

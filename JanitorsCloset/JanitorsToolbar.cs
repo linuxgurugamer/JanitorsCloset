@@ -102,15 +102,18 @@ namespace JanitorsCloset
         /// </summary>
         public static Dictionary<string, ButtonSceneBlock> allBlockedButtonsList = new Dictionary<string, ButtonSceneBlock>();
 
+
         /// <summary>
         /// buttonBarList is an array of buttonbars, one for each game scene (allocated in the StartToolbar() below)
         /// </summary>
         public static Dictionary<string, ButtonBarItem>[] buttonBarList;
 
-        private ApplicationLauncherButton primaryAppButton = null;
+        public ApplicationLauncherButton primaryAppButton = null;
         public static Dictionary<string, ButtonSceneBlock> primaryButtonBlockList;
+        public static Dictionary<string, ButtonSceneBlock>[] hiddenButtonBlockList;
 
-        Dictionary<string, ButtonSceneBlock> activeButtonBlockList;
+
+        public Dictionary<string, ButtonSceneBlock> activeButtonBlockList;
         ApplicationLauncherButton activeButton;
         string activeButtonHash;
 
@@ -143,8 +146,8 @@ namespace JanitorsCloset
 
             if (!b)
             {
-                Log.Error("Button not found in dictionary");
-#if false
+                Log.Error("Button not found in dictionary, hash: " + Button32hash(btn.sprite));
+#if true
                 foreach (var v in buttonDictionary)
                 {
                     Log.Info("buttonDictionary hash: " + v.Value);
@@ -209,8 +212,13 @@ namespace JanitorsCloset
 
                 loadButtonData();
                 buttonBarList = new Dictionary<string, ButtonBarItem>[(int)GameScenes.PSYSTEM + 1];
+                hiddenButtonBlockList = new Dictionary<string, ButtonSceneBlock>[(int)GameScenes.PSYSTEM + 1];
                 for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
+                {
                     buttonBarList[i] = new Dictionary<string, ButtonBarItem>();
+                    hiddenButtonBlockList[i] = new Dictionary<string, ButtonSceneBlock>();
+                    
+                }
 
             }
             GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
@@ -259,7 +267,10 @@ namespace JanitorsCloset
                             showToolbarRightClickToggle();
                             hidable = false;
                             showByHover = false;
-                            JanitorsCloset.Instance.ToolbarShow(this.primaryAppButton, "", buttonBarEntry.buttonBlockList);
+                            Dictionary<string, ButtonSceneBlock>  hiddenButtons = new Dictionary<string, ButtonSceneBlock>(JanitorsCloset.hiddenButtonBlockList[0]);
+                            hiddenButtons = hiddenButtons.Concat(JanitorsCloset.hiddenButtonBlockList[(int)JanitorsCloset.appScene]).ToDictionary(x => x.Key, x => x.Value);
+
+                            ToolbarShow(this.primaryAppButton, "", hiddenButtons);
 
                            // JanitorsCloset.Instance.ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList);
 
@@ -321,11 +332,12 @@ namespace JanitorsCloset
             ButtonBarItem buttonBarEntry = new ButtonBarItem();
 
             buttonBarEntry.buttonBlockList = new Dictionary<string, ButtonSceneBlock>();
-            ApplicationLauncher.AppScenes appScene = 0;
+         //   ApplicationLauncher.AppScenes appScene = 0;
             GameScenes curScene = HighLogic.LoadedScene;
             if (scene != GameScenes.LOADING)
                 curScene = scene;
 
+#if false
             switch (HighLogic.LoadedScene)
             {
                 case GameScenes.SPACECENTER:
@@ -337,7 +349,7 @@ namespace JanitorsCloset
                 case GameScenes.TRACKSTATION:
                     appScene = ApplicationLauncher.AppScenes.TRACKSTATION; break;
             }
-
+#endif
             try
             {
                 buttonBarEntry.button = ApplicationLauncher.Instance.AddModApplication(
@@ -751,7 +763,7 @@ namespace JanitorsCloset
             InputLockManager.RemoveControlLock("Pruner");
         }
 
-        void addToButtonBlockList(Dictionary<string, ButtonSceneBlock> buttonBlockList, ApplicationLauncherButton selectedButton)
+        public void addToButtonBlockList(Dictionary<string, ButtonSceneBlock> buttonBlockList, ApplicationLauncherButton selectedButton)
         {
             ButtonSceneBlock bsb = new ButtonSceneBlock();
             bsb.buttonHash = buttonId(selectedButton);
@@ -770,22 +782,51 @@ namespace JanitorsCloset
             showToolbarMenu = ShowMenuState.hiding;
         }
 
+        public void addToHiddenBlockList(ApplicationLauncherButton selectedButton, Blocktype btype)
+        {
+            // hiddenButtonBlockList
+
+            ButtonSceneBlock bsb = new ButtonSceneBlock();
+            bsb.buttonHash = buttonId(selectedButton);
+            Log.Info("hash of hidden button: " + bsb.buttonHash);
+            bsb.scene = HighLogic.LoadedScene;
+            bsb.blocktype = btype;
+            bsb.origButton = selectedButton;
+            
+            bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
+            if (btype == Blocktype.hideHere)
+                hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
+            else
+                hiddenButtonBlockList[0].Add(bsb.buttonHash, bsb);
+
+            allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+
+            showToolbarMenu = ShowMenuState.hiding;
+        }
+
+        public static ApplicationLauncher.AppScenes LoadedSceneToGameScene(GameScenes scene = GameScenes.LOADING)
+        {
+            if (scene == GameScenes.LOADING)
+                scene = HighLogic.LoadedScene;
+            switch (HighLogic.LoadedScene)
+            {
+                case GameScenes.SPACECENTER:
+                    return ApplicationLauncher.AppScenes.SPACECENTER;
+                case GameScenes.EDITOR:
+                    return ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
+                case GameScenes.FLIGHT:
+                    return ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW;
+                case GameScenes.TRACKSTATION:
+                    return ApplicationLauncher.AppScenes.TRACKSTATION;
+            }
+            return ApplicationLauncher.AppScenes.NEVER;
+        }
+
         public static ApplicationLauncher.AppScenes appScene
         {
             get
             {
-                switch (HighLogic.LoadedScene)
-                {
-                    case GameScenes.SPACECENTER:
-                        return ApplicationLauncher.AppScenes.SPACECENTER;
-                    case GameScenes.EDITOR:
-                        return ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH;
-                    case GameScenes.FLIGHT:
-                        return ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW;
-                    case GameScenes.TRACKSTATION:
-                        return ApplicationLauncher.AppScenes.TRACKSTATION;
-                }
-                return ApplicationLauncher.AppScenes.NEVER;
+                return LoadedSceneToGameScene(HighLogic.LoadedScene);
             }
         }
 
@@ -822,6 +863,17 @@ namespace JanitorsCloset
             //             return;
             if (GUILayout.Button("Hide here"))
             {
+                addToHiddenBlockList(ClickedButton, Blocktype.hideHere);
+
+                if (ClickedButton.gameObject.activeSelf)
+                    ClickedButton.gameObject.SetActive(false);
+                if (ClickedButton.enabled)
+                    ClickedButton.onDisable();
+
+
+                saveButtonData();
+                return;
+#if false
                 ButtonSceneBlock bsb = new ButtonSceneBlock();
 
                 bsb.buttonHash = buttonId(ClickedButton);
@@ -842,32 +894,20 @@ namespace JanitorsCloset
                 showToolbarMenu = ShowMenuState.hiding;
                 saveButtonData();
                 return;
-
+#endif
             }
             if (GUILayout.Button("Hide everywhere"))
             {
-
-                ButtonSceneBlock bsb = new ButtonSceneBlock();
-
-                bsb.buttonHash = buttonId(ClickedButton);
-                bsb.scene = HighLogic.LoadedScene;
-                bsb.blocktype = Blocktype.hideEverywhere;
-                bsb.origButton = ClickedButton;
-                bsb.buttonTexture = GetButtonTexture(ClickedButton.sprite);
-
+                addToHiddenBlockList(ClickedButton, Blocktype.hideEverywhere);                
 
                 if (ClickedButton.gameObject.activeSelf)
                     ClickedButton.gameObject.SetActive(false);
                 if (ClickedButton.enabled)
                     ClickedButton.onDisable();
 
-                primaryButtonBlockList.Add(bsb.buttonHash, bsb);
-                allBlockedButtonsList.Add(bsb.buttonHash, bsb);
-                showToolbarMenu = ShowMenuState.hiding;
+              
                 saveButtonData();
                 return;
-
-
             }
             int i = getNextAvailableFolder();
             if (i >= 0)

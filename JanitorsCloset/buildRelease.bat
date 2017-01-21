@@ -21,9 +21,29 @@ if "%_test%" == ":" (
 set HOMEDRIVE=%HOMEDIR:~0,2%
 )
 
+set VERSIONFILE=JanitorsCloset.version
+rem The following requires the JQ program, available here: https://stedolan.github.io/jq/download/
+c:\local\jq-win64  ".VERSION.MAJOR" %VERSIONFILE% >tmpfile
+set /P major=<tmpfile
+
+c:\local\jq-win64  ".VERSION.MINOR"  %VERSIONFILE% >tmpfile
+set /P minor=<tmpfile
+
+c:\local\jq-win64  ".VERSION.PATCH"  %VERSIONFILE% >tmpfile
+set /P patch=<tmpfile
+
+c:\local\jq-win64  ".VERSION.BUILD"  %VERSIONFILE% >tmpfile
+set /P build=<tmpfile
+del tmpfile
+set VERSION=%major%.%minor%.%patch%
+if "%build%" NEQ "0"  set VERSION=%VERSION%.%build%
 
 type JanitorsCloset.version
-set /p VERSION= "Enter version: "
+
+echo Version:  %VERSION%
+
+rem set /p newVERSION= "Enter version: "
+rem if "%newVERSION" NEQ "" set VERSION=%newVERSION%
 
 mkdir %HOMEDIR%\install\GameData\JanitorsCloset
 mkdir %HOMEDIR%\install\GameData\JanitorsCloset\Textures
@@ -36,7 +56,7 @@ copy ..\GameData\JanitorsCloset\Textures\* %HOMEDIR%\install\GameData\JanitorsCl
 copy /Y "License.txt" "%HOMEDIR%\install\GameData\JanitorsCloset"
 copy /Y "..\README.md" "%HOMEDIR%\install\GameData\JanitorsCloset"
 copy /Y MiniAVC.dll  "%HOMEDIR%\install\GameData\JanitorsCloset"
-
+copy /Y JanitorsCloset.version  "%HOMEDIR%\install\GameData\JanitorsCloset"
 
 %HOMEDRIVE%
 cd %HOMEDIR%\install
