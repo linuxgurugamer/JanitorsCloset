@@ -40,7 +40,9 @@ namespace JanitorsCloset
         [GameParameters.CustomParameterUI("Enable hover on icons in the JC toolbar")]
         public bool enabeHoverOnToolbarIcons = true;
 
-        
+        [GameParameters.CustomParameterUI("Debug mode (spams the log file")]
+        public bool debug = false;
+
 #if false
         public override void SetDifficultyPreset(GameParameters.Preset preset)
         {

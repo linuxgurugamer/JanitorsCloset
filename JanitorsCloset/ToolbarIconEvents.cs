@@ -68,14 +68,16 @@ namespace JanitorsCloset
                 Log.Info("CallbackGameSceneLoadRequested");
                 JanitorsCloset.Instance.ToolbarHide(false);
                 JanitorsCloset.Instance.primaryAppButton.SetFalse();
-                foreach (var b in JanitorsCloset.Instance.activeButtonBlockList)
+                if (JanitorsCloset.Instance.activeButtonBlockList != null)
                 {
-                    Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
-                    b.Value.origButton.onFalse();
-                    b.Value.active = false;
+                    foreach (var b in JanitorsCloset.Instance.activeButtonBlockList)
+                    {
+                        Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
+                        b.Value.origButton.onFalse();
+                        b.Value.active = false;
 
+                    }
                 }
-
             }
 
             private void CallbackLevelWasLoaded(GameScenes scene)

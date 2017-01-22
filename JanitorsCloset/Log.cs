@@ -69,19 +69,26 @@ namespace JanitorsCloset
             }
         }
 
-        [ConditionalAttribute("DEBUG")]
+//        [ConditionalAttribute("DEBUG")]
         public static void Info(String msg)
         {
-            if (IsLogable(LEVEL.INFO))
+#if DEBUG
+            if (IsLogable(LEVEL.INFO) ))
+#else
+            if (IsLogable(LEVEL.INFO) && (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().debug))
+#endif
             {
                 UnityEngine.Debug.Log(PREFIX + msg);
             }
         }
 
-        [ConditionalAttribute("DEBUG")]
+//        [ConditionalAttribute("DEBUG")]
         public static void Test(String msg)
         {
             //if (IsLogable(LEVEL.INFO))
+#if !DEBUG
+            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().debug)
+#endif
             {
                 UnityEngine.Debug.LogWarning(PREFIX + "TEST:" + msg);
             }

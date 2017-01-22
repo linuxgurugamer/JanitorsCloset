@@ -58,7 +58,7 @@ namespace JanitorsCloset
         private static string getBlackListDataFile()
         {
             // This happens when this is called before a save is loaded or created
-            if (HighLogic.SaveFolder == "DestructiblesTest")
+            if (HighLogic.SaveFolder == "DestructiblesTest" || HighLogic.SaveFolder == "")
                 return "";
             return (ROOT_PATH + "saves/" + HighLogic.SaveFolder + "/" + TT_DATAFILE);
         }
@@ -66,7 +66,7 @@ namespace JanitorsCloset
         public Dictionary<string, blackListPart> loadData(string fname)
         {
             Dictionary<string, blackListPart> blpList = new Dictionary<string, blackListPart>();
-            if (File.Exists(fname))
+            if (fname != "" && File.Exists(fname))
             {
                 using (StreamReader f = File.OpenText(fname))
                 {
@@ -121,12 +121,15 @@ namespace JanitorsCloset
         public void saveData(string fname, Dictionary<string, blackListPart> blpList)
         {
             Log.Info("saveData: " + fname);
-
+            if (fname == "" || blpList == null)
+                return;
+            
             using (StreamWriter f = File.CreateText(fname))
             {
-
                 foreach (var blp in blpList)
                 {
+                    Log.Info("blp.Key: " + blp.Key);
+                    Log.Info("modName: " + blp.Value.modName + ",  where: " + blp.Value.where);
                     f.WriteLine(blp.Value.modName + "," + blp.Value.where);
                 }
             }

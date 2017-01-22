@@ -113,6 +113,12 @@ ChangeLog
 		Fixed display of hidden buttons 
 		Updated some of the logging to only log errors in the release version
 
+0.2.11.4
+		Fixed nullref when no toolbars defined, this happend when changing scenes
+		Added checks for empty file name when saving & loading blacklist file
+		Added Debug mode (spams log file)
+
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
