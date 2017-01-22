@@ -102,7 +102,7 @@ namespace JanitorsCloset
                     if (HighLogic.LoadedScene == GameScenes.FLIGHT)
                         mapIsEnabled = MapView.MapIsEnabled;
                 }
-                bool doit = false;
+                
                 if (HighLogic.LoadedScene == GameScenes.FLIGHT)
                 {
                     if (mapIsEnabled != MapView.MapIsEnabled)
@@ -242,7 +242,7 @@ namespace JanitorsCloset
                 // foreach (var bbl in JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene])
                 //     Log.Info("bbl hashkey: " + bbl.Key);
 
-                ButtonSceneBlock s, s1, s2;
+                ButtonSceneBlock s;
 
                 bool done = true;
                 do

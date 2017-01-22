@@ -201,26 +201,7 @@ namespace JanitorsCloset
 
             _mouseController = HighLogic.fetch.GetComponent<Mouse>();
         }
-#if false
-        private void getPartData()
-        {
-            List<string> modNames = new List<string>();
 
-            for (int i = 0; i < PartLoader.Instance.parts.Count; i++)
-            {
-                AvailablePart p = PartLoader.Instance.parts[i];
-                if (p == null)
-                    continue;
-                //Log.InfoWarning("Part Manufacturer: " + p.manufacturer);
-                //Log.InfoWarning("Part name: " + p.name);
-                //Log.InfoWarning("Part config: " + p.partConfig);
-
-                //Log.InfoWarning("Part path: " + p.partPath);
-                //Log.InfoWarning("Part url: " + p.partUrl);
-                //Log.InfoWarning("Part title: " + p.title);
-            }
-        }
-#endif
 
         enum ShowMenuState { hidden, starting, visible, hiding };
         ShowMenuState _showPruneMenu = ShowMenuState.hidden;

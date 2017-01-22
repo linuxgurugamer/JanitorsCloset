@@ -240,16 +240,6 @@ namespace JanitorsCloset
                     continue;
                 prunedParts.Add(blp.modName);
 
-                //Log.InfoWarning("Part config: " + p.partConfig);
-
-                //Log.Info("Part configFileFullName: " + p.configFileFullName);
-
-                //Log.Info("Part partPath: " + p.partPath);
-                //Log.Info("Part partUrl: " + p.partUrl);
-                //Log.Info("Part resourceInfo: " + p);
-                //Log.Info("Part title: " + p.title);
-                //Log.Info("Part internalConfig: " + p.internalConfig);
-
                 // Rename cfg file
 
                 string s1 = part.configFileFullName.Substring(part.configFileFullName.IndexOf("GameData") + 9);
@@ -445,11 +435,7 @@ namespace JanitorsCloset
                                 }
                                 if (!b)
                                 {
-
-                                    //Log.Info("config.name: " + config.name);
-                                    //Log.Info("config.url: " + config.url);
                                     string s = config.url.Substring(0, config.url.LastIndexOf("/")) + ".cfg";
-                                    //Log.Info("Relative path: " + s);
                                     RenameFile(s, part.name);
                                 }
                             }
@@ -463,9 +449,6 @@ namespace JanitorsCloset
                             bool b1 = GetInternalSpaceConfigUrl.FindInternalSpaceConfigNode(config.name, out cfgNode);
                             if (b1)
                             {
-                                //Log.Info("Internal Space Config found: " + config.url);
-                                //Log.Info("cfgNode name: " + cfgNode.name );
-                                //Log.Info(cfgNode.ToString());
                                 nodes = cfgNode.GetNodes("MODEL");
                                 if (nodes != null)
                                     foreach (ConfigNode modelNode in nodes)

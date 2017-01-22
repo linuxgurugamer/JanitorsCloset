@@ -146,7 +146,7 @@ namespace JanitorsCloset
 
             if (!b)
             {
-                Log.Error("Button not found in dictionary, hash: " + Button32hash(btn.sprite));
+                Log.Info("Button not found in dictionary, hash: " + Button32hash(btn.sprite));
 #if true
                 foreach (var v in buttonDictionary)
                 {
@@ -530,10 +530,10 @@ namespace JanitorsCloset
             showToolbar = ShowMenuState.starting;
 
             int btnCnt;
-            //if (this.primaryAppButton != button)
+            if (this.primaryAppButton != button)
                 btnCnt = DisabledButtonsInToolbarCnt(buttonBlockList, this.primaryAppButton == button);
-            //else
-                //btnCnt = buttonBlockList.Count();
+            else
+                btnCnt = buttonBlockList.Count();
             Log.Info("btnCnt: " + btnCnt);
             if (ApplicationLauncher.Instance.IsPositionedAtTop)
             {
@@ -1022,15 +1022,6 @@ namespace JanitorsCloset
 
                         if (Input.GetMouseButtonUp(0))
                         {
-#if false
-                            Log.Info("Mouse0");
-                            Log.Info("curButton.Value.origButton.toggleButton.CurState: " + curButton.Value.origButton.toggleButton.CurrentState.ToString());
-                            Log.Info("curButton.Value.origButton.toggleButton.CurState: " + curButton.Value.origButton.IsEnabled.ToString());
-                            Log.Info("curButton.Value.origButton.toggleButton.CurState: " + curButton.Value.origButton.toggleButton.CurrentState.ToString());
-
-                            Log.Info("curButton.Value.origButton.toggleButton.Value: " + curButton.Value.origButton.toggleButton.Value.ToString());
-                            Log.Info("curButton.Value.origButton.toggleButton.StartState: " + curButton.Value.origButton.toggleButton.StartState.ToString());
-#endif
                             if (curButton.Value.active)
                             //                            if (curButton.Value.origButton.toggleButton.Value == true)
                             {

@@ -456,31 +456,6 @@ namespace JanitorsCloset
         }
 
         /// <summary>
-        /// //////////////////////
-        /// 
-        /// </summary>
-#if false
-		void getModList()
-		{
-			String[] mods = new string[0];
-
-			Log.Info ("getModList");
-
-			System.Reflection.Assembly[] assemblies = System.AppDomain.CurrentDomain.GetAssemblies();
-			foreach (var A in assemblies)
-			{
-				//Log.Info("FullName: " + A.GetName());
-				string a = A.GetName().ToString();
-				int idx = a.IndexOf (",");
-				a = a.Substring (0, idx);
-
-				Log.Info ("a.name: " + a);
-
-			}
-				
-		}
-#endif
-        /// <summary>
         /// ////////////////////
         /// </summary>
         protected void BuildContent()

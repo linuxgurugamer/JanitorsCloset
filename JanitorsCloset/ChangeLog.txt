@@ -99,7 +99,23 @@ ChangeLog
 0.2.10
 		Added saving of hidden buttons
 
+0.2.11
+		Rewrote internal button handling code to solve problems with some mods (specifically USI-LS)
+
+0.2.11.1
+		corrected using the correct value for the gamescene
+		Fixed delay after changing scenes
+
+0.2.11.2
+		Added option to disable hover on icons in JC toolbar
+
+0.2.11.3
+		Fixed display of hidden buttons 
+		Updated some of the logging to only log errors in the release version
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
 
+	Button Exclusion list
+		cfg file pointing to icon files which should be ignored (ie: not allow to be moved or hidden)
