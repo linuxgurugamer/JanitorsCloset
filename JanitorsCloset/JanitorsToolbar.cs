@@ -1054,24 +1054,26 @@ namespace JanitorsCloset
                                 toRevert = curButton.Value;
                         }
                     }
-                    if (IsMouseOver(brect))
+                    if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().enabeHoverOnToolbarIcons)
                     {
-                        if (!mouseOver)
+                        if (IsMouseOver(brect))
                         {
-                            mouseOver = true;
-                            curButton.Value.origButton.onHover();
-                            curButton.Value.origButton.onHoverBtn(curButton.Value.origButton.toggleButton);
-                            curButton.Value.origButton.onHoverBtnActive(curButton.Value.origButton.toggleButton);
-                        }
-                        else
-                        {
+                            if (!mouseOver)
+                            {
+                                mouseOver = true;
+                                curButton.Value.origButton.onHover();
+                                curButton.Value.origButton.onHoverBtn(curButton.Value.origButton.toggleButton);
+                                curButton.Value.origButton.onHoverBtnActive(curButton.Value.origButton.toggleButton);
+                            }
+                            else
+                            {
 
-                            mouseOver = false;
-                            curButton.Value.origButton.onHoverOut();
-                            curButton.Value.origButton.onHoverOutBtn(curButton.Value.origButton.toggleButton);
+                                mouseOver = false;
+                                curButton.Value.origButton.onHoverOut();
+                                curButton.Value.origButton.onHoverOutBtn(curButton.Value.origButton.toggleButton);
+                            }
                         }
                     }
-
                 }
             }
 

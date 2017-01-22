@@ -37,6 +37,10 @@ namespace JanitorsCloset
                    toolTip = "Time popup menu/toolbar stays around after mouse is moved away")]
         public float hoverTimeout = 0.5f;
 
+        [GameParameters.CustomParameterUI("Enable hover on icons in the JC toolbar")]
+        public bool enabeHoverOnToolbarIcons = true;
+
+        
 #if false
         public override void SetDifficultyPreset(GameParameters.Preset preset)
         {
