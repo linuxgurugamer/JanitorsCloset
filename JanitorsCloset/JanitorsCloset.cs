@@ -51,7 +51,7 @@ namespace JanitorsCloset
         public readonly static string MOD = Assembly.GetAssembly(typeof(JanitorsCloset)).GetName().Name;
         public static EditorPartListFilter<AvailablePart> searchFilterParts;
 
-
+        public static Dictionary<string, string> blacklistIcons;
 
         bool _showMenu = false;
         Rect _menuRect = new Rect();
@@ -162,6 +162,8 @@ namespace JanitorsCloset
         {
             Log.setTitle("Janitor's Closet");
             Log.Info("JanitorsCloset.Start");
+            blacklistIcons = JanitorsCloset.Instance.loadBlacklistData();
+
             lastUsedID = this.GetInstanceID();
             StartToolbar();            
         }
@@ -180,7 +182,8 @@ namespace JanitorsCloset
             if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
                 return;
 
-            Log.Info("Icon was clicked for " + icon.partInfo.name + " (" + icon.partInfo.title + ")");
+            Log.Info("Icon was clicked for " + icon.partInfo.name + " (" + icon.partInfo.title + "), icon.name: " + icon.name);
+
             _icon = icon;
             ShowPruneMenu();
 

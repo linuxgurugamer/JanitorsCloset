@@ -118,6 +118,12 @@ ChangeLog
 		Added checks for empty file name when saving & loading blacklist file
 		Added Debug mode (spams log file)
 
+0.2.11.5
+		Added a few checks to avoid a nullreff
+
+0.2.11.6
+		Fixed a rare null-ref related to the KerboKatz mods
+		Added config file of blacklisted icons, currently only has Kerbokatz
 
 	TODO
 	Blacklist filter

@@ -20,6 +20,7 @@ namespace JanitorsCloset
         private static String JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
         private static String JC_NODE = "JANITORSCLOSET";
         private static String JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JanitorsCloset.cfg";
+        private static String JC_BLACKLIST_FILE = JC_BASE_FOLDER + "PluginData/JCBlacklist.cfg";
 
         static string SafeLoad(string value, float oldvalue)
         {
@@ -57,8 +58,6 @@ namespace JanitorsCloset
                 return oldvalue.ToString();
             return value;
         }
-
-
 
         void saveButtonData()
         {
@@ -110,9 +109,9 @@ namespace JanitorsCloset
         }
 #endif
             configBarNode = new ConfigNode("Hidden");
-            for (int i = 0;  i < (int)GameScenes.PSYSTEM + 1; i++)
+            for (int i = 0; i < (int)GameScenes.PSYSTEM + 1; i++)
             {
-               
+
                 foreach (var bbi in JanitorsCloset.hiddenButtonBlockList[i])
                 {
                     configButtonNode = new ConfigNode(bbi.Value.buttonHash); // button on main toolbar
@@ -130,6 +129,7 @@ namespace JanitorsCloset
             configFile.AddNode(JC_NODE, janitorsClosetNode);
             configFile.Save(JC_CFG_FILE);
         }
+
 
         void loadButtonData()
         {
@@ -193,7 +193,7 @@ namespace JanitorsCloset
 #endif
                             ButtonSceneBlock bsb;
                             Log.Info("Loading Hidden");
-                            
+
                             foreach (var n2 in n.GetNodes())
                             {
                                 bsb = new ButtonSceneBlock();
@@ -207,12 +207,47 @@ namespace JanitorsCloset
                                 else
                                     loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
                             }
-                            
+
 
                         }
                     }
                 }
             }
+        }
+
+
+        Dictionary<string, string> loadBlacklistData()
+        {
+            Dictionary<string, string> loadedBlacklist = new Dictionary<string, string>();
+            Log.Info("loadBlacklistData");
+            if (File.Exists(JC_BLACKLIST_FILE))
+            {
+                configFile = ConfigNode.Load(JC_BLACKLIST_FILE);
+                if (configFile == null)
+                {
+                    Log.Error("Blacklist config file not loaded");
+                    return loadedBlacklist;
+                }
+                ConfigNode janitorsClosetNode = configFile.GetNode(JC_NODE);
+                if (janitorsClosetNode != null)
+                {
+                    ConfigNode blacklistNode = janitorsClosetNode.GetNode("BLACKLIST");
+                    if (blacklistNode != null && blacklistNode.CountValues > 0)
+                    {
+                        foreach (var s in blacklistNode.GetValues("iconName"))
+                        {
+                            Log.Info("blacklistIcon: " + s);
+                            loadedBlacklist.Add(s, s);
+                        }
+                        foreach (var s in blacklistNode.GetValues("iconHash"))
+                        {
+                            Log.Info("blacklistIconHash: " + s);
+                            loadedBlacklist.Add(s, s);
+                        }
+                    }
+                }
+            }
+            return loadedBlacklist;
         }
     }
 }

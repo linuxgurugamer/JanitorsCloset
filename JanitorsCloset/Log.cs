@@ -73,7 +73,7 @@ namespace JanitorsCloset
         public static void Info(String msg)
         {
 #if DEBUG
-            if (IsLogable(LEVEL.INFO) ))
+            if (IsLogable(LEVEL.INFO) )
 #else
             if (IsLogable(LEVEL.INFO) && (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().debug))
 #endif

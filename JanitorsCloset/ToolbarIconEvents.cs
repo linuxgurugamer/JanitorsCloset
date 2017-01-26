@@ -31,7 +31,8 @@ namespace JanitorsCloset
             //static List<ApplicationLauncherButton> appListHidden;
             static List<ApplicationLauncherButton> appListMod;
             static List<ApplicationLauncherButton> appListModHidden;
-            int appListModCount, appListModHiddenCount;
+
+            
 
 
             private void Start()
@@ -46,7 +47,8 @@ namespace JanitorsCloset
                 //appListHidden = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListHidden", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
                 appListMod = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListMod", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
                 appListModHidden = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListModHidden", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                RegisterSceneChanges(true);
+                
+               RegisterSceneChanges(true);
             }
 
             private void RegisterSceneChanges(bool enable)
@@ -66,16 +68,29 @@ namespace JanitorsCloset
             private void CallbackGameSceneLoadRequested(GameScenes scene)
             {
                 Log.Info("CallbackGameSceneLoadRequested");
+                if (JanitorsCloset.Instance == null)
+                {
+                    Log.Error("JanitorsCloset.Instance is null");
+                    return;
+                }
+                if (JanitorsCloset.Instance.primaryAppButton == null)
+                {
+                    Log.Error("JanitorsCloset.Instance.primaryAppButton is null");
+                    return;
+                }
+               
                 JanitorsCloset.Instance.ToolbarHide(false);
                 JanitorsCloset.Instance.primaryAppButton.SetFalse();
                 if (JanitorsCloset.Instance.activeButtonBlockList != null)
                 {
                     foreach (var b in JanitorsCloset.Instance.activeButtonBlockList)
                     {
-                        Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
-                        b.Value.origButton.onFalse();
-                        b.Value.active = false;
-
+                        if (b.Value.origButton != null)
+                        {
+                            Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
+                            b.Value.origButton.onFalse();
+                            b.Value.active = false;
+                        }
                     }
                 }
             }
@@ -99,8 +114,7 @@ namespace JanitorsCloset
                     //Log.Info("InstallToolIconEvents.FixedUpdate, new scene: " + HighLogic.LoadedScene.ToString());
                     lastScene = HighLogic.LoadedScene;
                     lastTime = Time.fixedTime;
-                    appListModCount = 0;
-                    appListModHiddenCount = 0;
+
                     if (HighLogic.LoadedScene == GameScenes.FLIGHT)
                         mapIsEnabled = MapView.MapIsEnabled;
                 }
@@ -110,8 +124,7 @@ namespace JanitorsCloset
                     if (mapIsEnabled != MapView.MapIsEnabled)
                     {
                         lastTime = Time.fixedTime;
-                        appListModCount = 0;
-                        appListModHiddenCount = 0;
+
                         mapIsEnabled = MapView.MapIsEnabled;
                     }
 
@@ -216,8 +229,15 @@ namespace JanitorsCloset
                 // after that, the prefab will already contain the changes we want to make
                 foreach (var icon in appListMod)
                 {
-                    InstallReplacementToolbarHandler(icon);
-                    Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Button32hash(icon.sprite));
+                    if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Button32hash(icon.sprite)))
+                    {
+                        Log.Info("Icon blacklisted in OnGUIApplicationLauncherReady: " + icon.sprite.texture.name);
+                    }
+                    else
+                    {
+                        InstallReplacementToolbarHandler(icon);
+                        Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Button32hash(icon.sprite));
+                    }
                 }
                 foreach (var icon in appListModHidden)
                 {

@@ -623,7 +623,13 @@ namespace JanitorsCloset
                 if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
                     return;
                 ClickedButton = Clicked;
-                Log.Info("Clicked Button hash: " + buttonId(Clicked));
+                Log.Info("Clicked Button hash: " + buttonId(Clicked)+ "   name: " + ClickedButton.sprite.texture.name);
+
+                if (blacklistIcons.ContainsKey(ClickedButton.sprite.texture.name) || blacklistIcons.ContainsKey(buttonId(Clicked)))
+                {
+                    Log.Info("Icon is blacklisted inToolbarClickedToolbarClicked ");
+                    return;
+                }
 
                 ShowToolbarMenu();
             }
