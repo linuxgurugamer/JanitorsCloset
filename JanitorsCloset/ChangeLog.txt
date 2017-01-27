@@ -132,5 +132,3 @@ ChangeLog
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
 
-	Button Exclusion list
-		cfg file pointing to icon files which should be ignored (ie: not allow to be moved or hidden)
