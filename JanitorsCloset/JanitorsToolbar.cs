@@ -1107,6 +1107,7 @@ namespace JanitorsCloset
                     activeButton = null;
 
                 }
+                saveButtonData();
             }
 
         }

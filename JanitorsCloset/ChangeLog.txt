@@ -125,6 +125,9 @@ ChangeLog
 		Fixed a rare null-ref related to the KerboKatz mods
 		Added config file of blacklisted icons, currently only has Kerbokatz
 
+0.2.11.7
+		fixed issue where lists weren't saved when removing a button from a folder
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
