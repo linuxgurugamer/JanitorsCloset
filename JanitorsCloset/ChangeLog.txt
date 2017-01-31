@@ -128,6 +128,15 @@ ChangeLog
 0.2.11.7
 		fixed issue where lists weren't saved when removing a button from a folder
 
+0.2.11.8
+		Removed call to close windows when changing scenes.
+
+0.2.11.9
+		Added menu item to blacklist a button and save it
+
+0.2.12	Full release
+		Fixed issue with SEP where hovering over a button caused flickering
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

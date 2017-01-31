@@ -96,18 +96,6 @@ namespace JanitorsCloset
 
             }
 
-#if false
-
-        public class ButtonSceneBlock
-        {
-            public GameScenes scene;
-            public Blocktype blocktype;
-            public string buttonHash;
-            public ApplicationLauncherButton origButton;
-            public bool active;
-            public Texture buttonTexture;
-        }
-#endif
             configBarNode = new ConfigNode("Hidden");
             for (int i = 0; i < (int)GameScenes.PSYSTEM + 1; i++)
             {
@@ -160,17 +148,7 @@ namespace JanitorsCloset
 
                                     cfg.toolbarButtonHash = n1.name;
                                     cfg.toolbarButtonIndex = cfg.folderIcon;
-#if false
-                                for (int i = 0; i < folderIcons.Count(); i++)
-                                {
-                                    if (cfg.toolbarButtonHash == folderIconHashes[i])
-                                    {
-                                        cfg.toolbarButtonIndex = i;
-                                        
-                                        break;
-                                    }
-                                }
-#endif
+
                                     loadedCfgs.Add(cfg.scene + cfg.buttonHash, cfg);
                                 }
                             }
@@ -179,18 +157,6 @@ namespace JanitorsCloset
                         {
                             // Hidden
 
-#if false
-
-        public class ButtonSceneBlock
-        {
-            public GameScenes scene;
-            public Blocktype blocktype;
-            public string buttonHash;
-            public ApplicationLauncherButton origButton;
-            public bool active;
-            public Texture buttonTexture;
-        }
-#endif
                             ButtonSceneBlock bsb;
                             Log.Info("Loading Hidden");
 
@@ -215,6 +181,19 @@ namespace JanitorsCloset
             }
         }
 
+        void saveBlacklistData(Dictionary<string,string> blacklistData)
+        {
+            ConfigNode blacklistNode = new ConfigNode("BLACKLIST");
+            ConfigNode janitorsClosetNode = new ConfigNode(JC_NODE);
+            configFile = new ConfigNode(JC_BLACKLIST_FILE);
+            foreach (var bld in blacklistData)
+            {
+                blacklistNode.AddValue("blacklistIconHash", bld.Value);               
+            }
+            janitorsClosetNode.AddNode(blacklistNode);
+            configFile.AddNode(janitorsClosetNode);
+            configFile.Save(JC_BLACKLIST_FILE);
+        }
 
         Dictionary<string, string> loadBlacklistData()
         {

@@ -920,7 +920,13 @@ namespace JanitorsCloset
                     return;
                 }
             }
-
+            if (GUILayout.Button("Add to Blacklist"))
+            {
+                string s = buttonId(ClickedButton);
+                Log.Info("blacklistIconHash: " + s);
+                blacklistIcons.Add(s, s);
+                saveBlacklistData(blacklistIcons);
+            }
             //int cnt = 0;
             foreach (var bb in buttonBarList[curScene])
             {
@@ -1062,14 +1068,17 @@ namespace JanitorsCloset
                                 curButton.Value.origButton.onHoverBtn(curButton.Value.origButton.toggleButton);
                                 curButton.Value.origButton.onHoverBtnActive(curButton.Value.origButton.toggleButton);
                             }
-                            else
+                        }
+                        else
+                        {
+                            if (mouseOver)
                             {
-
                                 mouseOver = false;
                                 curButton.Value.origButton.onHoverOut();
                                 curButton.Value.origButton.onHoverOutBtn(curButton.Value.origButton.toggleButton);
                             }
                         }
+                        
                     }
                 }
             }

@@ -57,6 +57,7 @@ copy /Y "License.txt" "%HOMEDIR%\install\GameData\JanitorsCloset"
 copy /Y "..\README.md" "%HOMEDIR%\install\GameData\JanitorsCloset"
 copy /Y MiniAVC.dll  "%HOMEDIR%\install\GameData\JanitorsCloset"
 copy /Y JanitorsCloset.version  "%HOMEDIR%\install\GameData\JanitorsCloset"
+copy /y ..\Gamedata\JanitorsCloset\PluginData\JCBlacklist.cfg %HOMEDIR%\install\GameData\JanitorsCloset\PluginData
 
 %HOMEDRIVE%
 cd %HOMEDIR%\install
