@@ -122,7 +122,7 @@ namespace JanitorsCloset
 
         Rect toolbarMenuRect = new Rect();
         ShowMenuState showToolbarMenu = ShowMenuState.hidden;
-        const float baseToolbarMenuHeight = 25f + 50f + 25f; // add 25 for each new button
+        const float baseToolbarMenuHeight = 25f + 50f + 25f + 25f; // add 25 for each new button
         const float buttonHeight = 25f;
         const float toolbarMenuWidth = 150f;
 
@@ -866,28 +866,7 @@ namespace JanitorsCloset
 
                 saveButtonData();
                 return;
-#if false
-                ButtonSceneBlock bsb = new ButtonSceneBlock();
 
-                bsb.buttonHash = buttonId(ClickedButton);
-                bsb.scene = HighLogic.LoadedScene;
-                bsb.blocktype = Blocktype.hideHere;
-                bsb.origButton = ClickedButton;
-                bsb.buttonTexture = GetButtonTexture(ClickedButton.sprite);
-
-                if (ClickedButton.gameObject.activeSelf)
-                    ClickedButton.gameObject.SetActive(false);
-                if (ClickedButton.enabled)
-                    ClickedButton.onDisable();
-
-                Log.Info("primaryButtonBlockList count: " + primaryButtonBlockList.Count.ToString());
-
-                primaryButtonBlockList.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);               
-                allBlockedButtonsList.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
-                showToolbarMenu = ShowMenuState.hiding;
-                saveButtonData();
-                return;
-#endif
             }
             if (GUILayout.Button("Hide everywhere"))
             {
@@ -921,12 +900,8 @@ namespace JanitorsCloset
                 }
             }
             if (GUILayout.Button("Add to Blacklist"))
-            {
-                string s = buttonId(ClickedButton);
-                Log.Info("blacklistIconHash: " + s);
-                blacklistIcons.Add(s, s);
-                saveBlacklistData(blacklistIcons);
-            }
+                blacklistbutton = true;
+            
             //int cnt = 0;
             foreach (var bb in buttonBarList[curScene])
             {
@@ -947,6 +922,37 @@ namespace JanitorsCloset
 
         }
 
+        bool blacklistbutton = false;
+        private void Update()
+        {
+            if (blacklistbutton)
+            {
+                blacklistbutton = false;
+                PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
+                    new Vector2(0.5f, 0.5f),
+                    new MultiOptionDialog("",
+                        "Janitor's Toolbar",
+                        HighLogic.UISkin,
+                        new Rect(0.5f, 0.5f, 150f, 60f),
+                        new DialogGUIFlexibleSpace(),
+                        new DialogGUIVerticalLayout(
+                            new DialogGUIFlexibleSpace(),
+                            new DialogGUIButton("Confirm blacklisting button",
+                                delegate
+                                {
+                                    string s = buttonId(ClickedButton);
+                                    Log.Info("blacklistIconHash: " + s);
+                                    blacklistIcons.Add(s, s);
+                                    saveBlacklistData(blacklistIcons);
+                                }, 140.0f, 30.0f, true),
+                           
+                            new DialogGUIButton("Cancel", () => { }, 140.0f, 30.0f, true)
+                            )),
+                    false,
+                    HighLogic.UISkin);
+            }
+
+        }
         int toolbarMenuRectID;
         int toolbarRectID;
 
@@ -1022,8 +1028,6 @@ namespace JanitorsCloset
 
                     // In case original button texture is changed
 
-                   // if (curButton.Value.origButton.sprite.texture.name != "TextureReplacer/Plugins/AppIcon" &&
-                   //     curButton.Value.origButton.sprite.texture.name != "Chatterer/Textures/chatterer_button_idle")
                     {
                         if (curButton.Value.buttonTexture != GetButtonTexture(curButton.Value.origButton.sprite))
                             curButton.Value.buttonTexture = GetButtonTexture(curButton.Value.origButton.sprite);

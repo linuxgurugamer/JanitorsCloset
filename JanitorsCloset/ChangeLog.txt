@@ -137,6 +137,10 @@ ChangeLog
 0.2.12	Full release
 		Fixed issue with SEP where hovering over a button caused flickering
 
+0.2.12.1
+		Fixed menu size to adjust for the blacklist option
+		Added dialog to confirm blacklisting button
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
