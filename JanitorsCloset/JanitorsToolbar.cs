@@ -1058,7 +1058,10 @@ namespace JanitorsCloset
                             if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
                                 curButton.Value.origButton.onRightClick();
                             else
+                            {
                                 toRevert = curButton.Value;
+                                Log.Info("toRevert: " + curButton.Value.buttonHash);
+                            }
                         }
                     }
                     if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().enabeHoverOnToolbarIcons)
@@ -1089,18 +1092,32 @@ namespace JanitorsCloset
 
             if (toRevert != null)
             {
-                Log.Info("Removing hash from activeButtonBlockList: " + toRevert.buttonHash);
+                Log.Info("Removing hash from activeButtonBlockList: " + toRevert.buttonHash + "   blocktype: " + toRevert.blocktype.ToString());
                 activeButtonBlockList.Remove(toRevert.buttonHash);
                 allBlockedButtonsList.Remove(toRevert.buttonHash);
-
+                
                 if (toRevert.blocktype == Blocktype.hideEverywhere || toRevert.blocktype == Blocktype.hideHere)
                 {
                     string hash = toRevert.buttonHash;
                     if (toRevert.blocktype == Blocktype.hideHere)
                         hash += toRevert.scene.ToString();
 
+                    Log.Info("Removing button hash: " + hash + " from primaryButtonBlockList");
                     primaryButtonBlockList.Remove(hash);
                     allBlockedButtonsList.Remove(hash);
+
+                    if (toRevert.blocktype == Blocktype.hideHere)
+                        hiddenButtonBlockList[(int)appScene].Remove(toRevert.buttonHash);
+                    else
+                        hiddenButtonBlockList[0].Remove(toRevert.buttonHash);
+#if false
+                    ButtonSceneBlock s;
+                    if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(hash, out s))
+                    {
+                        Log.Info("Removing from loadedHiddenCfgs: " + hash);
+                        JanitorsCloset.loadedHiddenCfgs.Remove(hash);
+                    }
+#endif
                 }
 
                 if (!toRevert.origButton.gameObject.activeSelf)

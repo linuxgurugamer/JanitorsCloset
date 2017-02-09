@@ -119,7 +119,7 @@ ChangeLog
 		Added Debug mode (spams log file)
 
 0.2.11.5
-		Added a few checks to avoid a nullreff
+		Added a few checks to avoid a nullref
 
 0.2.11.6
 		Fixed a rare null-ref related to the KerboKatz mods
@@ -140,6 +140,9 @@ ChangeLog
 0.2.12.1
 		Fixed menu size to adjust for the blacklist option
 		Added dialog to confirm blacklisting button
+
+0.2.13
+		Fixed problem unhiding a hidden button
 
 	TODO
 	Blacklist filter

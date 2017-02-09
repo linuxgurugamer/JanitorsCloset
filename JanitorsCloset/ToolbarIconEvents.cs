@@ -356,7 +356,7 @@ namespace JanitorsCloset
                     foreach (var bbl in JanitorsCloset.hiddenButtonBlockList[i])
                     {
                         var sl = appListMod.Where(b => JanitorsCloset.buttonId(b) == bbl.Key).ToList();
-                        Log.Info("sl count: " + sl.Count().ToString());
+                        Log.Info("hiddenButtonBlockList[" + i.ToString() + ", sl count: " + sl.Count().ToString());
 
                         if (sl.Count > 1)
                         {
