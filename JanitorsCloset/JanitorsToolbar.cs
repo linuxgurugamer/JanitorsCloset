@@ -1172,9 +1172,13 @@ namespace JanitorsCloset
                     if (IsMouseOver(brect))
                     {
                         Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.origButton).identifier);
-                        tooltip = buttonIdBDI(curButton.Value.origButton).identifier;
-                        //  tooltip = curButton.Value.buttonHash;
-                        drawTooltip = true;
+                        var b = buttonIdBDI(curButton.Value.origButton);
+                        if (b != null)
+                        {
+                            tooltip = b.identifier;
+                            //  tooltip = curButton.Value.buttonHash;
+                            drawTooltip = true;
+                        }
                     }
                     
                       

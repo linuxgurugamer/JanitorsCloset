@@ -261,7 +261,7 @@ namespace JanitorsCloset
         //Unity GUI loop
         void OnGUI()
         {
-            if (drawTooltip &&  (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip))
+            if (drawTooltip &&  HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip && tooltip != null && tooltip.Trim().Length > 0)
             {
                 SetupTooltip();
                 GUI.Window(1234, tooltipRect, TooltipWindow, "");

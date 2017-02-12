@@ -149,6 +149,9 @@ ChangeLog
 		Added Identify menu item to be able to specify an identity for a button
 		Added tooltips for buttons in the JCToolbar, for those buttons which have been identified
 
+0.2.14.1
+		Fixed nullrefs (harmless) when no buttonidentifiers are found for a hovered-over button
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
