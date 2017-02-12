@@ -41,7 +41,7 @@ namespace JanitorsCloset
             }
             catch (Exception ex)
             {
-                Log.Error("Failed to verify file " + filePath + " Error: " + ex.Message);
+                Log.Info("Failed to verify file " + filePath + " Error: " + ex.Message);
                 return false;
             }
         }

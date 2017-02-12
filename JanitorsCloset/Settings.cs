@@ -22,7 +22,6 @@ namespace JanitorsCloset
         public override int SectionOrder { get { return 1; } }
         public override bool HasPresets { get { return false; } }
 
-        
 
         [GameParameters.CustomParameterUI("Toolbar Enabled (changing this requires a restart)")]
         public bool toolbarEnabled = true;
@@ -42,6 +41,13 @@ namespace JanitorsCloset
 
         [GameParameters.CustomParameterUI("Use KerboKatz Toolbar for KerboKatz utilities")]
         public bool useKerboKatzToolbar = true;
+
+        [GameParameters.CustomParameterUI("Enable Button Identification")]
+        public bool buttonIdent = false;
+
+        [GameParameters.CustomParameterUI("Enable Button Tooltip")]
+        public bool buttonTooltip = true;
+
 
         [GameParameters.CustomParameterUI("Debug mode (spams the log file")]
         public bool debug = false;

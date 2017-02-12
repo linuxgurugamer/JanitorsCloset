@@ -29,17 +29,24 @@ namespace JanitorsCloset
             Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
             foreach (prunedPart pp in renamedFilesList)
             {
-                Log.Info("partName: " + pp.partName + "    path: " + pp.path);
-                int i = pp.path.IndexOf(".prune");
-                if (i > 0)
+                if (pp != null)
                 {
-                    string fname = pp.path.Substring(0, i);
-                    Log.Info("checking for: " + fname);
-                    if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + fname))
+                    if (pp.partName != null && pp.path != null)
                     {
-                        Log.Info("File exists, need to rename it");
-                        // following function will delete the older ".prune" file and rename the new one
-                        FileOperations.Instance.RenameFile(fname);
+                        Log.Info("partName: " + pp.partName + "    path: " + pp.path);
+                        int i = pp.path.IndexOf(".prune");
+                        if (i > 0)
+                        {
+                            string fname = pp.path.Substring(0, i);
+                            if (fname != null)
+                                Log.Info("checking for: " + fname);
+                            if (File.Exists(FileOperations.CONFIG_BASE_FOLDER + fname))
+                            {
+                                Log.Info("File exists, need to rename it");
+                                // following function will delete the older ".prune" file and rename the new one
+                                FileOperations.Instance.RenameFile(fname);
+                            }
+                        }
                     }
                 }
             }

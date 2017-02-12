@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.IO;
+using KSP.UI;
+using KSP.UI.Screens;
 
 namespace JanitorsCloset
 {
@@ -20,6 +22,7 @@ namespace JanitorsCloset
         private static String JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
         private static String JC_NODE = "JANITORSCLOSET";
         private static String JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JanitorsCloset.cfg";
+        private static String JC_DEFAULT_CFG_FILE = JC_BASE_FOLDER + "PluginData/JanitorsClosetDefault.cfg";
         private static String JC_BLACKLIST_FILE = JC_BASE_FOLDER + "PluginData/JCBlacklist.cfg";
 
         static string SafeLoad(string value, float oldvalue)
@@ -110,9 +113,15 @@ namespace JanitorsCloset
                     configBarNode.AddNode(bbi.Value.buttonHash, configButtonNode);
                 }
             }
-
             janitorsClosetNode.AddNode("Hidden", configBarNode);
 
+            configBarNode = new ConfigNode("ButtonIDs");
+            foreach (var bdi in buttonDictionary)
+            {
+                if (bdi.Value.identifier != "")
+                    configBarNode.AddValue(bdi.Value.buttonHash, bdi.Value.identifier);
+            }
+            janitorsClosetNode.AddNode("ButtonIDs", configBarNode);
             configFile = new ConfigNode();
             configFile.AddNode(JC_NODE, janitorsClosetNode);
             configFile.Save(JC_CFG_FILE);
@@ -124,57 +133,85 @@ namespace JanitorsCloset
             loadedCfgs = new Dictionary<string, Cfg>();
             loadedHiddenCfgs = new Dictionary<string, ButtonSceneBlock>();
             Cfg cfg;
-
-            if (File.Exists(JC_CFG_FILE))
+            foreach (string cfgFile in new List<string> { JC_DEFAULT_CFG_FILE, JC_CFG_FILE })
             {
-                configFile = ConfigNode.Load(JC_CFG_FILE);
-                ConfigNode janitorsClosetNode = configFile.GetNode(JC_NODE);
-                if (janitorsClosetNode != null)
+                if (File.Exists(cfgFile))
                 {
-                    foreach (var n in janitorsClosetNode.GetNodes())  // n = scenes
+                    configFile = ConfigNode.Load(cfgFile);
+                    ConfigNode janitorsClosetNode = configFile.GetNode(JC_NODE);
+                    if (janitorsClosetNode != null)
                     {
-                        Log.Info("Node.name: " + n.name);
-                        if (n.name != "Hidden")
+                        foreach (ConfigNode n in janitorsClosetNode.GetNodes())  // n = scenes
                         {
-                            foreach (var n1 in n.GetNodes())
+                            Log.Info("Node.name: " + n.name);
+                            if (n.name != "Hidden" && n.name != "ButtonIDs")
                             {
-                                foreach (var n2 in n1.GetNodes())
+                                foreach (var n1 in n.GetNodes())
                                 {
-                                    cfg = new Cfg();
-                                    cfg.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
-                                    cfg.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
-                                    cfg.buttonHash = n2.GetValue("buttonHash");
-                                    cfg.folderIcon = System.Int32.Parse(n1.GetValue("folderIcon"));
+                                    foreach (var n2 in n1.GetNodes())
+                                    {
+                                        cfg = new Cfg();
+                                        cfg.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
+                                        cfg.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
+                                        cfg.buttonHash = n2.GetValue("buttonHash");
+                                        cfg.folderIcon = System.Int32.Parse(n1.GetValue("folderIcon"));
 
-                                    cfg.toolbarButtonHash = n1.name;
-                                    cfg.toolbarButtonIndex = cfg.folderIcon;
-
-                                    loadedCfgs.Add(cfg.scene + cfg.buttonHash, cfg);
+                                        cfg.toolbarButtonHash = n1.name;
+                                        cfg.toolbarButtonIndex = cfg.folderIcon;
+                                        loadedCfgs.Add(cfg.scene + cfg.buttonHash, cfg);
+                                    }
                                 }
                             }
-                        }
-                        else
-                        {
-                            // Hidden
-
-                            ButtonSceneBlock bsb;
-                            Log.Info("Loading Hidden");
-
-                            foreach (var n2 in n.GetNodes())
+                            else
                             {
-                                bsb = new ButtonSceneBlock();
-                                bsb.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
-                                bsb.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
-                                bsb.buttonHash = n2.GetValue("buttonHash");
-                                bsb.active = Boolean.Parse(n2.GetValue("active"));
-                                Log.Info("hidden button: " + bsb.buttonHash + "  blocktype: " + bsb.blocktype.ToString());
-                                if (bsb.blocktype == Blocktype.hideHere)
-                                    loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
-                                else
-                                    loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                                if (n.name == "ButtonIDs")
+                                {
+                                    Log.Info("Loading ButtonIDs");
+                                    // int cnt = 1;
+                                    foreach (ConfigNode.Value n2 in n.values)
+                                    {
+                                        string hash = n2.name;
+                                        string data = n2.value;
+                                        Log.Info("hash: " + hash + "   data: " + data);
+                                        var b = JanitorsCloset.buttonIdBDI(hash);
+                                        if (b != null)
+                                        {
+                                            b.identifier = data;
+                                        }
+                                        else
+                                        {
+                                            b = new ButtonDictionaryItem();
+                                            b.identifier = data;
+                                            b.buttonHash = hash;
+                                            b.button = new ApplicationLauncherButton();
+                                            // b.button.name = cnt.ToString();
+                                            //   cnt++;
+                                            JanitorsCloset.buttonDictionary.Add(b.button, b);
+                                        }
+                                    }
+                                }
+                                if (n.name == "Hidden")
+                                {
+                                    // Hidden
+
+                                    ButtonSceneBlock bsb;
+                                    Log.Info("Loading Hidden");
+
+                                    foreach (var n2 in n.GetNodes())
+                                    {
+                                        bsb = new ButtonSceneBlock();
+                                        bsb.scene = (GameScenes)Enum.Parse(typeof(GameScenes), n2.GetValue("scene"));
+                                        bsb.blocktype = (Blocktype)Enum.Parse(typeof(Blocktype), n2.GetValue("blocktype"));
+                                        bsb.buttonHash = n2.GetValue("buttonHash");
+                                        bsb.active = Boolean.Parse(n2.GetValue("active"));
+                                        Log.Info("hidden button: " + bsb.buttonHash + "  blocktype: " + bsb.blocktype.ToString());
+                                        if (bsb.blocktype == Blocktype.hideHere)
+                                            loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
+                                        else
+                                            loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                                    }
+                                }
                             }
-
-
                         }
                     }
                 }
@@ -204,7 +241,7 @@ namespace JanitorsCloset
                 configFile = ConfigNode.Load(JC_BLACKLIST_FILE);
                 if (configFile == null)
                 {
-                    Log.Error("Blacklist config file not loaded");
+                    Log.Info("Blacklist config file not loaded");
                     return loadedBlacklist;
                 }
                 ConfigNode janitorsClosetNode = configFile.GetNode(JC_NODE);

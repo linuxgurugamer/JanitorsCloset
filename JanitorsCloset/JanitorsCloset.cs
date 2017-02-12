@@ -261,6 +261,13 @@ namespace JanitorsCloset
         //Unity GUI loop
         void OnGUI()
         {
+            if (drawTooltip &&  (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip))
+            {
+                SetupTooltip();
+                GUI.Window(1234, tooltipRect, TooltipWindow, "");
+            }
+                    
+                //DrawTooltip();
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
             if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
                 _pruneMenuRect = KSPUtil.ClampRectToScreen(GUILayout.Window(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
@@ -277,7 +284,12 @@ namespace JanitorsCloset
 
         }
 
- 
+        void TooltipWindow(int id)
+        {
+            //DrawTooltip();
+            Log.Info("TooltipWindow, tooltip: " + tooltip);
+            GUI.Label(new Rect(2,0,tooltipRect.width-2, tooltipRect.height), tooltip, HighLogic.Skin.label);
+        }
 
         void addToBlackList(string p, string title, blackListType type)
         {

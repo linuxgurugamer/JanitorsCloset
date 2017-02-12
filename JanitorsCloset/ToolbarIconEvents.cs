@@ -58,11 +58,13 @@ namespace JanitorsCloset
                 {
                     GameEvents.onGameSceneLoadRequested.Add(this.CallbackGameSceneLoadRequested);
                     GameEvents.onLevelWasLoaded.Add(this.CallbackLevelWasLoaded);
+                    GameEvents.onGameStatePostLoad.Add(this.CallbackOnGameStatePostLoad);
                 }
                 else
                 {
                     GameEvents.onGameSceneLoadRequested.Remove(this.CallbackGameSceneLoadRequested);
                     GameEvents.onLevelWasLoaded.Remove(this.CallbackLevelWasLoaded);
+                    GameEvents.onGameStatePostLoad.Remove(this.CallbackOnGameStatePostLoad);
                 }
             }
             private void CallbackGameSceneLoadRequested(GameScenes scene)
@@ -94,10 +96,17 @@ namespace JanitorsCloset
                     }
                 }
             }
+            private void CallbackOnGameStatePostLoad(ConfigNode n)
+            {
+                lasttimecheck = 0;
+                lastTime = Time.fixedTime;
+                Log.Info("CallbackOnGameStatePostLoad");
 
+            }
             private void CallbackLevelWasLoaded(GameScenes scene)
             {
                 lasttimecheck = 0;
+                lastTime = Time.fixedTime;
                 Log.Info("CallbackLevelWasLoaded");
                
             }
@@ -175,7 +184,7 @@ namespace JanitorsCloset
 
                     if (o == null)
                     {
-                        Log.Error("button missing ReplacementToolbarClickHandler");
+                        Log.Info("button missing ReplacementToolbarClickHandler");
                         return;
                     }
 
@@ -184,6 +193,9 @@ namespace JanitorsCloset
                     {
                         Log.Info("Not in buttonDictionary");
                         string hash = JanitorsCloset.buttonId(a1);
+                        ButtonDictionaryItem bdi = new ButtonDictionaryItem();
+                        bdi.buttonHash = hash;
+
                         bool doThisOne = true;
                         Log.Info("Checking buttonBarList");
                         foreach (var z in JanitorsCloset.buttonBarList)
@@ -197,13 +209,24 @@ namespace JanitorsCloset
 
                         if (doThisOne)
                         {
-                            if (JanitorsCloset.buttonDictionary.ContainsValue(hash))
+                          //  if (JanitorsCloset.buttonDictionary.Select(i => i.Value.buttonHash == hash).Count() > 0)
                             {
-                                Log.Info("hash found, deleting entry");
-                                var key = JanitorsCloset.buttonDictionary.FirstOrDefault(m => m.Value == hash).Key;
-                                JanitorsCloset.buttonDictionary.Remove(key);
+                                Log.Info("hash found, deleting entry, hash: " + hash);
+                                foreach (var i in JanitorsCloset.buttonDictionary)
+                                    Log.Info("buttonDictionaryHash: " + i.Value.buttonHash);
+                                var key = JanitorsCloset.buttonDictionary.Where(m => m.Value.buttonHash == hash);
+                                
+                                if (key != null && key.Count() > 0)
+                                {
+                                    Log.Info("deleting key from buttonDictionary");
+                                    var k = key.First().Key;
+                                   // Log.Info("k: " + k.name);
+                                    bdi.identifier = JanitorsCloset.buttonDictionary[k].identifier;
+                                    JanitorsCloset.buttonDictionary.Remove(k);
+                                }
                             }
-                            JanitorsCloset.buttonDictionary.Add(a1, hash);
+                            bdi.button = a1;
+                            JanitorsCloset.buttonDictionary.Add(a1, bdi);
                         }
                     }
                 }

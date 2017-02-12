@@ -144,6 +144,11 @@ ChangeLog
 0.2.13
 		Fixed problem unhiding a hidden button
 
+0.2.14
+		Fixed problem with quickload and scene changes not properly resetting toolbar
+		Added Identify menu item to be able to specify an identity for a button
+		Added tooltips for buttons in the JCToolbar, for those buttons which have been identified
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
