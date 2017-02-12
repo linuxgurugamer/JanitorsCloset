@@ -219,8 +219,12 @@ namespace JanitorsCloset
                         NoIncompatabilities = false;
                     }
                 }
-
-                OnGuiAppLauncherReady();
+                if (ApplicationLauncher.Instance == null)
+                {
+                    GameEvents.onGUIApplicationLauncherReady.Add(OnGuiAppLauncherReady);                  
+                }
+                else
+                    OnGuiAppLauncherReady();
 
                 folderIconHashes = new string[folderIcons.Count()];
                 for (int i = 0; i < folderIcons.Count(); i++)
@@ -306,7 +310,7 @@ namespace JanitorsCloset
         private void OnGuiAppLauncherReady()
         {
             
-            if (this.primaryAppButton == null)
+            if (this.primaryAppButton == null && HighLogic.CurrentGame != null)
             {
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
                 if (!NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
@@ -316,6 +320,7 @@ namespace JanitorsCloset
                 buttonBarEntry.buttonHash = "";
                 buttonBarEntry.buttonBlockList = new Dictionary<string, ButtonSceneBlock>();
                 primaryButtonBlockList = buttonBarEntry.buttonBlockList;
+                Log.Info("in OnGuiAppLauncherReady, before try");
                 try
                 {
                     this.primaryAppButton = ApplicationLauncher.Instance.AddModApplication(
@@ -367,7 +372,10 @@ namespace JanitorsCloset
                 }
                 catch (Exception ex)
                 {
-                    Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
+                    if (ex != null && ex.Message != null)
+                        Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
+                    else
+                    Log.Error("Error adding ApplicationLauncher button");
                 }
             }
         }
@@ -1171,13 +1179,15 @@ namespace JanitorsCloset
                     }
                     if (IsMouseOver(brect))
                     {
-                        Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.origButton).identifier);
                         var b = buttonIdBDI(curButton.Value.origButton);
                         if (b != null)
                         {
+                            Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.origButton).identifier);
+                            
                             tooltip = b.identifier;
                             //  tooltip = curButton.Value.buttonHash;
                             drawTooltip = true;
+                            
                         }
                     }
                     

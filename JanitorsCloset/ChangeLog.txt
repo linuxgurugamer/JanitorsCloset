@@ -152,6 +152,10 @@ ChangeLog
 0.2.14.1
 		Fixed nullrefs (harmless) when no buttonidentifiers are found for a hovered-over button
 
+0.2.14.2
+		Really fixed those nullrefs now
+		Fixed harmelss nullref at startup when there were a lot of mods
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
