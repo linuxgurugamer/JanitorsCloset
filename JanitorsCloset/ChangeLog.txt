@@ -156,6 +156,10 @@ ChangeLog
 		Really fixed those nullrefs now
 		Fixed harmelss nullref at startup when there were a lot of mods
 
+0.2.14.3
+		Fixed nullref when identifying buttons
+		Added many identifiers to default identifier file
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

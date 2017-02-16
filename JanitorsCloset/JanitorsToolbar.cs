@@ -1002,6 +1002,7 @@ namespace JanitorsCloset
         bool blacklistbutton = false;
         bool identifyButton = false;
         string identifyButtonHash = "";
+        string identifier;
 
         private void Update()
         {
@@ -1034,10 +1035,16 @@ namespace JanitorsCloset
             if (identifyButton)
             {
                 identifyButton = false;
-                string identifier = "n/a";
+                 identifier = "n/a";
                 ButtonDictionaryItem bdi = buttonIdBDI(ClickedButton);
                 if (bdi != null)
                     identifier = bdi.identifier;
+                else
+                {
+                    bdi = new ButtonDictionaryItem();
+                    bdi.buttonHash = JanitorsCloset.buttonId(ClickedButton);
+                    buttonDictionary.Add(ClickedButton, bdi);
+                }
                 PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
                     new Vector2(0.5f, 0.5f),
                     new MultiOptionDialog("\nEnter Button identity:",
@@ -1051,8 +1058,10 @@ namespace JanitorsCloset
 
                              new DialogGUITextInput(identifier, false, 64, delegate (string n)
                              {
-                                 identifier = n;
-                                 bdi.identifier = n;
+                                 identifier = string.Copy(n);
+                                 if (bdi == null)
+                                     Log.Info("BDI is null");
+                                 bdi.identifier = string.Copy(n);
                                  saveButtonData();
                                  return identifier;
                              }, 24f),
