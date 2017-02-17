@@ -1036,7 +1036,7 @@ namespace JanitorsCloset
             {
                 identifyButton = false;
                  identifier = "n/a";
-                ButtonDictionaryItem bdi = buttonIdBDI(ClickedButton);
+                ButtonDictionaryItem bdi = buttonIdBDI(JanitorsCloset.buttonId(ClickedButton));
                 if (bdi != null)
                     identifier = bdi.identifier;
                 else
@@ -1188,7 +1188,7 @@ namespace JanitorsCloset
                     }
                     if (IsMouseOver(brect))
                     {
-                        var b = buttonIdBDI(curButton.Value.origButton);
+                        var b = buttonIdBDI(curButton.Value.buttonHash);
                         if (b != null)
                         {
                             Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.origButton).identifier);

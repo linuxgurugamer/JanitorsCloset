@@ -160,6 +160,9 @@ ChangeLog
 		Fixed nullref when identifying buttons
 		Added many identifiers to default identifier file
 
+0.2.14.4
+		Fix for tooltips being duplicated
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
