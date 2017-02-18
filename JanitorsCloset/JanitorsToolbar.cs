@@ -170,6 +170,7 @@ namespace JanitorsCloset
 
             return bdi.buttonHash;
         }
+#if false
         ButtonDictionaryItem buttonIdBDI(ApplicationLauncherButton btn)
         {
             ButtonDictionaryItem bdi;
@@ -179,6 +180,7 @@ namespace JanitorsCloset
             else
                 return null;
         }
+#endif
         public static ButtonDictionaryItem buttonIdBDI(string hash)
         {
             var b = buttonDictionary.Where(i => i.Value.buttonHash == hash);
@@ -188,7 +190,7 @@ namespace JanitorsCloset
                 return null;
         }
 
-        #region StartAwake
+#region StartAwake
 
 
         public string hasMod(string modIdent)
@@ -270,7 +272,7 @@ namespace JanitorsCloset
             toolbarWindowFunction = HideToolbarButtonMenu;
         }
 
-        #endregion
+#endregion
         string tooltip = "";
         bool drawTooltip = false;
        // Vector2 mousePosition;
@@ -375,7 +377,7 @@ namespace JanitorsCloset
                     if (ex != null && ex.Message != null)
                         Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
                     else
-                    Log.Error("Error adding ApplicationLauncher button");
+                       Log.Error("Error adding ApplicationLauncher button");
                 }
             }
         }
@@ -1191,7 +1193,10 @@ namespace JanitorsCloset
                         var b = buttonIdBDI(curButton.Value.buttonHash);
                         if (b != null)
                         {
-                            Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.origButton).identifier);
+                            var x = buttonIdBDI(curButton.Value.buttonHash);
+                            if (x == null || x.identifier == null)
+                                Log.Info("buttonIdBDI returned a null");
+                            Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.buttonHash).identifier);
                             
                             tooltip = b.identifier;
                             //  tooltip = curButton.Value.buttonHash;

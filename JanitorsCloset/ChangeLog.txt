@@ -166,6 +166,9 @@ ChangeLog
 0.2.14.5
 		just a recbuild
 
+0.2.14.6
+		Fixed the nullref which returned from the 0.2.14.1 fix
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
