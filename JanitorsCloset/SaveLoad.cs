@@ -173,7 +173,7 @@ namespace JanitorsCloset
                                         string hash = n2.name;
                                         string data = n2.value;
                                         Log.Info("hash: " + hash + "   data: " + data);
-                                        var b = JanitorsCloset.buttonIdBDI(hash);
+                                        var b = JanitorsCloset.Instance.buttonIdBDI(hash);
                                         if (b != null)
                                         {
                                             b.identifier = data;

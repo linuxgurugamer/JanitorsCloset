@@ -169,6 +169,13 @@ ChangeLog
 0.2.14.6
 		Fixed the nullref which returned from the 0.2.14.1 fix
 
+0.2.15
+		Added color to Mod Filter menu item when mods are filterd
+		Added count of filtered sizes/mods to Mod Fitler menu item
+
+0.2.15.6
+		Fixed memory leak of multi megs a sec when the toolbar was displayed, by limiting the updating of the toolbar icons to once every 5 seconds
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

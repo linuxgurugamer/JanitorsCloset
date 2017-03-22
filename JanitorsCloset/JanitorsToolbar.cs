@@ -75,7 +75,6 @@ namespace JanitorsCloset
     //   [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     partial class JanitorsCloset// : BaseRaycaster
     {
-
         const string TexturePath = "JanitorsCloset/Textures/";
         const string mainIcon = "AppLauncherIcon";
         string[] folderIcons = new string[]{
@@ -91,6 +90,7 @@ namespace JanitorsCloset
             "black-white",
             "blue-black"};
 
+        public Texture2D toolbarIcon;
         string[] folderIconHashes;
 
         public static Dictionary<string, Cfg> loadedCfgs;
@@ -147,14 +147,14 @@ namespace JanitorsCloset
         /// </summary>
         /// <param name="btn"></param>
         /// <returns></returns>
-        public static string buttonId(ApplicationLauncherButton btn, bool addIfNotFound = true)
+        public string buttonId(ApplicationLauncherButton btn, bool addIfNotFound = true)
         {
             ButtonDictionaryItem bdi;
             var b = buttonDictionary.TryGetValue(btn, out bdi);
 
             if (!b)
             {
-                Log.Info("Button not found in dictionary, hash: " + Button32hash(btn.sprite));
+                Log.Info("Button not found in dictionary, hash: " + Instance.Button32hash(btn.sprite));
 #if false
                 Log.Info("buttonDictionary size: " + buttonDictionary.Count().ToString());
                 foreach (var v in buttonDictionary)
@@ -164,8 +164,8 @@ namespace JanitorsCloset
 #endif
                 if (!addIfNotFound)
                     return "NotFound";
-                
-                return Button32hash(btn.sprite);
+
+                return Instance.Button32hash(btn.sprite);
             }
 
             return bdi.buttonHash;
@@ -181,7 +181,7 @@ namespace JanitorsCloset
                 return null;
         }
 #endif
-        public static ButtonDictionaryItem buttonIdBDI(string hash)
+        public ButtonDictionaryItem buttonIdBDI(string hash)
         {
             var b = buttonDictionary.Where(i => i.Value.buttonHash == hash);
             if (b != null)
@@ -190,7 +190,7 @@ namespace JanitorsCloset
                 return null;
         }
 
-#region StartAwake
+        #region StartAwake
 
 
         public string hasMod(string modIdent)
@@ -223,7 +223,7 @@ namespace JanitorsCloset
                 }
                 if (ApplicationLauncher.Instance == null)
                 {
-                    GameEvents.onGUIApplicationLauncherReady.Add(OnGuiAppLauncherReady);                  
+                    GameEvents.onGUIApplicationLauncherReady.Add(OnGuiAppLauncherReady);
                 }
                 else
                     OnGuiAppLauncherReady();
@@ -248,7 +248,7 @@ namespace JanitorsCloset
                 {
                     buttonBarList[i] = new Dictionary<string, ButtonBarItem>();
                     hiddenButtonBlockList[i] = new Dictionary<string, ButtonSceneBlock>();
-                    
+
                 }
 
             }
@@ -272,10 +272,10 @@ namespace JanitorsCloset
             toolbarWindowFunction = HideToolbarButtonMenu;
         }
 
-#endregion
+        #endregion
         string tooltip = "";
         bool drawTooltip = false;
-       // Vector2 mousePosition;
+        // Vector2 mousePosition;
         Vector2 tooltipSize;
         float tooltipX, tooltipY;
         Rect tooltipRect;
@@ -288,13 +288,13 @@ namespace JanitorsCloset
             if (tooltip != null && tooltip.Trim().Length > 0)
             {
                 tooltipSize = HighLogic.Skin.label.CalcSize(new GUIContent(tooltip));
-                 tooltipX = (mousePosition.x + tooltipSize.x > Screen.width) ? (Screen.width - tooltipSize.x) : mousePosition.x;
-                 tooltipY = mousePosition.y;
+                tooltipX = (mousePosition.x + tooltipSize.x > Screen.width) ? (Screen.width - tooltipSize.x) : mousePosition.x;
+                tooltipY = mousePosition.y;
                 if (tooltipX < 0) tooltipX = 0;
                 if (tooltipY < 0) tooltipY = 0;
                 tooltipRect = new Rect(tooltipX - 1, tooltipY - tooltipSize.y, tooltipSize.x + 4, tooltipSize.y);
                 Log.Info("display x: " + tooltipX.ToString() + ", y: " + tooltipY.ToString() + ",  size.x,y: " + tooltipSize.x.ToString() + ", " + tooltipSize.y.ToString() + ", tooltip: " + tooltip);
-                
+
                 //  GUI.Label(new Rect(x, y, size.x, size.y), tooltip);
             }
         }
@@ -311,7 +311,7 @@ namespace JanitorsCloset
         /// </summary>
         private void OnGuiAppLauncherReady()
         {
-            
+
             if (this.primaryAppButton == null && HighLogic.CurrentGame != null)
             {
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
@@ -322,6 +322,7 @@ namespace JanitorsCloset
                 buttonBarEntry.buttonHash = "";
                 buttonBarEntry.buttonBlockList = new Dictionary<string, ButtonSceneBlock>();
                 primaryButtonBlockList = buttonBarEntry.buttonBlockList;
+                toolbarIcon = GameDatabase.Instance.GetTexture(TexturePath + mainIcon, false);
                 Log.Info("in OnGuiAppLauncherReady, before try");
                 try
                 {
@@ -331,12 +332,12 @@ namespace JanitorsCloset
                             showToolbarRightClickToggle();
                             hidable = false;
                             showByHover = false;
-                            Dictionary<string, ButtonSceneBlock>  hiddenButtons = new Dictionary<string, ButtonSceneBlock>(JanitorsCloset.hiddenButtonBlockList[0]);
+                            Dictionary<string, ButtonSceneBlock> hiddenButtons = new Dictionary<string, ButtonSceneBlock>(JanitorsCloset.hiddenButtonBlockList[0]);
                             hiddenButtons = hiddenButtons.Concat(JanitorsCloset.hiddenButtonBlockList[(int)JanitorsCloset.appScene]).ToDictionary(x => x.Key, x => x.Value);
 
                             ToolbarShow(this.primaryAppButton, "", hiddenButtons);
 
-                           // JanitorsCloset.Instance.ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList);
+                            // JanitorsCloset.Instance.ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList);
 
                         },  //RUIToggleButton.onTrue
                         () =>
@@ -363,7 +364,7 @@ namespace JanitorsCloset
                         null, //RUIToggleButton.onEnable
                         null, //RUIToggleButton.onDisable
                         validScenes,
-                        GameDatabase.Instance.GetTexture(TexturePath + mainIcon, false) //texture
+                        toolbarIcon //texture
                     );
                     Log.Info("Added ApplicationLauncher button");
                     this.primaryAppButton.onRightClick = showToolbarRightClickToggle;
@@ -377,7 +378,7 @@ namespace JanitorsCloset
                     if (ex != null && ex.Message != null)
                         Log.Error("Error adding ApplicationLauncher button: " + ex.Message);
                     else
-                       Log.Error("Error adding ApplicationLauncher button");
+                        Log.Error("Error adding ApplicationLauncher button");
                 }
             }
         }
@@ -386,11 +387,11 @@ namespace JanitorsCloset
         {
             if (!_showMenu)
             {
-                    JanitorsCloset.Instance.ShowMenu();
+                JanitorsCloset.Instance.ShowMenu();
             }
             else
             {
-                    JanitorsCloset.Instance.HideMenu();
+                JanitorsCloset.Instance.HideMenu();
             }
         }
 
@@ -399,7 +400,7 @@ namespace JanitorsCloset
             ButtonBarItem buttonBarEntry = new ButtonBarItem();
 
             buttonBarEntry.buttonBlockList = new Dictionary<string, ButtonSceneBlock>();
-         //   ApplicationLauncher.AppScenes appScene = 0;
+            //   ApplicationLauncher.AppScenes appScene = 0;
             GameScenes curScene = HighLogic.LoadedScene;
             if (scene != GameScenes.LOADING)
                 curScene = scene;
@@ -432,7 +433,7 @@ namespace JanitorsCloset
                                     ToolbarShow(buttonBarEntry.button, buttonBarEntry.buttonHash, buttonBarEntry.buttonBlockList, true);
                                 }
                                 hidable = false;
-                               
+
                             }
                         }, //RUIToggleButton.OnHover
                         () =>
@@ -487,11 +488,11 @@ namespace JanitorsCloset
                         (hide && b.Value.blocktype != Blocktype.moveToFolder))
                         cnt++;
                 }
-//                if ( (b.Value.blocktype == Blocktype.moveToFolder /* ||
-//                    b.Value.blocktype == Blocktype.hideEverywhere*/ ) &&
-//                    ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
-//                    //b.Value.scene == HighLogic.LoadedScene)
-//                    cnt++;
+                //                if ( (b.Value.blocktype == Blocktype.moveToFolder /* ||
+                //                    b.Value.blocktype == Blocktype.hideEverywhere*/ ) &&
+                //                    ApplicationLauncher.Instance.ShouldBeVisible(b.Value.origButton))
+                //                    //b.Value.scene == HighLogic.LoadedScene)
+                //                    cnt++;
             }
             return cnt;
         }
@@ -500,7 +501,7 @@ namespace JanitorsCloset
         bool hidable = true;
 
         public HelpPopup helpPopup = null;
-         string[] helpText = {
+        string[] helpText = {
 "The button for The Janitor’s Closet is now available on all screens.   There are several modes of",
 "operation, depending on various factors.  The toolbar button looks like a broom & dustbin.",
 "Toolbar buttons can be hidden, either in the current screen or everywhere.  This is somewhat",
@@ -575,7 +576,7 @@ namespace JanitorsCloset
                 showByHover = false;
                 return;
             }
-            
+
             if (showByHover)
                 HideMenu();
             showByHover = hover;
@@ -690,7 +691,7 @@ namespace JanitorsCloset
                 if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
                     return;
                 ClickedButton = Clicked;
-                Log.Info("Clicked Button hash: " + buttonId(Clicked)+ "   name: " + ClickedButton.sprite.texture.name);
+                Log.Info("Clicked Button hash: " + buttonId(Clicked) + "   name: " + ClickedButton.sprite.texture.name);
 
                 if (blacklistIcons.ContainsKey(ClickedButton.sprite.texture.name) || blacklistIcons.ContainsKey(buttonId(Clicked)))
                 {
@@ -711,10 +712,14 @@ namespace JanitorsCloset
             get { return (int)HighLogic.LoadedScene; }
         }
 
-        public static Texture2D GetButtonTexture(Texture2D img)
+
+
+        // static Texture2D img2;
+        static Color32[] pixelBlock = null;
+        static RenderTexture rt, origrt;
+        public Texture2D GetButtonTexture(Texture2D img)
         {
             Texture2D img2;
-            Color32[] pixelBlock = null;
 
             // see: https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels.html
             try
@@ -722,28 +727,27 @@ namespace JanitorsCloset
                 pixelBlock = img.GetPixels32();
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.SetPixels32(pixelBlock);
-
-                //Log.Info("GetPixels32 loaded image");
+                Log.Info("GetPixels32 loaded image");
             }
             catch (UnityException _e)
             {
 
                 img.filterMode = FilterMode.Point;
-                RenderTexture rt = RenderTexture.GetTemporary(img.width, img.height);
+                rt = RenderTexture.GetTemporary(img.width, img.height);
                 rt.filterMode = FilterMode.Point;
-                RenderTexture origrt = RenderTexture.active;
+                origrt = RenderTexture.active;
                 RenderTexture.active = rt;
                 Graphics.Blit(img, rt);
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.ReadPixels(new Rect(0, 0, img.width, img.height), 0, 0);
-                //Log.Info("GetPixels32 had Exception, img name: " + img.name);
+                Log.Info("GetPixels32 had Exception, img name: " + img.name);
                 RenderTexture.ReleaseTemporary(rt);
                 RenderTexture.active = origrt;
             }
             img2.Apply();
             return img2;
         }
-        public static Texture2D GetButtonTexture(RawImage sprite)
+        public Texture2D GetButtonTexture(RawImage sprite)
         {
             Texture2D img = sprite.texture as Texture2D;
             img.name = sprite.texture.name;
@@ -751,7 +755,7 @@ namespace JanitorsCloset
 
         }
 
-        public static string Button32hash(Texture2D img2)
+        public string Button32hash(Texture2D img2)
         {
             Crc32 crc32 = new Crc32();
             String hash = String.Empty;
@@ -762,7 +766,7 @@ namespace JanitorsCloset
             return hash;
         }
 
-        public static string Button32hash(RawImage sprite)
+        public string Button32hash(RawImage sprite)
         {
             Texture2D img2 = GetButtonTexture(sprite);
             return Button32hash(img2);
@@ -854,7 +858,7 @@ namespace JanitorsCloset
             bsb.scene = HighLogic.LoadedScene;
             bsb.blocktype = btype;
             bsb.origButton = selectedButton;
-            
+
             bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
             if (btype == Blocktype.hideHere)
                 hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
@@ -939,14 +943,14 @@ namespace JanitorsCloset
             }
             if (GUILayout.Button("Hide everywhere"))
             {
-                addToHiddenBlockList(ClickedButton, Blocktype.hideEverywhere);                
+                addToHiddenBlockList(ClickedButton, Blocktype.hideEverywhere);
 
                 if (ClickedButton.gameObject.activeSelf)
                     ClickedButton.gameObject.SetActive(false);
                 if (ClickedButton.enabled)
                     ClickedButton.onDisable();
 
-              
+
                 saveButtonData();
                 return;
             }
@@ -976,7 +980,7 @@ namespace JanitorsCloset
                 if (GUILayout.Button("Identify"))
                 {
                     identifyButton = true;
-                    identifyButtonHash =  buttonId(ClickedButton);
+                    identifyButtonHash = buttonId(ClickedButton);
                 }
 
             }
@@ -984,7 +988,7 @@ namespace JanitorsCloset
             //int cnt = 0;
             foreach (var bb in buttonBarList[curScene])
             {
-                
+
                 if (GUILayout.Button(new GUIContent("Move to folder", GameDatabase.Instance.GetTexture(TexturePath + "20_" + folderIcons[bb.Value.folderIcon], false)), GUILayout.Height(22)))
                 {
                     addToButtonBlockList(bb.Value.buttonBlockList, ClickedButton);
@@ -1006,6 +1010,16 @@ namespace JanitorsCloset
         string identifyButtonHash = "";
         string identifier;
 
+
+        private void FixedUpdate()
+        {
+            // if (modFilterWindow != null && modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0)
+            // {
+
+            //}
+           
+
+        }
         private void Update()
         {
             if (blacklistbutton)
@@ -1028,7 +1042,7 @@ namespace JanitorsCloset
                                     blacklistIcons.Add(s, s);
                                     saveBlacklistData(blacklistIcons);
                                 }, 140.0f, 30.0f, true),
-                           
+
                             new DialogGUIButton("Cancel", () => { }, 140.0f, 30.0f, true)
                             )),
                     false,
@@ -1037,14 +1051,14 @@ namespace JanitorsCloset
             if (identifyButton)
             {
                 identifyButton = false;
-                 identifier = "n/a";
-                ButtonDictionaryItem bdi = buttonIdBDI(JanitorsCloset.buttonId(ClickedButton));
+                identifier = "n/a";
+                ButtonDictionaryItem bdi = buttonIdBDI(JanitorsCloset.Instance.buttonId(ClickedButton));
                 if (bdi != null)
                     identifier = bdi.identifier;
                 else
                 {
                     bdi = new ButtonDictionaryItem();
-                    bdi.buttonHash = JanitorsCloset.buttonId(ClickedButton);
+                    bdi.buttonHash = JanitorsCloset.Instance.buttonId(ClickedButton);
                     buttonDictionary.Add(ClickedButton, bdi);
                 }
                 PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
@@ -1054,7 +1068,7 @@ namespace JanitorsCloset
                         HighLogic.UISkin,
                         new Rect(0.5f, 0.5f, 150f, 60f),
                         new DialogGUIFlexibleSpace(),
-                        
+
                         new DialogGUIVerticalLayout(
                             new DialogGUIFlexibleSpace(),
 
@@ -1078,6 +1092,8 @@ namespace JanitorsCloset
         int toolbarMenuRectID;
         int toolbarRectID;
 
+        double lastButtonUpdateTime = 0;
+        bool updateButtons = false;
         /// <summary>
         /// Called by OnGUI
         /// </summary>
@@ -1096,7 +1112,7 @@ namespace JanitorsCloset
                 KSPUtil.ClampRectToScreen(GUILayout.Window(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
             else
                 if (showToolbarMenu != ShowMenuState.hidden)
-                    HideToolbarMenu();
+                HideToolbarMenu();
 
             // ToolbarHide checks to see if the hover has timed out
             if (showToolbar == ShowMenuState.visible)
@@ -1109,6 +1125,8 @@ namespace JanitorsCloset
                 gs.padding = new RectOffset(0, 0, 0, 0);
                 showToolbar = ShowMenuState.visible;
 
+                if (Time.fixedTime - lastButtonUpdateTime > 5)
+                    updateButtons = true;
                 Log.Info("toolbarRect.x: " + toolbarRect.x.ToString() + " y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
                 GUI.Window(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
             }
@@ -1127,17 +1145,17 @@ namespace JanitorsCloset
         {
             Log.Info("JCtoolBar, button count: " + activeButtonBlockList.Count.ToString());
             ButtonSceneBlock toRevert = null;
-           // lasttimeToolBarRectShown = Time.fixedTime;
+            // lasttimeToolBarRectShown = Time.fixedTime;
 
             int cnt = 0;
             drawTooltip = false;
 
             foreach (var curButton in activeButtonBlockList)
             {
-
+#if true
                 if (curButton.Value.blocktype == Blocktype.hideEverywhere ||
                     ApplicationLauncher.Instance.ShouldBeVisible(curButton.Value.origButton))
-                    //curButton.Value.scene == HighLogic.LoadedScene)
+                //curButton.Value.scene == HighLogic.LoadedScene)
                 {
                     Rect brect;
                     if (!ApplicationLauncher.Instance.IsPositionedAtTop)
@@ -1151,11 +1169,16 @@ namespace JanitorsCloset
                     cnt++;
 
                     // In case original button texture is changed
-
+#if true
+                    if (updateButtons)
                     {
-                        if (curButton.Value.buttonTexture != GetButtonTexture(curButton.Value.origButton.sprite))
-                            curButton.Value.buttonTexture = GetButtonTexture(curButton.Value.origButton.sprite);
+                        lastButtonUpdateTime = Time.fixedTime;
+
+                        var b = GetButtonTexture(curButton.Value.origButton.sprite);
+                        if (curButton.Value.buttonTexture != b)
+                            curButton.Value.buttonTexture = b;
                     }
+#endif
                     if (GUI.Button(brect, curButton.Value.buttonTexture as Texture /* , GUILayout.Width(41), GUILayout.Height(41)*/))
                     {
                         Log.Info("Clicking, keyCode: " + Event.current.keyCode.ToString());
@@ -1197,15 +1220,15 @@ namespace JanitorsCloset
                             if (x == null || x.identifier == null)
                                 Log.Info("buttonIdBDI returned a null");
                             Log.Info("Hover over button: " + buttonIdBDI(curButton.Value.buttonHash).identifier);
-                            
+
                             tooltip = b.identifier;
                             //  tooltip = curButton.Value.buttonHash;
                             drawTooltip = true;
-                            
+
                         }
                     }
-                    
-                      
+
+
 
                     if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().enabeHoverOnToolbarIcons)
                     {
@@ -1228,17 +1251,19 @@ namespace JanitorsCloset
                                 curButton.Value.origButton.onHoverOutBtn(curButton.Value.origButton.toggleButton);
                             }
                         }
-                        
+
                     }
                 }
+#endif
             }
+            updateButtons = false;
 
             if (toRevert != null)
             {
                 Log.Info("Removing hash from activeButtonBlockList: " + toRevert.buttonHash + "   blocktype: " + toRevert.blocktype.ToString());
                 activeButtonBlockList.Remove(toRevert.buttonHash);
                 allBlockedButtonsList.Remove(toRevert.buttonHash);
-                
+
                 if (toRevert.blocktype == Blocktype.hideEverywhere || toRevert.blocktype == Blocktype.hideHere)
                 {
                     string hash = toRevert.buttonHash;

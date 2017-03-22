@@ -91,7 +91,7 @@ namespace JanitorsCloset
         }
 
 
-        internal static bool FindPart(AvailablePart part)
+        internal bool FindPart(AvailablePart part)
         {
             if (part == null)
             {
@@ -382,7 +382,24 @@ namespace JanitorsCloset
             {
                 permaPruneWindow.Show();
             }
-            if (GUILayout.Button("Mod Filter"))
+            GUIStyle styleButton = new GUIStyle(GUI.skin.button);
+            string modFilter = "Mod Filter";
+            Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount.ToString() + "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount.ToString());
+            if (modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0)
+            {
+                styleButton.normal.textColor = Color.yellow;
+                styleButton.hover.textColor = Color.yellow;
+                modFilter = "Mod Filter (" + modFilterWindow.ModFilteredCount.ToString() + ", " + modFilterWindow.SizeFilteredCount.ToString() + ")";
+            }
+            else
+            {
+                styleButton.normal.textColor = GUI.skin.button.normal.textColor;
+                styleButton.hover.textColor = GUI.skin.button.hover.textColor;
+            }
+
+
+
+            if (GUILayout.Button(modFilter, styleButton))
             {
                 modFilterWindow.Show();
             }

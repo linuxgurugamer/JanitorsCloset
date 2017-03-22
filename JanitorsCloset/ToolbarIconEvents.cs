@@ -192,7 +192,7 @@ namespace JanitorsCloset
                     if (!JanitorsCloset.buttonDictionary.ContainsKey(a1))
                     {
                         Log.Info("Not in buttonDictionary");
-                        string hash = JanitorsCloset.buttonId(a1);
+                        string hash = JanitorsCloset.Instance.buttonId(a1);
                         ButtonDictionaryItem bdi = new ButtonDictionaryItem();
                         bdi.buttonHash = hash;
 
@@ -252,20 +252,20 @@ namespace JanitorsCloset
                 // after that, the prefab will already contain the changes we want to make
                 foreach (var icon in appListMod)
                 {
-                    if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Button32hash(icon.sprite)))
+                    if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Instance.Button32hash(icon.sprite)))
                     {
                         Log.Info("Icon blacklisted in OnGUIApplicationLauncherReady: " + icon.sprite.texture.name);
                     }
                     else
                     {
                         InstallReplacementToolbarHandler(icon);
-                        Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Button32hash(icon.sprite));
+                        Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
                     }
                 }
                 foreach (var icon in appListModHidden)
                 {
                     InstallReplacementToolbarHandler(icon);
-                    Log.Info("appListModHidden, icon.name: " + icon.sprite.texture.name + "     Hash: " + JanitorsCloset.Button32hash(icon.sprite));
+                    Log.Info("appListModHidden, icon.name: " + icon.sprite.texture.name + "     Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
                 }
 
             }
@@ -295,13 +295,13 @@ namespace JanitorsCloset
                     done = true;
                     foreach (var a1 in appListMod)
                     {
-                        Log.Info("a1 hash: " + JanitorsCloset.Button32hash(a1.sprite));
+                        Log.Info("a1 hash: " + JanitorsCloset.Instance.Button32hash(a1.sprite));
 
                         // foreach (var lc in JanitorsCloset.loadedCfgs)
                         {
                             Cfg cfg;
 
-                            if (JanitorsCloset.loadedCfgs.TryGetValue(HighLogic.LoadedScene.ToString() + JanitorsCloset.Button32hash(a1.sprite), out cfg))
+                            if (JanitorsCloset.loadedCfgs.TryGetValue(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite), out cfg))
                             {
                                 Log.Info("button to folder found in save file");
                                 ButtonBarItem bbi;
@@ -312,27 +312,27 @@ namespace JanitorsCloset
                                 JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1);
 
 
-                                Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.buttonId(a1));
+                                Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.Instance.buttonId(a1));
 
-                                JanitorsCloset.loadedCfgs.Remove(HighLogic.LoadedScene.ToString() + JanitorsCloset.Button32hash(a1.sprite));
+                                JanitorsCloset.loadedCfgs.Remove(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite));
                                 done = false;
                                 break;
                             }
-                            if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString(), out s))
+                            if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString(), out s))
                             {
-                                Log.Info("Button hidden, scene found in save file: " + JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
+                                Log.Info("Button hidden, scene found in save file: " + JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
                                 JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideHere);
 
-                                JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
+                                JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
                             }
                             else
                             {
-                                if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Button32hash(a1.sprite), out s))
+                                if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Instance.Button32hash(a1.sprite), out s))
                                 {
-                                    Log.Info("Button hidden, everywhere found in save file: " + JanitorsCloset.Button32hash(a1.sprite));
+                                    Log.Info("Button hidden, everywhere found in save file: " + JanitorsCloset.Instance.Button32hash(a1.sprite));
                                     JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideEverywhere);
 
-                                    JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Button32hash(a1.sprite));
+                                    JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Instance.Button32hash(a1.sprite));
                                 }
                             }
                         }
@@ -348,9 +348,9 @@ namespace JanitorsCloset
                     {
                         if (a1 != bbl.Value.button)
                         {
-                            if (bbl.Value.buttonBlockList.TryGetValue(JanitorsCloset.buttonId(a1), out s) ||
-                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.buttonId(a1), out s) ||
-                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.buttonId(a1) + HighLogic.LoadedScene.ToString(), out s)
+                            if (bbl.Value.buttonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1), out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1), out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1) + HighLogic.LoadedScene.ToString(), out s)
                                 )
                             {
                                 s.origButton = a1;
@@ -358,7 +358,7 @@ namespace JanitorsCloset
                             }
                             else
                             {
-                                Log.Info("Button not found to remove from toolbar, hash: " + JanitorsCloset.buttonId(a1));
+                                Log.Info("Button not found to remove from toolbar, hash: " + JanitorsCloset.Instance.buttonId(a1));
                                 foreach (var v in bbl.Value.buttonBlockList)
                                 {
                                     Log.Info("buttonBlockList hash: " + v.Value.buttonHash);
@@ -378,7 +378,7 @@ namespace JanitorsCloset
                     updateButtonDictionary(JanitorsCloset.hiddenButtonBlockList[i].Select(i1 => i1.Value.origButton).ToList());
                     foreach (var bbl in JanitorsCloset.hiddenButtonBlockList[i])
                     {
-                        var sl = appListMod.Where(b => JanitorsCloset.buttonId(b) == bbl.Key).ToList();
+                        var sl = appListMod.Where(b => JanitorsCloset.Instance.buttonId(b) == bbl.Key).ToList();
                         Log.Info("hiddenButtonBlockList[" + i.ToString() + ", sl count: " + sl.Count().ToString());
 
                         if (sl.Count > 1)
@@ -386,7 +386,7 @@ namespace JanitorsCloset
                             Log.Error("Multiple identical buttons found in toolbar");
                             foreach (var sli in sl)
                             {
-                                Log.Info("sli.buttonhash: " + JanitorsCloset.buttonId(sli));
+                                Log.Info("sli.buttonhash: " + JanitorsCloset.Instance.buttonId(sli));
                             }
                         }
                         if (sl.Count == 1)
@@ -404,7 +404,7 @@ namespace JanitorsCloset
                             foreach (var v in JanitorsCloset.primaryButtonBlockList)
                                 Log.Info("primaryButtonBlockList hash: " + v.Value.buttonHash);
                             foreach (var v in appListMod)
-                                Log.Info("appListMod hash: " + JanitorsCloset.buttonId(v));
+                                Log.Info("appListMod hash: " + JanitorsCloset.Instance.buttonId(v));
 
                         }
                     }

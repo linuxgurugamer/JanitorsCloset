@@ -119,6 +119,9 @@ namespace JanitorsCloset
         private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
         private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
         private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
+        public int ModFilteredCount = 0;
+        public int SizeFilteredCount = 0;
+
         private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
 
         int selectedFilterList = 1;
@@ -413,6 +416,7 @@ namespace JanitorsCloset
                     states = sizeButtons;
                     break;
             }
+
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Show All"))
@@ -512,6 +516,8 @@ namespace JanitorsCloset
             }
             GUILayout.EndScrollView();
             GUI.DragWindow();
+            ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
+            SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
         }
 
         private static readonly String CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
@@ -590,6 +596,8 @@ namespace JanitorsCloset
                     configSectionNode = configFileNode.GetNode("SIZE");
                     LoadConfigSection(configSectionNode, "Size", sizeButtons);
 
+                    ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
+                    SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
 #if false
             string sorting = config.GetValue<string>("Sorting");
             if (!String.IsNullOrEmpty(sorting))
