@@ -40,6 +40,7 @@ namespace JanitorsCloset
         public ApplicationLauncherButton origButton;
         public bool active;
         public Texture buttonTexture;
+        public Texture buttonTexture2;
 
         public ButtonSceneBlock()
         {
@@ -133,6 +134,7 @@ namespace JanitorsCloset
         const float baseToolbarMenuHeight = 25f + 50f + 25f + 25f; // add 25 for each new button
         const float buttonHeight = 25f;
         const float toolbarMenuWidth = 150f;
+        GUIStyle toolbarButtonStyle = new GUIStyle();
 
         Rect toolbarRect = new Rect();
         ShowMenuState showToolbar = ShowMenuState.hidden;
@@ -237,7 +239,9 @@ namespace JanitorsCloset
                         Log.Info("Texture file: " + TexturePath + "38_" + folderIcons[i] + " not found");
                     else
                     {
-                        folderIconHashes[i] = Button32hash(GetButtonTexture(a));
+                        var b = GetButtonTexture(a);
+                        folderIconHashes[i] = Button32hash(b);
+                        Destroy(b);
                     }
                 }
 
@@ -252,6 +256,16 @@ namespace JanitorsCloset
                 }
 
             }
+            
+
+            toolbarButtonStyle.onActive.background = HighLogic.Skin.button.onActive.background;
+            toolbarButtonStyle.onFocused.background = HighLogic.Skin.button.onFocused.background;
+            toolbarButtonStyle.onNormal.background = HighLogic.Skin.button.onNormal.background;
+            toolbarButtonStyle.onHover.background = HighLogic.Skin.button.active.background;
+            toolbarButtonStyle.active.background = HighLogic.Skin.button.active.background;
+            toolbarButtonStyle.focused.background = HighLogic.Skin.button.focused.background;
+            toolbarButtonStyle.hover.background = HighLogic.Skin.button.hover.background;
+            toolbarButtonStyle.normal.background = HighLogic.Skin.button.normal.background;
             GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
         }
 
@@ -611,8 +625,8 @@ namespace JanitorsCloset
                 {
                     xMin = screenPos.x - btnCnt * (iconSize),
                     xMax = screenPos.x + 5, // - offset,
-                    yMin = screenPos.y,
-                    yMax = screenPos.y + iconSize
+                    yMin = screenPos.y + 2,
+                    yMax = screenPos.y + iconSize 
                 };
             }
             else
@@ -620,7 +634,7 @@ namespace JanitorsCloset
                 // Assume horizontal menu, therefor this needs to be vertical
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x,
+                    xMin = screenPos.x + 2,
                     xMax = screenPos.x + iconSize,
                     yMin = screenPos.y - btnCnt * iconSize,
                     yMax = screenPos.y + 5
@@ -717,15 +731,14 @@ namespace JanitorsCloset
         // static Texture2D img2;
         static Color32[] pixelBlock = null;
         static RenderTexture rt, origrt;
+        
         public Texture2D GetButtonTexture(Texture2D img)
         {
-            Texture2D img2;
-
+            Texture2D img2 = new Texture2D(38, 38, TextureFormat.ARGB32, false);
             // see: https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels.html
             try
             {
                 pixelBlock = img.GetPixels32();
-                img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.SetPixels32(pixelBlock);
                 Log.Info("GetPixels32 loaded image");
             }
@@ -747,10 +760,13 @@ namespace JanitorsCloset
             img2.Apply();
             return img2;
         }
+
         public Texture2D GetButtonTexture(RawImage sprite)
         {
             Texture2D img = sprite.texture as Texture2D;
+   
             img.name = sprite.texture.name;
+
             return GetButtonTexture(img);
 
         }
@@ -765,11 +781,27 @@ namespace JanitorsCloset
                 hash += b1.ToString("x2").ToLower();
             return hash;
         }
+#if false
+        public string Button32hash(Texture img2)
+        {
 
+
+            Crc32 crc32 = new Crc32();
+            String hash = String.Empty;
+            byte[] byteAR = img2.EncodeToPNG();
+
+            foreach (byte b1 in crc32.ComputeHash(byteAR))
+                hash += b1.ToString("x2").ToLower();
+            return hash;
+        }
+#endif
         public string Button32hash(RawImage sprite)
         {
             Texture2D img2 = GetButtonTexture(sprite);
-            return Button32hash(img2);
+            
+            string s = Button32hash(img2);
+            Destroy(img2);
+            return s;
         }
 
         public void ShowToolbarMenu()
@@ -841,6 +873,7 @@ namespace JanitorsCloset
 
 
             bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
+            bsb.buttonTexture2 = selectedButton.sprite.texture;
             buttonBlockList.Add(bsb.buttonHash, bsb);
 
             allBlockedButtonsList.Add(bsb.buttonHash, bsb);
@@ -860,6 +893,7 @@ namespace JanitorsCloset
             bsb.origButton = selectedButton;
 
             bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
+            bsb.buttonTexture2 = selectedButton.sprite.texture;
             if (btype == Blocktype.hideHere)
                 hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
             else
@@ -1013,13 +1047,42 @@ namespace JanitorsCloset
 
         private void FixedUpdate()
         {
-            // if (modFilterWindow != null && modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0)
-            // {
-
-            //}
-           
-
+            // In case original button texture is changed
+            if (activeButtonBlockList!= null) // && Time.fixedTime - lastButtonUpdateTime > 10)
+            { 
+              
+                foreach (var curButton in activeButtonBlockList)
+                {
+                    if (curButton.Value.origButton != null)
+                    {
+                       // lastButtonUpdateTime = Time.fixedTime;
+                        // The following line doesn't work
+                        if (curButton.Value.origButton.sprite.texture != curButton.Value.buttonTexture2)
+                        {
+                            Log.Info("Check found difference");
+                            curButton.Value.buttonTexture2 = curButton.Value.origButton.sprite.texture;
+                        }
+#if false
+                        var b = GetButtonTexture(curButton.Value.origButton.sprite);
+                        if (curButton.Value.buttonTexture != b)
+                        {
+                            Destroy(curButton.Value.buttonTexture);
+                            curButton.Value.buttonTexture = b;
+                        }
+                        else
+                        {
+                            Destroy(b);
+                        }
+#endif
+                        
+                        //Log.Info("Button32hash(curButton.Value.buttonTexture)" + Button32hash(curButton.Value.buttonTexture).ToString());
+                        //Log.Info("Button32hash(curButton.Value.buttonTexture2)" + Button32hash(curButton.Value.buttonTexture2).ToString());
+                        
+                    }
+                }
+            }
         }
+
         private void Update()
         {
             if (blacklistbutton)
@@ -1092,8 +1155,8 @@ namespace JanitorsCloset
         int toolbarMenuRectID;
         int toolbarRectID;
 
-        double lastButtonUpdateTime = 0;
-        bool updateButtons = false;
+       // double lastButtonUpdateTime = 0;
+       // bool updateButtons = false;
         /// <summary>
         /// Called by OnGUI
         /// </summary>
@@ -1125,8 +1188,8 @@ namespace JanitorsCloset
                 gs.padding = new RectOffset(0, 0, 0, 0);
                 showToolbar = ShowMenuState.visible;
 
-                if (Time.fixedTime - lastButtonUpdateTime > 5)
-                    updateButtons = true;
+              //  if (Time.fixedTime - lastButtonUpdateTime > 5)
+              //      updateButtons = true;
                 Log.Info("toolbarRect.x: " + toolbarRect.x.ToString() + " y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
                 GUI.Window(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
             }
@@ -1159,27 +1222,17 @@ namespace JanitorsCloset
                 {
                     Rect brect;
                     if (!ApplicationLauncher.Instance.IsPositionedAtTop)
-                        brect = new Rect(0, 41 * cnt, 41, 41);
+                        brect = new Rect(0, 41 * cnt, 38, 38);
                     else
-                        brect = new Rect(41 * cnt, 0, 41, 41);
+                        brect = new Rect(41 * cnt, 0, 38, 38);
 
 
                     Log.Info("scene: " + HighLogic.LoadedScene.ToString() + "   cnt: " + cnt.ToString() + "   brect, x,y: " + brect.x.ToString() + ", " + brect.y.ToString() + "   width, height: " + brect.width.ToString() + ", " + brect.height.ToString());
 
                     cnt++;
 
-                    // In case original button texture is changed
-#if true
-                    if (updateButtons)
-                    {
-                        lastButtonUpdateTime = Time.fixedTime;
-
-                        var b = GetButtonTexture(curButton.Value.origButton.sprite);
-                        if (curButton.Value.buttonTexture != b)
-                            curButton.Value.buttonTexture = b;
-                    }
-#endif
-                    if (GUI.Button(brect, curButton.Value.buttonTexture as Texture /* , GUILayout.Width(41), GUILayout.Height(41)*/))
+                   
+                    if (GUI.Button(brect, curButton.Value.buttonTexture2, toolbarButtonStyle /* as Texture */ /* , GUILayout.Width(41), GUILayout.Height(41)*/))
                     {
                         Log.Info("Clicking, keyCode: " + Event.current.keyCode.ToString());
 
@@ -1256,7 +1309,7 @@ namespace JanitorsCloset
                 }
 #endif
             }
-            updateButtons = false;
+           // updateButtons = false;
 
             if (toRevert != null)
             {

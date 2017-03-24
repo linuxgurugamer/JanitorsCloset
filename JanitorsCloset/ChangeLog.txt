@@ -176,6 +176,10 @@ ChangeLog
 0.2.15.6
 		Fixed memory leak of multi megs a sec when the toolbar was displayed, by limiting the updating of the toolbar icons to once every 5 seconds
 
+0.2.16
+		Permanent fix to memory leak problem
+		Fixed performance issue as well, where fps would drop by 20-40fps when toolbar was open
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
