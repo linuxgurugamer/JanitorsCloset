@@ -309,13 +309,18 @@ namespace JanitorsCloset
                                 {
                                     bbi = JanitorsCloset.Instance.AddAdditionalToolbarButton(cfg.toolbarButtonIndex, cfg.scene);
                                 }
-                                JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1);
+                                if (JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1))
+                                {
 
 
-                                Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.Instance.buttonId(a1));
+                                    Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.Instance.buttonId(a1));
 
-                                JanitorsCloset.loadedCfgs.Remove(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite));
-                                done = false;
+                                    JanitorsCloset.loadedCfgs.Remove(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite));
+                                    done = false;
+                                } else
+                                {
+                                    Log.Error("Error adding to button block list");
+                                }
                                 break;
                             }
                             if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString(), out s))

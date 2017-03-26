@@ -180,6 +180,11 @@ ChangeLog
 		Permanent fix to memory leak problem
 		Fixed performance issue as well, where fps would drop by 20-40fps when toolbar was open
 
+0.2.17
+		Found error in CRC calculations (was making a fixed texture of 38x38, instead of using the source textures size)
+			This was causing some textures to come up with the same CRC, which breaks things
+		Added try/catch to watch for duplicate CRC codes
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

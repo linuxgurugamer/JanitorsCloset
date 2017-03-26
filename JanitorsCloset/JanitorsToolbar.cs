@@ -734,7 +734,7 @@ namespace JanitorsCloset
         
         public Texture2D GetButtonTexture(Texture2D img)
         {
-            Texture2D img2 = new Texture2D(38, 38, TextureFormat.ARGB32, false);
+            Texture2D img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
             // see: https://docs.unity3d.com/ScriptReference/Texture2D.GetPixels.html
             try
             {
@@ -760,9 +760,37 @@ namespace JanitorsCloset
             img2.Apply();
             return img2;
         }
-
+#if false
+        Texture2D ConvertSpriteToTexture(Sprite sprite)
+        {
+            try
+            {
+                if (sprite.rect.width != sprite.texture.width)
+                {
+                    Texture2D newText = new Texture2D((int)sprite.rect.width, (int)sprite.rect.height);
+                    Color[] colors = newText.GetPixels();
+                    Color[] newColors = sprite.texture.GetPixels((int)System.Math.Ceiling(sprite.textureRect.x),
+                                                                 (int)System.Math.Ceiling(sprite.textureRect.y),
+                                                                 (int)System.Math.Ceiling(sprite.textureRect.width),
+                                                                 (int)System.Math.Ceiling(sprite.textureRect.height));
+                    Debug.Log(colors.Length + "_" + newColors.Length);
+                    newText.SetPixels(newColors);
+                    newText.Apply();
+                    return newText;
+                }
+                else
+                    return sprite.texture;
+            }
+            catch
+            {
+                return sprite.texture;
+            }
+        }
+#endif
         public Texture2D GetButtonTexture(RawImage sprite)
         {
+            // return ConvertSpriteToTexture(sprite);
+
             Texture2D img = sprite.texture as Texture2D;
    
             img.name = sprite.texture.name;
@@ -776,9 +804,10 @@ namespace JanitorsCloset
             Crc32 crc32 = new Crc32();
             String hash = String.Empty;
             byte[] byteAR = img2.EncodeToPNG();
-
+            Log.Info("byteAR size: " + byteAR.Length.ToString());
             foreach (byte b1 in crc32.ComputeHash(byteAR))
                 hash += b1.ToString("x2").ToLower();
+            Log.Info("byteAR size: " + byteAR.Length.ToString() + "   hash: " + hash);
             return hash;
         }
 #if false
@@ -861,7 +890,7 @@ namespace JanitorsCloset
             InputLockManager.RemoveControlLock("Pruner");
         }
 
-        public void addToButtonBlockList(Dictionary<string, ButtonSceneBlock> buttonBlockList, ApplicationLauncherButton selectedButton)
+        public bool addToButtonBlockList(Dictionary<string, ButtonSceneBlock> buttonBlockList, ApplicationLauncherButton selectedButton)
         {
             ButtonSceneBlock bsb = new ButtonSceneBlock();
             bsb.buttonHash = buttonId(selectedButton);
@@ -874,11 +903,34 @@ namespace JanitorsCloset
 
             bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
             bsb.buttonTexture2 = selectedButton.sprite.texture;
-            buttonBlockList.Add(bsb.buttonHash, bsb);
+#if DEBUG
+            foreach (var s in buttonBlockList)
+                Log.Info("addToButtonBlockList,  buttonBlockList key: " + s.Key);
+#endif
+            try
+            {
+                buttonBlockList.Add(bsb.buttonHash, bsb);
+            } catch
+            {
+                Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in buttonBlockList, not being added");
+                return false;
+            }
 
-            allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+#if DEBUG
+            foreach (var s in allBlockedButtonsList)
+                Log.Info("addToButtonBlockList, allBlockedButtonsList key: " + s.Key);
+#endif
+            try
+            {
+                allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+            } catch
+            {
+                Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in allBlockedButtonsList, not being added");
+                return false;
+            }
 
             showToolbarMenu = ShowMenuState.hiding;
+            return true;
         }
 
         public void addToHiddenBlockList(ApplicationLauncherButton selectedButton, Blocktype btype)
@@ -995,15 +1047,21 @@ namespace JanitorsCloset
                 {
                     Log.Info("new toolbarbutton index: " + i.ToString());
                     var newToolbarFolderButton = AddAdditionalToolbarButton(i);
-                    addToButtonBlockList(newToolbarFolderButton.buttonBlockList, ClickedButton);
+                    if (addToButtonBlockList(newToolbarFolderButton.buttonBlockList, ClickedButton))
+                    {
 
-                    if (ClickedButton.gameObject.activeSelf)
-                        ClickedButton.gameObject.SetActive(false);
-                    if (ClickedButton.enabled)
-                        ClickedButton.onDisable();
+                        if (ClickedButton.gameObject.activeSelf)
+                            ClickedButton.gameObject.SetActive(false);
+                        if (ClickedButton.enabled)
+                            ClickedButton.onDisable();
 
-                    saveButtonData();
-                    return;
+                        saveButtonData();
+                        return;
+                    }
+                    else
+                    {
+                        Log.Error("Error adding to button block list");
+                    }
                 }
             }
             if (GUILayout.Button("Add to Blacklist"))
@@ -1025,14 +1083,19 @@ namespace JanitorsCloset
 
                 if (GUILayout.Button(new GUIContent("Move to folder", GameDatabase.Instance.GetTexture(TexturePath + "20_" + folderIcons[bb.Value.folderIcon], false)), GUILayout.Height(22)))
                 {
-                    addToButtonBlockList(bb.Value.buttonBlockList, ClickedButton);
+                    if (addToButtonBlockList(bb.Value.buttonBlockList, ClickedButton))
+                    {
 
-                    if (ClickedButton.gameObject.activeSelf)
-                        ClickedButton.gameObject.SetActive(false);
-                    if (ClickedButton.enabled)
-                        ClickedButton.onDisable();
+                        if (ClickedButton.gameObject.activeSelf)
+                            ClickedButton.gameObject.SetActive(false);
+                        if (ClickedButton.enabled)
+                            ClickedButton.onDisable();
 
-                    saveButtonData();
+                        saveButtonData();
+                    } else
+                    {
+                        Log.Error("Error adding to button block list");
+                    }
                     return;
                 }
             }
