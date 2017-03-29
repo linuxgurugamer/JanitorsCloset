@@ -185,6 +185,9 @@ ChangeLog
 			This was causing some textures to come up with the same CRC, which breaks things
 		Added try/catch to watch for duplicate CRC codes
 
+0.2.17.1
+		Removed horizontal scroll bar in ModFilterWindow
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

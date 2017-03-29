@@ -489,7 +489,9 @@ namespace JanitorsCloset
 
             keys.Sort(CompareEntries);
 
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+            // This will hide the horizontal scrollbar
+            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+//            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
             foreach (string name in keys)
             {
                 ToggleState state = states[name];

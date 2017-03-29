@@ -32,7 +32,7 @@ namespace JanitorsCloset
             {
                 while (EditorPartList.Instance == null) yield return null;
 
-                var prefab = EditorPartList.Instance.partPrefab;
+                var prefab = EditorPartList.Instance.partPrefab; 
 
                 InstallReplacementHandler(prefab);
 
