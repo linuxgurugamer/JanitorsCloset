@@ -188,6 +188,10 @@ ChangeLog
 0.2.17.1
 		Removed horizontal scroll bar in ModFilterWindow
 
+0.2.18
+		Fixed bug where the blocked part titles weren't being shown in the editor after leaving the editor and returning
+		Added HideUnpurchased button to Mod Filter window
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

@@ -121,12 +121,20 @@ namespace JanitorsCloset
         private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
         public int ModFilteredCount = 0;
         public int SizeFilteredCount = 0;
+        bool hideUnpurchased = false;
 
         private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
 
         int selectedFilterList = 1;
 
         //-------------------------------------------------------------------------------------------------------------------------------------------
+        bool PartIsPurchased(AvailablePart info)
+        {
+            if (PartLoader.Instance == null) return false;
+            return HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX || ResearchAndDevelopment.PartModelPurchased(info);
+        }
+
+
         string FindPartMod(AvailablePart part)
         {
             Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
@@ -285,11 +293,20 @@ namespace JanitorsCloset
             }
             return false;
         }
+        bool PartInUnpurchasedButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            if (!hideUnpurchased)
+                return true;
+            return PartIsPurchased(part);
+        }
 
         void DefineFilters()
         {
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
+
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons(part, sizeButtons, sizeHash))));
+
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();
         }
@@ -419,6 +436,17 @@ namespace JanitorsCloset
 
             GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
+            if (HighLogic.CurrentGame.Mode != Game.Modes.SANDBOX)
+            {
+                string s = " Hide Unpurchased ";
+                if (hideUnpurchased)
+                    s = " Show Unpurchased ";
+                if (GUILayout.Button(s))
+                {
+                    hideUnpurchased = !hideUnpurchased;
+                    EditorPartList.Instance.Refresh();
+                }
+            }
             if (GUILayout.Button("Show All"))
             {
                 var names = new List<string>(states.Keys);

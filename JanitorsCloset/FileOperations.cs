@@ -66,6 +66,11 @@ namespace JanitorsCloset
         public Dictionary<string, blackListPart> loadData(string fname)
         {
             Dictionary<string, blackListPart> blpList = new Dictionary<string, blackListPart>();
+
+            List<AvailablePart> loadedParts = new List<AvailablePart>();
+            if (PartLoader.Instance != null)
+                loadedParts.AddRange(PartLoader.LoadedPartsList);
+
             if (fname != "" && File.Exists(fname))
             {
                 using (StreamReader f = File.OpenText(fname))
@@ -85,6 +90,8 @@ namespace JanitorsCloset
                             if (s[1] == "VAB")
                                 blp.where = blackListType.VAB;
 
+                            AvailablePart p = loadedParts.Find(part => part.name == blp.modName);
+                            blp.title = p.title;
                             Log.Info("Blacklist mod: " + blp.modName);
                             blp.permapruned = false;
 
