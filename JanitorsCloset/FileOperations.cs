@@ -71,6 +71,7 @@ namespace JanitorsCloset
             if (PartLoader.Instance != null)
                 loadedParts.AddRange(PartLoader.LoadedPartsList);
 
+            Log.Info("loadData, fname: " + fname);
             if (fname != "" && File.Exists(fname))
             {
                 using (StreamReader f = File.OpenText(fname))
@@ -89,13 +90,17 @@ namespace JanitorsCloset
                                 blp.where = blackListType.SPH;
                             if (s[1] == "VAB")
                                 blp.where = blackListType.VAB;
-
+                            
                             AvailablePart p = loadedParts.Find(part => part.name == blp.modName);
-                            blp.title = p.title;
-                            Log.Info("Blacklist mod: " + blp.modName);
-                            blp.permapruned = false;
+                            if (p != null)
+                            {
+                                blp.title = p.title;
+                                Log.Info("Blacklist mod: " + blp.modName);
+                                Log.Info("partTitle: " + blp.title);
+                                blp.permapruned = false;
 
-                            blpList.Add(blp.modName, blp);
+                                blpList.Add(blp.modName, blp);
+                            }
                         }
                     }
                 }

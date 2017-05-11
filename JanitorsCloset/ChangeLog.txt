@@ -192,7 +192,12 @@ ChangeLog
 		Fixed bug where the blocked part titles weren't being shown in the editor after leaving the editor and returning
 		Added HideUnpurchased button to Mod Filter window
 
+0.2.19
+		Added check when loading blacklist to be sure part isn't pruned, avoids nullreff
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune
+	Block or show based on resource
+	Add Filter/sort to tracking station
 
