@@ -193,7 +193,10 @@ ChangeLog
 		Added HideUnpurchased button to Mod Filter window
 
 0.2.19
-		Added check when loading blacklist to be sure part isn't pruned, avoids nullreff
+		Added check when loading blacklist to be sure part isn't pruned, avoids nullref
+
+0.2.20
+		Fixed nullref when hidden icon textures were null
 
 	TODO
 	Blacklist filter
