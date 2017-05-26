@@ -302,10 +302,14 @@ namespace JanitorsCloset
 
         void DefineFilters()
         {
+            Log.Info("DefineFilters");
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
+            Log.Info("DefineFilters 2");
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
+            Log.Info("DefineFilters 3");
 
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons(part, sizeButtons, sizeHash))));
+            Log.Info("DefineFilters 4");
 
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();

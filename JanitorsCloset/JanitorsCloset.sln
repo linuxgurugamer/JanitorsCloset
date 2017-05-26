@@ -7,7 +7,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JanitorsCloset", "JanitorsC
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7F692D76-80B4-4B37-BBEF-26A00C5B9BE6}"
 	ProjectSection(SolutionItems) = preProject
+		buildRelease.bat = buildRelease.bat
 		Changelog.txt = Changelog.txt
+		deploy.bat = deploy.bat
 		JanitorsCloset.version = JanitorsCloset.version
 	EndProjectSection
 EndProject

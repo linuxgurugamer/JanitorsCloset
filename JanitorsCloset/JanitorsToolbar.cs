@@ -7,6 +7,7 @@ using System.Text;
 
 using UnityEngine;
 using UnityEngine.EventSystems;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
@@ -266,7 +267,19 @@ namespace JanitorsCloset
             toolbarButtonStyle.focused.background = HighLogic.Skin.button.focused.background;
             toolbarButtonStyle.hover.background = HighLogic.Skin.button.hover.background;
             toolbarButtonStyle.normal.background = HighLogic.Skin.button.normal.background;
-            GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
+            //GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
+        }
+
+        void OnEnable()
+        {
+            //Tell our 'OnLevelFinishedLoading' function to start listening for a scene change as soon as this script is enabled.
+            SceneManager.sceneLoaded += OnSceneLoadedGUIReady;
+        }
+
+        void OnDisable()
+        {
+            //Tell our 'OnLevelFinishedLoading' function to stop listening for a scene change as soon as this script is disabled. Remember to always have an unsubscription for every delegate you subscribe to!
+            SceneManager.sceneLoaded -= OnSceneLoadedGUIReady;
         }
 
         int folderIndex(string hash)
@@ -702,7 +715,7 @@ namespace JanitorsCloset
             Log.Info("JanitorsCloset.OnRightClick");
             if (Clicked != primaryAppButton)
             {
-                if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
+                if (!ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) && !ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary))
                     return;
                 ClickedButton = Clicked;
                 Log.Info("Clicked Button hash: " + buttonId(Clicked) + "   name: " + ClickedButton.sprite.texture.name);
@@ -1153,7 +1166,8 @@ namespace JanitorsCloset
                 blacklistbutton = false;
                 PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
                     new Vector2(0.5f, 0.5f),
-                    new MultiOptionDialog("",
+                    new MultiOptionDialog("janitorsToolbar1",
+                        "",
                         "Janitor's Toolbar",
                         HighLogic.UISkin,
                         new Rect(0.5f, 0.5f, 150f, 60f),
@@ -1189,7 +1203,8 @@ namespace JanitorsCloset
                 }
                 PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f),
                     new Vector2(0.5f, 0.5f),
-                    new MultiOptionDialog("\nEnter Button identity:",
+                    new MultiOptionDialog("janitorsToolbar2",
+                        "\nEnter Button identity:",
                         "Janitor's Toolbar",
                         HighLogic.UISkin,
                         new Rect(0.5f, 0.5f, 150f, 60f),
@@ -1318,7 +1333,7 @@ namespace JanitorsCloset
                         if (Input.GetMouseButtonUp(1))
                         {
                             Log.Info("Mouse1");
-                            if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
+                            if (!ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) && !ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary))
                                 curButton.Value.origButton.onRightClick();
                             else
                             {

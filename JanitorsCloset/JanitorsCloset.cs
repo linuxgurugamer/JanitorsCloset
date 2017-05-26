@@ -6,11 +6,15 @@ using System.Linq;
 using System.Text;
 
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
 using System.IO;
+
+
+using System.Collections;
 
 namespace JanitorsCloset
 {
@@ -134,20 +138,12 @@ namespace JanitorsCloset
             
         }
 
-        void OnSceneLoadedGUIReady(GameScenes scene)
+        void OnSceneLoadedGUIReady(Scene scene, LoadSceneMode mode)
         {
             Log.Info("OnSceneLoadedGUIReady");
             if (HighLogic.LoadedSceneIsEditor)
             {
-                blackList = FileOperations.Instance.loadBlackListData();
-
-                EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
-
-                Func<AvailablePart, bool> _criteria = (_aPart) => FindPart(_aPart);
-                searchFilterParts = new EditorPartListFilter<AvailablePart>(MOD, _criteria);
-                EditorPartList.Instance.ExcludeFilters.AddFilter(searchFilterParts);
-
-                InitializeGUI();
+                StartCoroutine(sceneReady());
             }
             else
             {
@@ -156,6 +152,26 @@ namespace JanitorsCloset
                     modFilterWindow.Hide();
                 _showMenu = false;
             }
+        }
+
+        public IEnumerator sceneReady()
+        { 
+            while (EditorPartList.Instance == null)
+                yield return new WaitForSeconds(0.2f);
+
+
+            blackList = FileOperations.Instance.loadBlackListData();
+
+            EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
+
+            Func<AvailablePart, bool> _criteria = (_aPart) => FindPart(_aPart);
+            searchFilterParts = new EditorPartListFilter<AvailablePart>(MOD, _criteria);
+
+            EditorPartList.Instance.ExcludeFilters.AddFilter(searchFilterParts);
+
+            InitializeGUI();
+            //yield return 0; 
+
         }
 
         new void Start()
@@ -179,7 +195,8 @@ namespace JanitorsCloset
         EditorPartIcon _icon;
         private void IconClicked(EditorPartIcon icon, EditorIconEvents.EditorIconClickEvent evt)
         {
-            if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary) && !Input.GetKey(GameSettings.MODIFIER_KEY.secondary))
+            Log.Info("IconClicked");
+            if (!ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) && !ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary))
                 return;
 
             Log.Info("Icon was clicked for " + icon.partInfo.name + " (" + icon.partInfo.title + "), icon.name: " + icon.name);

@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Linq;
 using System.Text;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
@@ -57,15 +58,26 @@ namespace JanitorsCloset
                 if (enable)
                 {
                     GameEvents.onGameSceneLoadRequested.Add(this.CallbackGameSceneLoadRequested);
-                    GameEvents.onLevelWasLoaded.Add(this.CallbackLevelWasLoaded);
+                   // GameEvents.onLevelWasLoaded.Add(this.CallbackLevelWasLoaded);
                     GameEvents.onGameStatePostLoad.Add(this.CallbackOnGameStatePostLoad);
                 }
                 else
                 {
                     GameEvents.onGameSceneLoadRequested.Remove(this.CallbackGameSceneLoadRequested);
-                    GameEvents.onLevelWasLoaded.Remove(this.CallbackLevelWasLoaded);
+                    //GameEvents.onLevelWasLoaded.Remove(this.CallbackLevelWasLoaded);
                     GameEvents.onGameStatePostLoad.Remove(this.CallbackOnGameStatePostLoad);
                 }
+            }
+            void OnEnable()
+            {
+                //Tell our 'OnLevelFinishedLoading' function to start listening for a scene change as soon as this script is enabled.
+                SceneManager.sceneLoaded += CallbackLevelWasLoaded;
+            }
+
+            void OnDisable()
+            {
+                //Tell our 'OnLevelFinishedLoading' function to stop listening for a scene change as soon as this script is disabled. Remember to always have an unsubscription for every delegate you subscribe to!
+                SceneManager.sceneLoaded -= CallbackLevelWasLoaded;
             }
             private void CallbackGameSceneLoadRequested(GameScenes scene)
             {
@@ -103,7 +115,7 @@ namespace JanitorsCloset
                 Log.Info("CallbackOnGameStatePostLoad");
 
             }
-            private void CallbackLevelWasLoaded(GameScenes scene)
+            private void CallbackLevelWasLoaded(Scene scene, LoadSceneMode mode)
             {
                 lasttimecheck = 0;
                 lastTime = Time.fixedTime;
@@ -459,7 +471,7 @@ namespace JanitorsCloset
             void onRightClick()
             {
                 Log.Info("ToolbarIconEvents.OnRightClick");
-                if (!Input.GetKey(GameSettings.MODIFIER_KEY.primary))
+                if (!ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary))
                 {
                     Log.Info("Calling savedHandler");
                     savedHandler();

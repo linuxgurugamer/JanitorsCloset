@@ -198,6 +198,11 @@ ChangeLog
 0.2.20
 		Fixed nullref when hidden icon textures were null
 
+0.3.0
+		replaced depreciated call to GameEvents.onLevelWasLoaded with Unity SceneManagment calls
+		Moved search filter initialization into coroutine because of 1.3 change
+		Replaced Input.GetKey with ExtendedInput.GetKey
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

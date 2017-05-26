@@ -93,8 +93,9 @@ namespace JanitorsCloset
                         break;
 
                     case winContent.permaprune:
-                        dialog = new MultiOptionDialog("This will permanently rename files to prevent them from being loaded", "Permanent Prune", HighLogic.UISkin, new DialogGUIBase[] {
-                                                                                     new DialogGUIButton ("OK", () => {
+                        dialog = new MultiOptionDialog("janitorsToolbar3",
+                                                        "This will permanently rename files to prevent them from being loaded", "Permanent Prune", HighLogic.UISkin, new DialogGUIBase[] {
+                                                        new DialogGUIButton ("OK", () => {
                                                              winState = winContent.close;
                                                              startPruner();
                                                              // pruner();
@@ -109,8 +110,9 @@ namespace JanitorsCloset
                         break;
 
                     case winContent.undo:
-                        dialog = new MultiOptionDialog("This will permanently rename pruned files to allow them to be loaded", "Unprune (restore)", HighLogic.UISkin, new DialogGUIBase[] {
-                                                                                     new DialogGUIButton ("OK", () => {
+                        dialog = new MultiOptionDialog("janitorsToolbar4",
+                                                        "This will permanently rename pruned files to allow them to be loaded", "Unprune (restore)", HighLogic.UISkin, new DialogGUIBase[] {
+                                                        new DialogGUIButton ("OK", () => {
                                                              unpruner();
                                                              winState = winContent.close;
                                                         }),
