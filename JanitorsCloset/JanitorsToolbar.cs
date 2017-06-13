@@ -270,14 +270,16 @@ namespace JanitorsCloset
             //GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
         }
 
-        void OnEnable()
+        new void  OnEnable()
         {
+            base.OnEnable();
             //Tell our 'OnLevelFinishedLoading' function to start listening for a scene change as soon as this script is enabled.
             SceneManager.sceneLoaded += OnSceneLoadedGUIReady;
         }
 
-        void OnDisable()
+        new void OnDisable()
         {
+            base.OnDisable();
             //Tell our 'OnLevelFinishedLoading' function to stop listening for a scene change as soon as this script is disabled. Remember to always have an unsubscription for every delegate you subscribe to!
             SceneManager.sceneLoaded -= OnSceneLoadedGUIReady;
         }

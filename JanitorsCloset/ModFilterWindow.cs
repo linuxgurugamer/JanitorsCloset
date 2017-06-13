@@ -116,11 +116,16 @@ namespace JanitorsCloset
         }
         private Dictionary<string, ToggleState> modButtons = new Dictionary<string, ToggleState>();
         private Dictionary<string, ToggleState> sizeButtons = new Dictionary<string, ToggleState>();
+        private Dictionary<string, ToggleState> resourceButtons = new Dictionary<string, ToggleState>();
+
         private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
+
         private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
         private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
+        private Dictionary<string, HashSet<AvailablePart>> resourceHash = new Dictionary<string, HashSet<AvailablePart>>();
         public int ModFilteredCount = 0;
         public int SizeFilteredCount = 0;
+        public int ResourceFilteredCount = 0;
         bool hideUnpurchased = false;
 
         private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
@@ -198,6 +203,32 @@ namespace JanitorsCloset
                 Log.Info(string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
                 sizeHash[partInfo.partSize].Add(part);
 
+                // Add any resources the part has listed
+                if (part.resourceInfos.Count > 0)
+                {
+                    foreach (var res in part.resourceInfos)
+                    {
+                        if (!resourceButtons.ContainsKey(res.resourceName))
+                        {
+                            Log.Info(string.Format("define new resource filter key {0}", res.resourceName));
+                            resourceButtons.Add(res.resourceName, new ToggleState() { enabled = true, latched = false });
+                            resourceHash.Add(res.resourceName, new HashSet<AvailablePart>());
+                        }
+                        Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, res.resourceName));
+                        resourceHash[res.resourceName].Add(part);
+                    }
+                }
+                else
+                {
+                    string resname = "None";
+                    if (!resourceButtons.ContainsKey(resname))
+                    {
+                        resourceButtons.Add(resname, new ToggleState() { enabled = true, latched = false });
+                        resourceHash.Add(resname, new HashSet<AvailablePart>());
+                    }
+                    Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, resname));
+                    resourceHash[resname].Add(part);
+                }
 
                 // the part's base directory name is used to filter entire mods in and out
                 string partModName = FindPartMod(part);
@@ -303,14 +334,15 @@ namespace JanitorsCloset
         void DefineFilters()
         {
             Log.Info("DefineFilters");
+            
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
-            Log.Info("DefineFilters 2");
+            
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
-            Log.Info("DefineFilters 3");
+
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Filter", (part => PartInFilteredButtons(part, resourceButtons, resourceHash))));
 
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons(part, sizeButtons, sizeHash))));
-            Log.Info("DefineFilters 4");
-
+            
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();
         }
@@ -319,15 +351,27 @@ namespace JanitorsCloset
         static GUIStyle styleButtonSettings;
         public void Start()
         {
+           
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             LoadValuesFromConfig(selectedFilterList);
-            DefineFilters();
+            //DefineFilters();
             modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
 
             modwindowRectID = JanitorsCloset.getNextID();
             enabled = false;
+            
         }
+
+        bool filtersDefined = false;
+        public void Update()
+        {
+            if (filtersDefined)
+                return;
+            filtersDefined = true;
+            DefineFilters();
+        }
+
         void InitStyles()
         {
             styleButton = new GUIStyle(GUI.skin.button);
@@ -410,7 +454,7 @@ namespace JanitorsCloset
         }
 
         Vector2 scrollPosition;
-        string[] filterType = new string[] { "Mod Name", "Module Size" };
+        string[] filterType = new string[] { "Mod Name", "Module Size", "Resources" };
         int selFilter = 0;
 
         private void FilterChildWindowHandler(int id)
@@ -435,6 +479,9 @@ namespace JanitorsCloset
                     break;
                 case 1:
                     states = sizeButtons;
+                    break;
+                case 2:
+                    states = resourceButtons;
                     break;
             }
 
@@ -552,6 +599,7 @@ namespace JanitorsCloset
             GUI.DragWindow();
             ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
             SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
+            ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabled == false).Count();
         }
 
         private static readonly String CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
@@ -632,6 +680,7 @@ namespace JanitorsCloset
 
                     ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
                     SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
+                    ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabled == false).Count();
 #if false
             string sorting = config.GetValue<string>("Sorting");
             if (!String.IsNullOrEmpty(sorting))

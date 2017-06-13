@@ -128,6 +128,7 @@ namespace JanitorsCloset
         ModFilterWindow modFilterWindow = null;
         ShowBlocked showBlocked = null;
         ShowRenamed showRenamed = null;
+        public bool guiInitialized = false;
 
         void InitializeGUI()
         {
@@ -135,7 +136,6 @@ namespace JanitorsCloset
             modFilterWindow = this.gameObject.AddComponent<ModFilterWindow>();
             showBlocked = this.gameObject.AddComponent<ShowBlocked>();
             showRenamed = this.gameObject.AddComponent<ShowRenamed>();
-            
         }
 
         void OnSceneLoadedGUIReady(Scene scene, LoadSceneMode mode)
@@ -159,7 +159,7 @@ namespace JanitorsCloset
             while (EditorPartList.Instance == null)
                 yield return new WaitForSeconds(0.2f);
 
-
+            Log.Info("sceneReady");
             blackList = FileOperations.Instance.loadBlackListData();
 
             EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
@@ -171,7 +171,7 @@ namespace JanitorsCloset
 
             InitializeGUI();
             //yield return 0; 
-
+            guiInitialized = true;
         }
 
         new void Start()
@@ -401,12 +401,12 @@ namespace JanitorsCloset
             }
             GUIStyle styleButton = new GUIStyle(GUI.skin.button);
             string modFilter = "Mod Filter";
-            Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount.ToString() + "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount.ToString());
-            if (modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0)
+            Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount.ToString() + "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount.ToString() + "   modFilterWindow.ResourceFilteredCount: " + modFilterWindow.ResourceFilteredCount.ToString());
+            if (modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0 || modFilterWindow.ResourceFilteredCount > 0)
             {
                 styleButton.normal.textColor = Color.yellow;
                 styleButton.hover.textColor = Color.yellow;
-                modFilter = "Mod Filter (" + modFilterWindow.ModFilteredCount.ToString() + ", " + modFilterWindow.SizeFilteredCount.ToString() + ")";
+                modFilter = "Mod Filter (" + modFilterWindow.ModFilteredCount.ToString() + ", " + modFilterWindow.SizeFilteredCount.ToString() + ", " + modFilterWindow.ResourceFilteredCount.ToString() + ")";
             }
             else
             {
