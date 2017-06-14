@@ -211,7 +211,9 @@ namespace JanitorsCloset
 
         private void IconHover(EditorPartIcon icon, bool hover)
         {
-            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod)
+            Log.Info("IconHover,  ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary): " + ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary).ToString());
+            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod || 
+                ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) || ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary)) 
             {
                 string mod = ModFilterWindow.FindPartMod(icon.partInfo);
              
@@ -221,6 +223,8 @@ namespace JanitorsCloset
                 else
                     tooltip = "";
             }
+            else
+                tooltip = "";
         }
 
 

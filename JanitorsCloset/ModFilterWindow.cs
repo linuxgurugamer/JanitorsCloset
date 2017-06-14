@@ -168,7 +168,7 @@ namespace JanitorsCloset
             this.enabled = false;
         }
 
-        string UsefulModuleName(string longName)
+        static string UsefulModuleName(string longName)
         {
             Log.Info("ModFilterWindow.UsefulModuleName");
 
@@ -337,7 +337,9 @@ namespace JanitorsCloset
         void DefineFilters()
         {
             Log.Info("DefineFilters");
-            
+            if (configs == null)
+                configs = GameDatabase.Instance.GetConfigs("PART");
+
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
             
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
@@ -352,14 +354,20 @@ namespace JanitorsCloset
 
         static GUIStyle styleButton = null;
         static GUIStyle styleButtonSettings;
-        public void Start()
+        
+        void InitData()
         {
             if (configs == null)
                 configs = GameDatabase.Instance.GetConfigs("PART");
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             LoadValuesFromConfig(selectedFilterList);
-            //DefineFilters();
+
+        }
+        public void Start()
+        {
+            InitData();
+            // DefineFilters();
             modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
 
             modwindowRectID = JanitorsCloset.getNextID();

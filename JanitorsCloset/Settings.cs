@@ -49,7 +49,8 @@ namespace JanitorsCloset
         [GameParameters.CustomParameterUI("Enable Button Tooltip")]
         public bool buttonTooltip = true;
 
-        [GameParameters.CustomParameterUI("Show mod part is from when hovering")]
+        [GameParameters.CustomParameterUI("Always show the parent mod in a tooltip", 
+            toolTip = "If disabled, then the tooltip will be show when the modifier key is held down")]
         public bool showMod = true;
 
 
