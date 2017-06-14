@@ -49,6 +49,9 @@ namespace JanitorsCloset
         [GameParameters.CustomParameterUI("Enable Button Tooltip")]
         public bool buttonTooltip = true;
 
+        [GameParameters.CustomParameterUI("Show mod part is from when hovering")]
+        public bool showMod = true;
+
 
         [GameParameters.CustomParameterUI("Debug mode (spams the log file")]
         public bool debug = false;

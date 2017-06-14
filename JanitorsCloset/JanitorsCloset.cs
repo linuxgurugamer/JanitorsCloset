@@ -147,6 +147,7 @@ namespace JanitorsCloset
             }
             else
             {
+                EditorIconEvents.OnEditorPartIconHover.Remove(IconHover);
                 EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
                 if (modFilterWindow != null)
                     modFilterWindow.Hide();
@@ -162,6 +163,7 @@ namespace JanitorsCloset
             Log.Info("sceneReady");
             blackList = FileOperations.Instance.loadBlackListData();
 
+            EditorIconEvents.OnEditorPartIconHover.Add(IconHover);
             EditorIconEvents.OnEditorPartIconClicked.Add(IconClicked);
 
             Func<AvailablePart, bool> _criteria = (_aPart) => FindPart(_aPart);
@@ -207,6 +209,19 @@ namespace JanitorsCloset
             evt.Veto(); // prevent part from being spawned
         }
 
+        private void IconHover(EditorPartIcon icon, bool hover)
+        {
+            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod)
+            {
+                string mod = ModFilterWindow.FindPartMod(icon.partInfo);
+             
+                drawTooltip = true;
+                if (hover)
+                    tooltip = mod;
+                else
+                    tooltip = "";
+            }
+        }
 
 
         protected override void Awake()

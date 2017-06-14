@@ -208,6 +208,9 @@ ChangeLog
 		Fixed bug where parts would be permenantly hidden if one or more filters were defined in the modfilter screen.  
 		Added filtering by resource
 
+0.3.2
+		Add tooltip to show mod part is from when hovering over part in VAB partlist
+		updated build script (apparently last version wasn't released properly)
 
 	TODO
 	Blacklist filter

@@ -1,25 +1,9 @@
 ﻿
 @echo off
-set DEFHOMEDRIVE=d:
-set DEFHOMEDIR=%DEFHOMEDRIVE%%HOMEPATH%
-set HOMEDIR=
-set HOMEDRIVE=%CD:~0,2%
 
 set RELEASEDIR=d:\Users\jbb\release
 set ZIP="c:\Program Files\7-zip\7z.exe"
-echo Default homedir: %DEFHOMEDIR%
 
-rem set /p HOMEDIR= "Enter Home directory, or <CR> for default: "
-
-if "%HOMEDIR%" == "" (
-set HOMEDIR=%DEFHOMEDIR%
-)
-echo %HOMEDIR%
-
-SET _test=%HOMEDIR:~1,1%
-if "%_test%" == ":" (
-set HOMEDRIVE=%HOMEDIR:~0,2%
-)
 
 set VERSIONFILE=JanitorsCloset.version
 rem The following requires the JQ program, available here: https://stedolan.github.io/jq/download/
@@ -42,26 +26,13 @@ type JanitorsCloset.version
 
 echo Version:  %VERSION%
 
-rem set /p newVERSION= "Enter version: "
-rem if "%newVERSION" NEQ "" set VERSION=%newVERSION%
 
-mkdir %HOMEDIR%\install\GameData\JanitorsCloset
-mkdir %HOMEDIR%\install\GameData\JanitorsCloset\Textures
-mkdir %HOMEDIR%\install\GameData\JanitorsCloset\PluginData
-mkdir %HOMEDIR%\install\GameData\JanitorsCloset\Plugins
+copy JanitorsCloset\bin\Release\JanitorsCloset.dll GameData\JanitorsCloset\Plugins
 
-copy bin\Release\JanitorsCloset.dll %HOMEDIR%\install\GameData\JanitorsCloset\Plugins
-copy ..\GameData\JanitorsCloset\Textures\* %HOMEDIR%\install\GameData\JanitorsCloset\Textures
-
-copy /Y "License.txt" "%HOMEDIR%\install\GameData\JanitorsCloset"
-copy /Y "README.md" "%HOMEDIR%\install\GameData\JanitorsCloset"
-copy /Y ..\MiniAVC.dll  "%HOMEDIR%\install\GameData\JanitorsCloset"
-copy /Y JanitorsCloset.version  "%HOMEDIR%\install\GameData\JanitorsCloset"
-copy /y Gamedata\JanitorsCloset\PluginData\JCBlacklist.cfg %HOMEDIR%\install\GameData\JanitorsCloset\PluginData
-copy /y Gamedata\JanitorsCloset\PluginData\JanitorsClosetDefault.cfg %HOMEDIR%\install\GameData\JanitorsCloset\PluginData
-
-%HOMEDRIVE%
-cd %HOMEDIR%\install
+copy /Y "License.txt" "GameData\JanitorsCloset"
+copy /Y "README.md" "GameData\JanitorsCloset"
+copy /Y ..\MiniAVC.dll  "GameData\JanitorsCloset"
+copy /Y JanitorsCloset.version  "GameData\JanitorsCloset"
 
 set FILE="%RELEASEDIR%\JanitorsCloset-%VERSION%.zip"
 IF EXIST %FILE% del /F %FILE%

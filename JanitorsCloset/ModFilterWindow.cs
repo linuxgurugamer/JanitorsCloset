@@ -128,7 +128,7 @@ namespace JanitorsCloset
         public int ResourceFilteredCount = 0;
         bool hideUnpurchased = false;
 
-        private UrlDir.UrlConfig[] configs = GameDatabase.Instance.GetConfigs("PART");
+        private static UrlDir.UrlConfig[] configs = null;
 
         int selectedFilterList = 1;
 
@@ -140,8 +140,11 @@ namespace JanitorsCloset
         }
 
 
-        string FindPartMod(AvailablePart part)
+        static public string FindPartMod(AvailablePart part)
         {
+            if (configs == null)
+                configs = GameDatabase.Instance.GetConfigs("PART");
+
             Log.Info("ModFilterWindow.FindPartMod, part.name: " + part.name);
             UrlDir.UrlConfig config = Array.Find<UrlDir.UrlConfig>(configs, (c => (part.name == c.name.Replace('_', '.').Replace(' ', '.'))));
             if (config == null)
@@ -351,7 +354,8 @@ namespace JanitorsCloset
         static GUIStyle styleButtonSettings;
         public void Start()
         {
-           
+            if (configs == null)
+                configs = GameDatabase.Instance.GetConfigs("PART");
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             LoadValuesFromConfig(selectedFilterList);

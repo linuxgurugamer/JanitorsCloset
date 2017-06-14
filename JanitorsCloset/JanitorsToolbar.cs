@@ -693,6 +693,8 @@ namespace JanitorsCloset
         {
             Log.Info("JanitorsCloset.OnDestroy");
 
+
+            EditorIconEvents.OnEditorPartIconHover.Remove(IconHover);
             EditorIconEvents.OnEditorPartIconClicked.Remove(IconClicked);
             ToolbarIconEvents.OnToolbarIconClicked.Remove(ToolbarClicked);
             if (this.primaryAppButton != null)

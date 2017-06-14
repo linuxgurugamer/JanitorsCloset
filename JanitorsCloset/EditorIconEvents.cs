@@ -19,6 +19,9 @@ namespace JanitorsCloset
         public static readonly EventData<EditorPartIcon, EditorIconClickEvent> OnEditorPartIconClicked =
             new EventData<EditorPartIcon, EditorIconClickEvent>("EditorPartIconClicked");
 
+        public static readonly EventData<EditorPartIcon, bool> OnEditorPartIconHover =
+            new EventData<EditorPartIcon, bool>("EditorPartIconHover");
+
         public class EditorIconClickEvent
         {
             public void Veto() { Vetoed = true; }
@@ -50,9 +53,10 @@ namespace JanitorsCloset
             }
         }
 
-        private class ReplacementClickHandler : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler
+        private class ReplacementClickHandler : MonoBehaviour, IPointerClickHandler, IPointerDownHandler, IPointerUpHandler, IPointerEnterHandler, IPointerExitHandler
         {
             private EditorPartIcon _icon;
+            
             private PointerClickHandler _originalClickHandler;
             private Button _button;
 
@@ -61,6 +65,7 @@ namespace JanitorsCloset
                 _button = GetComponent<Button>();
                 _originalClickHandler = GetComponent<PointerClickHandler>();
                 _icon = GetComponent<EditorPartIcon>();
+                
 
                 if (_button == null || _originalClickHandler == null || _icon == null)
                 {
@@ -74,6 +79,14 @@ namespace JanitorsCloset
                 // unhook EditorPartIcon's listener from the button
                 // this will allow us to veto any clicks
                 _button.onClick.RemoveListener(_icon.MouseInput_SpawnPart);
+            }
+            public void OnPointerEnter(PointerEventData eventData)
+            {                
+                OnEditorPartIconHover.Fire(_icon, true);
+            }
+            public void OnPointerExit(PointerEventData eventData)
+            {
+                OnEditorPartIconHover.Fire(_icon, false);
             }
 
             public void OnPointerClick(PointerEventData eventData)
