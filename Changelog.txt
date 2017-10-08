@@ -209,9 +209,12 @@ ChangeLog
 		Added filtering by resource
 
 0.3.2
-		Add tooltip to show mod part is from when hovering over part in VAB partlist
+		Add tooltip to show mod part is from when hovering over part in VAB partlist.  
+		Added settings for mod tooltip.  If disabled, then tooltip will be shown when modifier key is held down
 		updated build script (apparently last version wasn't released properly)
 
+0.3.3
+		Updated for KSP 1.3.1
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

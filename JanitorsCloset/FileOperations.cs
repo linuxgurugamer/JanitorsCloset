@@ -70,7 +70,31 @@ namespace JanitorsCloset
             List<AvailablePart> loadedParts = new List<AvailablePart>();
             if (PartLoader.Instance != null)
                 loadedParts.AddRange(PartLoader.LoadedPartsList);
+#if false
+            foreach (var part in loadedParts)
+            {
+                List<Bounds> list = new List<Bounds>();
+                if (!(part.partPrefab.Modules.GetModule<LaunchClamp>(0) != null))
+                {
+                    
+                    Bounds[] partRendererBounds = PartGeometryUtil.GetPartRendererBounds(part.partPrefab);
+                    int num = partRendererBounds.Length;
+                    for (int j = 0; j < num; j++)
+                    {
+                        Bounds bounds2 = partRendererBounds[j];
+                        Bounds bounds3 = bounds2;
+                        bounds3.size *= part.partPrefab.boundsMultiplier;
+                        Vector3 size = bounds3.size;
+                        bounds3.Expand(part.partPrefab.GetModuleSize(size, ModifierStagingSituation.CURRENT));
+                        list.Add(bounds2);
+                    }
+                }
 
+                var pg = PartGeometryUtil.MergeBounds(list.ToArray(), part.partPrefab.transform.root).size;
+
+                Log.Info("part: " + part.name + ", height x,y,z: " + pg.x.ToString() + ", " + pg.y.ToString() + ", " + pg.z.ToString());
+            }
+#endif
             Log.Info("loadData, fname: " + fname);
             if (fname != "" && File.Exists(fname))
             {
