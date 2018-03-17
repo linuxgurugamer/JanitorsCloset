@@ -42,7 +42,7 @@
     <Compile Include="FileOperations.cs" />
     <Compile Include="FindTexturePathFromModel.cs" />
     <Compile Include="GetExportName.cs" />
-    <Compile Include="GetInternalSpaceConfigUrl .cs" />
+    <Compile Include="GetInternalSpaceConfigUrl.cs" />
     <Compile Include="HelpPopup.cs" />
     <Compile Include="ImportExport.cs" />
     <Compile Include="ImportExportSelect.cs" />
