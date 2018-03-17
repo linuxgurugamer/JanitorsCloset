@@ -9,6 +9,7 @@ using UnityEngine;
 using KSP.UI;
 using KSP.UI.Screens;
 using KSP.IO;
+using ClickThroughFix;
 
 
 namespace JanitorsCloset
@@ -422,7 +423,7 @@ namespace JanitorsCloset
             _windowTitle = string.Format("Mod Filter");
             var tstyle = new GUIStyle(GUI.skin.window);
 
-            modWindowRect = GUILayout.Window(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
+            modWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
         }
 
         int CompareEntries(string left, string right)

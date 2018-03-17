@@ -12,6 +12,7 @@ using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
 using System.IO;
+using ClickThroughFix;
 
 namespace JanitorsCloset
 {
@@ -1254,7 +1255,7 @@ namespace JanitorsCloset
                 (showToolbarMenu == ShowMenuState.starting) ||
                 (showToolbarMenu == ShowMenuState.visible && (Time.fixedTime - lastTimeShown < HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().hoverTimeout || toolbarMenuRect.Contains(Event.current.mousePosition)))
                 )
-                KSPUtil.ClampRectToScreen(GUILayout.Window(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
+                KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
             else
                 if (showToolbarMenu != ShowMenuState.hidden)
                 HideToolbarMenu();
@@ -1273,7 +1274,7 @@ namespace JanitorsCloset
               //  if (Time.fixedTime - lastButtonUpdateTime > 5)
               //      updateButtons = true;
                 Log.Info("toolbarRect.x: " + toolbarRect.x.ToString() + " y: " + toolbarRect.y.ToString() + "  height: " + toolbarRect.height.ToString() + "  width: " + toolbarRect.width.ToString());
-                GUI.Window(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
+                ClickThruBlocker.GUIWindow(toolbarRectID, toolbarRect, JCToolBar, (string)null, gs);
             }
         }
 

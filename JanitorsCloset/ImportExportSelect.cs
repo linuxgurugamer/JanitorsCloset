@@ -179,8 +179,8 @@ namespace JanitorsCloset
                     GUI.skin = HighLogic.Skin;
                     GUI.skin.customStyles[0] = s;
 #endif
-                    //m_fileBrowser.m_screenRect = KSPUtil.ClampRectToScreen(GUILayout.Window(this.GetInstanceID(), m_fileBrowser.m_screenRect, _windowFunction, "Blocker Menu"));
-                    // m_fileBrowser.m_screenRect = GUILayout.Window(GetInstanceID(), m_fileBrowser.m_screenRect, m_fileBrowser.Window, "");
+                    //m_fileBrowser.m_screenRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(this.GetInstanceID(), m_fileBrowser.m_screenRect, _windowFunction, "Blocker Menu"));
+                    // m_fileBrowser.m_screenRect = ClickThruBlocker.GUILayoutWindow(GetInstanceID(), m_fileBrowser.m_screenRect, m_fileBrowser.Window, "");
                     m_fileBrowser.Window(browserWindowID);
                     // If the mouse is over our window, then lock the rest of the UI
                     if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();

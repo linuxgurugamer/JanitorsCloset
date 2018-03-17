@@ -1,26 +1,23 @@
 ﻿{
   "NAME": "JanitorsCloset",
-  "URL": "http://ksp-avc.cybutek.net/version.php?id=348",
+  "URL": "https://raw.githubusercontent.com/linuxgurugamer/JanitorsCloset/master/JanitorsCloset.version",
   "DOWNLOAD": "http://spacedock.info/mod/944/",
-  "VERSION": {
+  "GITHUB" :
+  {
+	"USERNAME" : "linuxgurugamer",
+	"REPOSITORY" : "JanitorsCloset"
+  },
+  "VERSION": 
+  {
     "MAJOR": 0,
     "MINOR": 3,
-    "PATCH": 3,
+    "PATCH": 4,
     "BUILD": 0
   },
-  "KSP_VERSION": {
+  "KSP_VERSION": 
+  {
     "MAJOR": 1,
-    "MINOR": 3,
-    "PATCH": 1
-  },
-  "KSP_VERSION_MIN": {
-    "MAJOR": 1,
-    "MINOR": 3,
-    "PATCH": 1
-  },
-  "KSP_VERSION_MAX": {
-    "MAJOR": 1,
-    "MINOR": 3,
+    "MINOR": 4,
     "PATCH": 1
   }
 }

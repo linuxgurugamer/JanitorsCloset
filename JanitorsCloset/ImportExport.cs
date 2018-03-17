@@ -8,6 +8,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+using ClickThroughFix;
 
 namespace JanitorsCloset
 {
@@ -55,12 +56,12 @@ namespace JanitorsCloset
         {
             if (isVisible)
             {
-                //this.configBounds = GUILayout.Window(GetInstanceID(), configBounds, ConfigWindow, "Import/Export", HighLogic.Skin.window);
+                //this.configBounds = ClickThruBlocker.GUILayoutWindow(GetInstanceID(), configBounds, ConfigWindow, "Import/Export", HighLogic.Skin.window);
                 string _windowTitle = string.Format("Import/Export");
                 var tstyle = new GUIStyle(GUI.skin.window);
 
                 configBounds.yMax = _windowRect.yMin;
-                configBounds = GUILayout.Window(configWindowID, configBounds, ConfigWindow, _windowTitle, tstyle);
+                configBounds = ClickThruBlocker.GUILayoutWindow(configWindowID, configBounds, ConfigWindow, _windowTitle, tstyle);
             }
         }
 

@@ -9,6 +9,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+using ClickThroughFix;
+
+
 namespace JanitorsCloset
 {
     class ShowBlocked : MonoBehaviour
@@ -68,7 +71,7 @@ namespace JanitorsCloset
                     blockedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
                 
-                _windowRect = GUILayout.Window(blockedWindowContentID, _windowRect, BlockedWindowContent, "Show Blocked Parts", tstyle);
+                _windowRect = ClickThruBlocker.GUILayoutWindow(blockedWindowContentID, _windowRect, BlockedWindowContent, "Show Blocked Parts", tstyle);
             }
         }
 

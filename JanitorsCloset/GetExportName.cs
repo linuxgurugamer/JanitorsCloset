@@ -10,6 +10,7 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+using ClickThroughFix;
 
 
 namespace JanitorsCloset
@@ -79,7 +80,7 @@ namespace JanitorsCloset
 
             //	Log.Info("PDPNWindow.OnGUI");
             GUI.skin = HighLogic.Skin;
-            windowRect = GUILayout.Window(myWindowId, windowRect, Window, "Enter Export Blacklist Name");
+            windowRect = ClickThruBlocker.GUILayoutWindow(myWindowId, windowRect, Window, "Enter Export Blacklist Name");
 
         }
 

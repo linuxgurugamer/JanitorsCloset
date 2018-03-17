@@ -5,5 +5,5 @@
   
  using System.Reflection;
 
- [assembly: AssemblyVersion("0.3.3.0")]
- [assembly: AssemblyDescription("$(ProjectDir)")]
+ [assembly: AssemblyVersion("0.3.4.0")]
+ [assembly: AssemblyDescription("D:\Users\jbb\github\JanitorsCloset\JanitorsCloset\")]

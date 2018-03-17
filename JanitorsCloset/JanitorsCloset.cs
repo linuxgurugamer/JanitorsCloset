@@ -12,6 +12,7 @@ using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
 using System.IO;
+using ClickThroughFix;
 
 
 using System.Collections;
@@ -306,7 +307,7 @@ namespace JanitorsCloset
                 //DrawTooltip();
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
             if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
-                _pruneMenuRect = KSPUtil.ClampRectToScreen(GUILayout.Window(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
+                _pruneMenuRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
             else
                 if (_showPruneMenu != ShowMenuState.hidden)
                 HidePruneMenu();
@@ -314,7 +315,7 @@ namespace JanitorsCloset
             OnGUIToolbar();
 
             if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f)))
-                _menuRect = GUILayout.Window(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
+                _menuRect = ClickThruBlocker.GUILayoutWindow(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
             else
                 _menuRect = new Rect();
 

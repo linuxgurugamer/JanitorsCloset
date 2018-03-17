@@ -8,6 +8,9 @@ using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+using ClickThroughFix;
+
+
 namespace JanitorsCloset
 {
     class ShowRenamed : MonoBehaviour
@@ -67,7 +70,7 @@ namespace JanitorsCloset
                 if (renamedWindowContentID == 0)
                     renamedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
-                renamedWindowRect = GUILayout.Window(renamedWindowContentID, renamedWindowRect, ShowRenamedWindowContent, "Show PermaPruned Parts", tstyle);
+                renamedWindowRect = ClickThruBlocker.GUILayoutWindow(renamedWindowContentID, renamedWindowRect, ShowRenamedWindowContent, "Show PermaPruned Parts", tstyle);
             }
         }
 

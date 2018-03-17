@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 14
-VisualStudioVersion = 14.0.25420.1
+# Visual Studio 15
+VisualStudioVersion = 15.0.27428.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JanitorsCloset", "JanitorsCloset\JanitorsCloset.csproj", "{E46D419E-3857-4A29-B319-6C14E5093E04}"
 EndProject
@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		Changelog.txt = Changelog.txt
 		deploy.bat = deploy.bat
 		JanitorsCloset.version = JanitorsCloset.version
+		jenkins.txt = jenkins.txt
 	EndProjectSection
 EndProject
 Global
@@ -26,5 +27,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {2873632C-97C6-420A-B425-5CC36E79D928}
 	EndGlobalSection
 EndGlobal

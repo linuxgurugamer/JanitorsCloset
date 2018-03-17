@@ -8,6 +8,8 @@ using System.Text;
 using UnityEngine;
 using KSP.UI;
 using KSP.UI.Screens;
+using ClickThroughFix;
+
 
 namespace JanitorsCloset
 {
@@ -89,7 +91,7 @@ namespace JanitorsCloset
                         var tstyle = new GUIStyle(GUI.skin.window);
 
                         _windowRect.yMax = _windowRect.yMin;
-                        _windowRect = GUILayout.Window(windowContentID, _windowRect, WindowContent, _windowTitle, tstyle);
+                        _windowRect = ClickThruBlocker.GUILayoutWindow(windowContentID, _windowRect, WindowContent, _windowTitle, tstyle);
                         break;
 
                     case winContent.permaprune:
