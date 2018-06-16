@@ -221,6 +221,10 @@ ChangeLog
 		Added ClickThroughBlocker support
 		Added Jenkins config
 
+0.3.4.1
+	Updated .version for all of 1.4
+	Added dependency checking for ClickThroughBlocker
+
 	TODO
 	Blacklist filter
 		Hide all parts which match filter.  Not Permaprune

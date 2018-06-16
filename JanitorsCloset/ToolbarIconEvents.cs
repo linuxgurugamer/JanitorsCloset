@@ -262,31 +262,43 @@ namespace JanitorsCloset
 
                 // some icons have already been instantiated, need to fix those too. Only needed this first time;
                 // after that, the prefab will already contain the changes we want to make
-                foreach (var icon in appListMod)
+                try
                 {
-                    if (JanitorsCloset.blacklistIcons != null)
+                    foreach (var icon in appListMod)
                     {
-                        
-                        if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Instance.Button32hash(icon.sprite)))
+                        if (JanitorsCloset.blacklistIcons != null)
                         {
-                            Log.Info("Icon blacklisted in OnGUIApplicationLauncherReady: " + icon.sprite.texture.name);
-                        }
-                        else
-                        {
-                            InstallReplacementToolbarHandler(icon);
-                            Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
+
+                            if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Instance.Button32hash(icon.sprite)))
+                            {
+                                Log.Info("Icon blacklisted in OnGUIApplicationLauncherReady: " + icon.sprite.texture.name);
+                            }
+                            else
+                            {
+                                InstallReplacementToolbarHandler(icon);
+                                Log.Info("appListMod, icon.name: " + icon.sprite.texture.name + "    Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
+                            }
                         }
                     }
-                }
-                foreach (var icon in appListModHidden)
+                } catch (Exception e)
                 {
-                    if (icon.sprite.texture != null)
-                    {
-                        InstallReplacementToolbarHandler(icon);
-                        Log.Info("appListModHidden, icon.name: " + icon.sprite.texture.name + "     Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
-                    }
+                    Log.Error("OnGUIApplicationLauncherReady, 1, exception: " + e.Message);
                 }
 
+                try
+                {
+                    foreach (var icon in appListModHidden)
+                    {
+                        if (icon.sprite.texture != null)
+                        {
+                            InstallReplacementToolbarHandler(icon);
+                            Log.Info("appListModHidden, icon.name: " + icon.sprite.texture.name + "     Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
+                        }
+                    }
+                } catch (Exception e)
+                {
+                    Log.Error("OnGUIApplicationLauncherReady, 2, exception: " + e.Message);
+                }
             }
 
             /// <summary>
