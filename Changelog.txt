@@ -230,3 +230,5 @@ ChangeLog
 		Hide all parts which match filter.  Not Permaprune
 	Add Filter/sort to tracking station
 
+0.3.4.2
+	Version bump for 1.5 rebuild

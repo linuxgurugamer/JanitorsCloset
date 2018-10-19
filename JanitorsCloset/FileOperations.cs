@@ -70,8 +70,11 @@ namespace JanitorsCloset
             List<AvailablePart> loadedParts = new List<AvailablePart>();
             if (PartLoader.Instance != null)
                 loadedParts.AddRange(PartLoader.LoadedPartsList);
+      
 #if false
-            foreach (var part in loadedParts)
+            // This code is used to export various information about parts and their resources
+            // used to rebalance fuel tanks
+            foreach (AvailablePart part in loadedParts)
             {
                 List<Bounds> list = new List<Bounds>();
                 if (!(part.partPrefab.Modules.GetModule<LaunchClamp>(0) != null))
@@ -91,8 +94,20 @@ namespace JanitorsCloset
                 }
 
                 var pg = PartGeometryUtil.MergeBounds(list.ToArray(), part.partPrefab.transform.root).size;
-
-                Log.Info("part: " + part.name + ", height x,y,z: " + pg.x.ToString() + ", " + pg.y.ToString() + ", " + pg.z.ToString());
+                string resources = "";
+                foreach (AvailablePart.ResourceInfo r in part.resourceInfos)
+                {
+                    if (r.resourceName != "ElectricCharge" && r.resourceName != "Ablator")
+                        resources += r.resourceName + ",";
+                }
+                if (resources != "")
+                {
+                    
+                    Log.Info("part: " + part.name + ", part.title: " + part.title + ", descr: " + part.description.Replace(",", ".") +
+                        ", mass: " + part.partPrefab.mass + ", techRequired: " + part.TechRequired +
+                        ", height x,y,z: " + pg.x.ToString() + ", " + pg.y.ToString() + ", " + pg.z.ToString() + "," + resources);
+                }
+                
             }
 #endif
             Log.Info("loadData, fname: " + fname);

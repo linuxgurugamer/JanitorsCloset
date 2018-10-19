@@ -1,6 +1,6 @@
 ﻿{
   "NAME": "JanitorsCloset",
-  "URL": "https://raw.githubusercontent.com/linuxgurugamer/JanitorsCloset/master/JanitorsCloset.version",
+  "URL": "http://ksp.spacetux.net/avc/JanitorsCloset.version",
   "DOWNLOAD": "http://spacedock.info/mod/944/",
   "GITHUB" :
   {
@@ -12,21 +12,21 @@
     "MAJOR": 0,
     "MINOR": 3,
     "PATCH": 4,
-    "BUILD": 1
+    "BUILD": 2
   },
   "KSP_VERSION": {
     "MAJOR": 1,
-    "MINOR": 4,
+    "MINOR": 5,
     "PATCH": 1
   },
   "KSP_VERSION_MIN": {
     "MAJOR": 1,
-    "MINOR": 4,
+    "MINOR": 5,
     "PATCH": 1
   },
   "KSP_VERSION_MAX": {
     "MAJOR": 1,
-    "MINOR": 4,
+    "MINOR": 5,
     "PATCH": 99
   }
 }
