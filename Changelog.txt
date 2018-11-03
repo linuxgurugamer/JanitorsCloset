@@ -232,3 +232,6 @@ ChangeLog
 
 0.3.4.2
 	Version bump for 1.5 rebuild
+
+0.3.4.3
+	Added code to detect the missing kerbals:  kerbalEVAfemale, kerbalEVAVintage, kerbalEVAfemaleVintage

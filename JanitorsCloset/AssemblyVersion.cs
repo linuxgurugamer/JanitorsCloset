@@ -5,5 +5,5 @@
   
  using System.Reflection;
 
- [assembly: AssemblyVersion("0.3.4.2")]
+ [assembly: AssemblyVersion("0.3.4.3")]
  [assembly: AssemblyDescription("$(ProjectDir)")]
