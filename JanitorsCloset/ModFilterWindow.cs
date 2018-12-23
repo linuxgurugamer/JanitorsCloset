@@ -297,7 +297,7 @@ namespace JanitorsCloset
             AvailablePart flag = null;
             foreach (var part in loadedParts)
             {
-                if (part.name == "kerbalEVA" || part.name == "kerbalEVAfemale" || part.name == "kerbalEVAVintage" || part.name == "kerbalEVAfemaleVintage")
+                if (part.name.Contains("kerbalEVA")
                     kerbalEVA = part;
                 else if (part.name == "flag")
                     flag = part;
