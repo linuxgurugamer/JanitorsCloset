@@ -238,3 +238,6 @@ ChangeLog
 
 0.3.4.4
 	Replaced individual checks for each of the kerbal parts with a single one using Contains
+
+0.3.4.5
+	version bump to fix spacedock
