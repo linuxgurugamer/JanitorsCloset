@@ -236,5 +236,5 @@ ChangeLog
 0.3.4.3
 	Added code to detect the missing kerbals:  kerbalEVAfemale, kerbalEVAVintage, kerbalEVAfemaleVintage
 
-0.3.4.x
+0.3.4.4
 	Replaced individual checks for each of the kerbal parts with a single one using Contains
