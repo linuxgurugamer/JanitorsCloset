@@ -241,3 +241,6 @@ ChangeLog
 
 0.3.4.5
 	version bump to fix spacedock
+
+0.3.4.6
+	Added new size 1.5 (1.875m) to filter selection

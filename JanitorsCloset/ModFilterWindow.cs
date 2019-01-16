@@ -20,7 +20,7 @@ namespace JanitorsCloset
 
         public class PartInfo
         {
-            string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
+            string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 1.5 (1.875m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
 
             
             //-------------------------------------------------------------------------------------------------------------------------------

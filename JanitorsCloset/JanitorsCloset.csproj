@@ -103,8 +103,14 @@
     <PostBuildEvent>
 start /D d:\Users\jbb\github\JanitorsCloset /WAIT deploy.bat  $(TargetDir) $(TargetFileName)
 
+
+
 if $(ConfigurationName) == Release (
+
+
 	start /D d:\Users\jbb\github\JanitorsCloset /WAIT buildRelease.bat $(TargetDir) $(TargetFileName)
+
+
 )</PostBuildEvent>
   </PropertyGroup>
   <PropertyGroup>
