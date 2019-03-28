@@ -248,3 +248,6 @@ ChangeLog
 0.3.4.7
 	Fixed incorrect initialization of constants in ModFilterWindow
 	Added check for null in GetButtonTexture
+
+0.3.4.8
+	Added some more checks for null refs

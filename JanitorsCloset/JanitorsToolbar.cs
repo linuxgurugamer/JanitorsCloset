@@ -808,17 +808,17 @@ namespace JanitorsCloset
         public Texture2D GetButtonTexture(RawImage sprite)
         {
             // return ConvertSpriteToTexture(sprite);
-            if (sprite != null)
+            if (sprite != null && sprite.texture != null)
             {
                 Texture2D img = sprite.texture as Texture2D;
-
-                img.name = sprite.texture.name;
+                if (sprite.texture.name != null)
+                    img.name = sprite.texture.name;
 
                 return GetButtonTexture(img);
             }
             else
             {
-                Texture2D img = new Texture2D(1, 1);
+                Texture2D img = new Texture2D(2, 2);
                 return img;
             }
 
@@ -826,6 +826,8 @@ namespace JanitorsCloset
 
         public string Button32hash(Texture2D img2)
         {
+            if (img2 == null)
+                return "null";
             Crc32 crc32 = new Crc32();
             String hash = String.Empty;
             byte[] byteAR = img2.EncodeToPNG();
@@ -851,6 +853,8 @@ namespace JanitorsCloset
 #endif
         public string Button32hash(RawImage sprite)
         {
+            if (sprite == null)
+                return "spritenull";
             Texture2D img2 = GetButtonTexture(sprite);
             
             string s = Button32hash(img2);
