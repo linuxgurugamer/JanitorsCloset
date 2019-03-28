@@ -367,6 +367,11 @@ namespace JanitorsCloset
         }
         public void Start()
         {
+            CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
+            JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
+            JC_NODE = "JanitorsCloset";
+            JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter";
+            
             InitData();
             // DefineFilters();
             modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
@@ -615,15 +620,16 @@ namespace JanitorsCloset
             ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabled == false).Count();
         }
 
-        private static readonly String CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
-        private static String JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
-        private static String JC_NODE = "JanitorsCloset";
-        private static String JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter";
+        private static String CONFIG_BASE_FOLDER;
+        private static String JC_BASE_FOLDER;
+        private static String JC_NODE;
+        private static String JC_CFG_FILE;
 
         private static ConfigNode configFile = null;
         private static ConfigNode configFileNode = null;
         private static ConfigNode configSectionNode = null;
 
+ 
         //-------------------------------------------------------------------------------------------------------------------------------------------
         void SaveConfig(int selectedCfg) //string sorting = null)
         {

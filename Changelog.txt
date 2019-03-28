@@ -244,3 +244,7 @@ ChangeLog
 
 0.3.4.6
 	Added new size 1.5 (1.875m) to filter selection
+
+0.3.4.7
+	Fixed incorrect initialization of constants in ModFilterWindow
+	Added check for null in GetButtonTexture

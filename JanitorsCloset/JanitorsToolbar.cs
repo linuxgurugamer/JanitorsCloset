@@ -808,12 +808,19 @@ namespace JanitorsCloset
         public Texture2D GetButtonTexture(RawImage sprite)
         {
             // return ConvertSpriteToTexture(sprite);
+            if (sprite != null)
+            {
+                Texture2D img = sprite.texture as Texture2D;
 
-            Texture2D img = sprite.texture as Texture2D;
-   
-            img.name = sprite.texture.name;
+                img.name = sprite.texture.name;
 
-            return GetButtonTexture(img);
+                return GetButtonTexture(img);
+            }
+            else
+            {
+                Texture2D img = new Texture2D(1, 1);
+                return img;
+            }
 
         }
 
