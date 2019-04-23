@@ -17,6 +17,7 @@ namespace JanitorsCloset
 
     class ModFilterWindow : MonoBehaviour
     {
+        const string INVERSE = "-inverse";
 
         public class PartInfo
         {
@@ -104,29 +105,37 @@ namespace JanitorsCloset
         };
 
 
-        Rect filterWindowRect = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
+        //Rect filterWindowRect = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
         Rect modWindowRect;
+        Rect filterHelpWindow = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
 
         private const int MOD_WINDOW_ID = 94;
         private const int SIZE_WINDOW_ID = 95;
 
         private struct ToggleState
         {
-            public bool enabled;
+            public bool enabledState;
             public bool latched;
+            public bool inverse;
         }
         private Dictionary<string, ToggleState> modButtons = new Dictionary<string, ToggleState>();
         private Dictionary<string, ToggleState> sizeButtons = new Dictionary<string, ToggleState>();
         private Dictionary<string, ToggleState> resourceButtons = new Dictionary<string, ToggleState>();
+        private Dictionary<string, ToggleState> partModuleButtons = new Dictionary<string, ToggleState>();
 
         private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
 
         private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
         private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
         private Dictionary<string, HashSet<AvailablePart>> resourceHash = new Dictionary<string, HashSet<AvailablePart>>();
+        private Dictionary<string, HashSet<AvailablePart>> partModuleHash = new Dictionary<string, HashSet<AvailablePart>>();
+
         public int ModFilteredCount = 0;
+        public int ModInverseCount = 0;
         public int SizeFilteredCount = 0;
         public int ResourceFilteredCount = 0;
+        public int ModuleFilteredCount = 0;
+        public int ModuleInverseCount = 0;
         bool hideUnpurchased = false;
 
         private static UrlDir.UrlConfig[] configs = null;
@@ -201,7 +210,7 @@ namespace JanitorsCloset
                 if (!sizeButtons.ContainsKey(partInfo.partSize))
                 {
                     Log.Info(string.Format("define new size filter key {0}", partInfo.partSize));
-                    sizeButtons.Add(partInfo.partSize, new ToggleState() { enabled = true, latched = false });
+                    sizeButtons.Add(partInfo.partSize, new ToggleState() { enabledState = true, latched = false, inverse = false });
                     sizeHash.Add(partInfo.partSize, new HashSet<AvailablePart>());
                 }
                 Log.Info(string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
@@ -215,7 +224,7 @@ namespace JanitorsCloset
                         if (!resourceButtons.ContainsKey(res.resourceName))
                         {
                             Log.Info(string.Format("define new resource filter key {0}", res.resourceName));
-                            resourceButtons.Add(res.resourceName, new ToggleState() { enabled = true, latched = false });
+                            resourceButtons.Add(res.resourceName, new ToggleState() { enabledState = true, latched = false, inverse = false });
                             resourceHash.Add(res.resourceName, new HashSet<AvailablePart>());
                         }
                         Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, res.resourceName));
@@ -227,11 +236,133 @@ namespace JanitorsCloset
                     string resname = "None";
                     if (!resourceButtons.ContainsKey(resname))
                     {
-                        resourceButtons.Add(resname, new ToggleState() { enabled = true, latched = false });
+                        resourceButtons.Add(resname, new ToggleState() { enabledState = true, latched = false, inverse = false });
                         resourceHash.Add(resname, new HashSet<AvailablePart>());
                     }
                     Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, resname));
                     resourceHash[resname].Add(part);
+                }
+                foreach (var module in part.partPrefab.Modules)
+                {
+                    // First get all the part modules here
+
+                    Log.Info("module: name: " + module.name + ", moduleName: " + module.moduleName);
+                    
+                    if (!partModuleButtons.ContainsKey(module.moduleName))
+                    {
+
+                        Log.Info(string.Format("define new module.moduleName filter key {0}", module.moduleName));
+                        partModuleButtons.Add(module.moduleName, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                        partModuleHash.Add(module.moduleName, new HashSet<AvailablePart>());
+                    }
+                    Log.Info(string.Format("add {0} to partModuleHash for modleName: {1}", part.name, module.moduleName));
+                    partModuleHash[module.moduleName].Add(part);
+
+                    // Now get the resources used by the modules
+
+                    foreach (var res in module.resHandler.inputResources)
+                    {
+                        if (!resourceButtons.ContainsKey(res.name))
+                        {
+                            Log.Info(string.Format("define new res.inputResource filter key {0}", res.name));
+                            resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                            resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                        }
+                        Log.Info(string.Format("add {0} to resourceHash for inputResource: {1}", part.name, res.name));
+                        resourceHash[res.name].Add(part);
+                    }
+                    foreach (var res in module.resHandler.outputResources)
+                    {
+                        if (!resourceButtons.ContainsKey(res.name))
+                        {
+                            Log.Info(string.Format("define new res.outputResources filter key {0}", res.name));
+                            resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                            resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                        }
+                        Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, res.name));
+                        resourceHash[res.name].Add(part);
+                    }
+                    switch (module.moduleName)
+                    {
+                        case "ModuleEngines":
+                            {
+                                Log.Info("ModuleEngines");
+                                ModuleEngines me = module as ModuleEngines;
+                                for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                {
+                                    Propellant propellant = me.propellants[i];
+                                    if (!resourceButtons.ContainsKey(propellant.name))
+                                    {
+                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                    }
+                                    Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
+                                    resourceHash[propellant.name].Add(part);
+                                }
+                                break;
+                            }
+                        case "ModuleEnginesFX":
+                            {
+                                Log.Info("ModuleEnginesFX");
+
+                                ModuleEngines me = module as ModuleEnginesFX;
+                                for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                {
+                                    Propellant propellant = me.propellants[i];
+                                    if (!resourceButtons.ContainsKey(propellant.name))
+                                    {
+                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                    }
+                                    Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
+                                    resourceHash[propellant.name].Add(part);
+                                }
+                                break;
+                            }
+                        case "ModuleRCS":
+                            {
+                                Log.Info("ModuleRCS");
+
+                                ModuleRCS me = module as ModuleRCS;
+                                for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                {
+                                    Propellant propellant = me.propellants[i];
+                                    if (!resourceButtons.ContainsKey(propellant.name))
+                                    {
+                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                    }
+                                    Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
+                                    resourceHash[propellant.name].Add(part);
+                                }
+                                break;
+                            }
+                        case "ModuleRCSFX":
+                            {
+                                Log.Info("ModuleRCSFX");
+
+                                ModuleRCSFX me = module as ModuleRCSFX;
+               
+                                for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                {
+                                    Propellant propellant = me.propellants[i];
+                                    if (!resourceButtons.ContainsKey(propellant.name))
+                                    {
+                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                    }
+                                    Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
+                                    resourceHash[propellant.name].Add(part);
+                                }
+                            
+                                break;
+                            }
+                    }
+
                 }
 
                 // the part's base directory name is used to filter entire mods in and out
@@ -242,7 +373,7 @@ namespace JanitorsCloset
                     if (!modButtons.ContainsKey(partModName))
                     {
                         Log.Info(string.Format("define new mod filter key {0}", partModName));
-                        modButtons.Add(partModName, new ToggleState() { enabled = true, latched = false });
+                        modButtons.Add(partModName, new ToggleState() { enabledState = true, latched = false, inverse = false });
                         modHash.Add(partModName, new HashSet<AvailablePart>());
                     }
                     Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
@@ -317,22 +448,94 @@ namespace JanitorsCloset
             return loadedParts;
         }
 
+        bool PartInResourceFilteredButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            Log.Info("part: " + part.name);
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)                
+            {
+                if (!entry.Value.enabledState)
+                    continue;
+                if (filterHash[entry.Key].Contains(part))
+                {
+                    Log.Info("part: " + part.name + " has resource: " + entry.Key);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         bool PartInFilteredButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            foreach (string name in buttons.Keys)
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
-                if (!buttons[name].enabled)
+                if (!entry.Value.enabledState)
                     continue;
-                if (filterHash[name].Contains(part))
+                if (filterHash[entry.Key].Contains(part))
                     return true;
             }
             return false;
         }
+
+        bool PartInResourseExcludeButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
+            {
+                if (!entry.Value.inverse)
+                    continue;
+                if (!filterHash.ContainsKey(entry.Key))
+                {
+                    Log.Error("filterHash does not contain key: " + entry.Key);
+                }
+                else
+                {
+                    if (filterHash[entry.Key].Contains(part))
+                        return false;
+                }
+            }
+            return true;
+        }
+
         bool PartInUnpurchasedButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             if (!hideUnpurchased)
                 return true;
             return PartIsPurchased(part);
+        }
+
+        
+        bool PartInModuleButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
+            {
+                if (!entry.Value.enabledState)
+                    continue;
+        
+                if (filterHash[entry.Key].Contains(part))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        bool PartInModuleExcludeButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
+            {
+                if (!entry.Value.inverse)
+                    continue;
+
+                if (!filterHash.ContainsKey(entry.Key))
+                {
+                    Log.Error("filterHash does not contain key: " + entry.Key);
+                }
+                else
+                {
+                    if (filterHash[entry.Key].Contains(part))
+                        return false;
+                }
+            }
+            return true;
         }
 
         void DefineFilters()
@@ -342,20 +545,29 @@ namespace JanitorsCloset
                 configs = GameDatabase.Instance.GetConfigs("PART");
 
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
-            
+
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Filter", (part => PartInFilteredButtons(part, resourceButtons, resourceHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Filter", (part => PartInResourceFilteredButtons(part, resourceButtons, resourceHash))));
+
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Exclude Filter", (part => PartInResourseExcludeButtons(part, resourceButtons, resourceHash))));
 
             EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons(part, sizeButtons, sizeHash))));
-            
+
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Filter", (part => PartInModuleButtons(part, partModuleButtons, partModuleHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Exclude Filter", (part => PartInModuleExcludeButtons(part, partModuleButtons, partModuleHash))));
+
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();
         }
 
         static GUIStyle styleButton = null;
         static GUIStyle styleButtonSettings;
-        
+
+        Color origBackgroundColor;
+        GUIStyle styleButtonLeftAligned;
+
+
         void InitData()
         {
             if (configs == null)
@@ -363,20 +575,26 @@ namespace JanitorsCloset
             List<AvailablePart> loadedParts = GetPartsList();
             InitialPartsScan(loadedParts);
             LoadValuesFromConfig(selectedFilterList);
-
+            LoadReadableNames();
         }
         public void Start()
         {
             CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
             JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
-            JC_NODE = "JanitorsCloset";
+            JC_NODE = "JANITORSCLOSET";
             JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter";
-            
+            JC_FILTER_CONFIG_FILE = JC_BASE_FOLDER + "PluginData/FiltersConfig.cfg";
+            JC_READABLE_NAMES_NODE = "READABLENAMES";
+            JC_BLACKLIST_NODE = "MODULE_BLACKLIST";
+#if false
+            JC_MERGELIST_NODE = "MERGELIST";
+#endif
             InitData();
             // DefineFilters();
-            modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, sizeButtons.Count));
+            modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, Math.Max(sizeButtons.Count, Math.Max(resourceButtons.Count, partModuleButtons.Count))));
 
             modwindowRectID = JanitorsCloset.getNextID();
+            modFilterHelpWindowID = JanitorsCloset.getNextID();
             enabled = false;
             
         }
@@ -392,6 +610,7 @@ namespace JanitorsCloset
 
         void InitStyles()
         {
+            Log.Info("InitStyles");
             styleButton = new GUIStyle(GUI.skin.button);
             styleButton.name = "ButtonGeneral";
             styleButton.normal.background = GUI.skin.button.normal.background;
@@ -408,16 +627,21 @@ namespace JanitorsCloset
             styleButtonSettings.alignment = TextAnchor.MiddleCenter;
             styleButtonSettings.normal.textColor = new Color32(177, 193, 205, 255);
             styleButtonSettings.fontStyle = FontStyle.Bold;
-        }
 
+            origBackgroundColor = GUI.backgroundColor; // store value.
+            styleButtonLeftAligned = new GUIStyle(GUI.skin.button);
+            styleButtonLeftAligned.alignment = TextAnchor.MiddleLeft;
+        }
 
 
         string _windowTitle = string.Empty;
         int modwindowRectID;
+        int modFilterHelpWindowID;
+
+        bool showFilterHelpWindow = false;
 
         public void OnGUI()
         {
-
             if (Event.current.type == EventType.Repaint)
                 GUI.skin = HighLogic.Skin;
             if (!enabled)
@@ -429,12 +653,20 @@ namespace JanitorsCloset
             var tstyle = new GUIStyle(GUI.skin.window);
 
             modWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
+            if (showFilterHelpWindow)
+             filterHelpWindow = ClickThruBlocker.GUILayoutWindow(modFilterHelpWindowID, filterHelpWindow, FilterHelpWindow, _windowTitle, tstyle);
+            if (helpPopup != null)
+                helpPopup.draw();
         }
 
-        int CompareEntries(string left, string right)
+        int CompareEntries(string lft, string rght)
         {
+            string left = GetReadableName(lft);
+            string right = GetReadableName(rght);
             if (left == right)
                 return 0;
+
+            // Special cases for adapters so they are in height order, from smaller to larger
             if (left.Contains("Adapter") && right.Contains("larger"))
                 return 1;
             if (right.Contains("Adapter") && left.Contains("larger"))
@@ -458,7 +690,8 @@ namespace JanitorsCloset
             foreach (string name in names)
             {
                 ToggleState state = states[name];
-                state.enabled = true;
+                state.enabledState = true;
+                state.inverse = false;
                 states[name] = state;
             }
             names = new List<string>(sizeButtons.Keys);
@@ -466,19 +699,73 @@ namespace JanitorsCloset
             foreach (string name in names)
             {
                 ToggleState state = states[name];
-                state.enabled = true;
+                state.enabledState = true;
+                state.inverse = false;
+                states[name] = state;
+            }
+            names = new List<string>(resourceButtons.Keys);
+            states = resourceButtons;
+            foreach (string name in names)
+            {
+                ToggleState state = states[name];
+                state.enabledState = true;
+                state.inverse = false;
+                states[name] = state;
+            }
+
+            names = new List<string>(partModuleButtons.Keys);
+            states = partModuleButtons;
+            foreach (string name in names)
+            {
+                ToggleState state = states[name];
+                state.enabledState = true;
+                state.inverse = false;
                 states[name] = state;
             }
         }
 
+        HelpPopup helpPopup = null;
+        private void FilterHelpWindow(int id)
+        {
+            if (helpPopup == null)
+            {
+                helpPopup = new HelpPopup(
+                    "Mod Filter", "Mod Name - filter mods by name\n" + 
+                    "Module Size - filter mods by size\nResources - filter mods by resource\n" +
+                    "Modules - filter mods by modules\n\n" +
+                    "Resource filter can filter by two methods:\n" + 
+                    "\t1. The green toggle says that the resource must be contained in the part or\n" +
+                    "\t   (if an engine module) used by the part\n" +
+                    "\t2. The red toggle says that shown parts must NOT have or use the specified\n" + 
+                    "\t   resource.  Clicking the button with the resource name will cycle\n" +
+                    "\t   through the three modes of filtering for that resource.\n\n" +
+
+                    "Modules refers to the part modules which provide the functionality in each\n" +
+                    "part.  Like the resources, you can either filter by requiring one or more specific\n" +
+                    "part modules to be present (the green toggle), or you can filter by excluding\n" +
+                    "part which have specific part modules (the red toggle)\n\n" +
+                    "In essense, the filters work by requiring all values with Green toggles be present\n" +
+                    "AND that all values with Red toggles be excluded.\n\n" +
+
+                    "The Invert button will invert all the toggles and is only available on the Resources and Modules windows"
+                    , JanitorsCloset.getNextID());
+            }
+
+            helpPopup.showMenu = true;
+            showFilterHelpWindow = false;
+        }
+
         Vector2 scrollPosition;
-        string[] filterType = new string[] { "Mod Name", "Module Size", "Resources" };
+        string[] filterType = new string[] { "Mod Name", "Module Size", "Resources", "Modules" };
         int selFilter = 0;
 
         private void FilterChildWindowHandler(int id)
         {
             Dictionary<string, ToggleState> states = modButtons;
-
+            if (GUI.Button(new Rect(12, 2, 30, 20), "?", styleButtonSettings))
+            {
+                showFilterHelpWindow = !showFilterHelpWindow;
+            }
             if (GUI.Button(new Rect(modWindowRect.width - 32, 2, 30, 20), "X", styleButtonSettings))
             {
                 enabled = false;
@@ -493,7 +780,6 @@ namespace JanitorsCloset
             {
                 case 0:
                     states = modButtons;
-
                     break;
                 case 1:
                     states = sizeButtons;
@@ -501,9 +787,13 @@ namespace JanitorsCloset
                 case 2:
                     states = resourceButtons;
                     break;
+                case 3:
+                    states = partModuleButtons;
+                    break;                
             }
 
             GUILayout.EndHorizontal();
+            bool updateNeeded = false;
             GUILayout.BeginHorizontal();
             if (HighLogic.CurrentGame.Mode != Game.Modes.SANDBOX)
             {
@@ -513,7 +803,7 @@ namespace JanitorsCloset
                 if (GUILayout.Button(s))
                 {
                     hideUnpurchased = !hideUnpurchased;
-                    EditorPartList.Instance.Refresh();
+                    updateNeeded = true;
                 }
             }
             if (GUILayout.Button("Show All"))
@@ -522,10 +812,10 @@ namespace JanitorsCloset
                 foreach (string name in names)
                 {
                     ToggleState state = states[name];
-                    state.enabled = true;
+                    state.enabledState = true;
                     states[name] = state;
                 }
-                SaveConfig(selectedFilterList);
+                updateNeeded = true;
             }
             if (GUILayout.Button("Hide All"))
             {
@@ -533,33 +823,31 @@ namespace JanitorsCloset
                 foreach (string name in names)
                 {
                     ToggleState state = states[name];
-                    state.enabled = false;
+                    state.enabledState = false;
                     states[name] = state;
                 }
-                SaveConfig(selectedFilterList);
+                updateNeeded = true;
+            }
+            if (selFilter == 2 || selFilter == 3)
+            {
+                Log.Info("FilterChildWindowHandler 1");
+                if (GUILayout.Button("Invert"))
+                {
+                    var names = new List<string>(states.Keys);
+                    foreach (string name in names)
+                    {
+                        ToggleState state = states[name];
+                        state.inverse = !state.inverse;
+                        state.enabledState = !state.inverse;
+                        states[name] = state;
+                    }
+                    updateNeeded = true;
+                }
             }
             if (GUILayout.Button("Reset All"))
             {
                 resetAll();
-#if false
-                var names = new List<string>(modButtons.Keys);
-                states = modButtons;
-                foreach (string name in names)
-                {
-                    ToggleState state = states[name];
-                    state.enabled = true;
-                    states[name] = state;
-                }
-                names = new List<string>(sizeButtons.Keys);
-                states = sizeButtons;
-                foreach (string name in names)
-                {
-                    ToggleState state = states[name];
-                    state.enabled = true;
-                    states[name] = state;
-                }
-#endif
-                SaveConfig(selectedFilterList);
+                updateNeeded = true;
             }
             GUILayout.EndHorizontal();
 
@@ -576,54 +864,118 @@ namespace JanitorsCloset
                 {
                     selectedFilterList = cnt;
                     LoadValuesFromConfig(selectedFilterList);
-
+                    updateNeeded = true;
                 }
                 GUI.backgroundColor = oldColor;
             }
             GUILayout.EndHorizontal();
-
+            if (updateNeeded)
+            {
+                EditorPartList.Instance.Refresh();
+                SaveConfig(selectedFilterList);
+            }
             var keys = new List<string>(states.Keys);
 
             keys.Sort(CompareEntries);
 
             // This will hide the horizontal scrollbar
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
-//            scrollPosition = GUILayout.BeginScrollView(scrollPosition);
+
             foreach (string name in keys)
             {
                 ToggleState state = states[name];
                 //string truncatedName = (name.Length > 35) ? name.Remove(34) : name;
-                bool before = state.enabled;
-                GUILayout.BeginHorizontal();
-                state.enabled = GUILayout.Toggle(state.enabled, name);
-                GUILayout.EndHorizontal();
-               
-                if (state.enabled && !state.latched)
+                bool before = state.enabledState;
+                bool beforeInverse = state.inverse;
+
+                string readableName = GetReadableName(name);
+                if (readableName != "")
                 {
-                    state.latched = true;
-                    states[name] = state;
-                    EditorPartList.Instance.Refresh();
+                    GUILayout.BeginHorizontal();
+                    GUILayout.Space(5);
+
+                    if (selFilter != 2 && selFilter != 3)
+                    {
+                        state.enabledState = GUILayout.Toggle(state.enabledState, readableName);
+                        GUILayout.Space(20);
+                        if (state.enabledState && state.enabledState != before)
+                            state.inverse = false;
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+                    }
+                    else
+                    {
+                        Log.Info("FilterChildWindowHandler 3");
+                        state.enabledState = GUILayout.Toggle(state.enabledState, "");
+                        GUILayout.Space(20);
+                        if (state.enabledState && state.enabledState != before)
+                            state.inverse = false;
+
+                        GUI.backgroundColor = Color.red;
+                        state.inverse = GUILayout.Toggle(state.inverse, "");
+                        GUI.backgroundColor = origBackgroundColor; // reset to old value.
+                        if (state.inverse && state.inverse != beforeInverse)
+                            state.enabledState = false;
+                        GUILayout.Space(20);
+                        Log.Info("readableName: " + readableName);
+                        if (GUILayout.Button(readableName, styleButtonLeftAligned, GUILayout.Width(300)))
+                        {
+                            if (state.enabledState)
+                            {
+                                state.enabledState = false;
+                                state.inverse = true;
+                            }
+                            else
+                            {
+                                if (state.inverse)
+                                {
+                                    state.inverse = false;
+                                }
+                                else
+                                    state.enabledState = true;
+                            }
+                        }
+
+                        Log.Info("FilterChildWindowHandler 4");
+
+                        GUILayout.FlexibleSpace();
+                        GUILayout.EndHorizontal();
+                        GUILayout.Space(5);
+                        Log.Info("FilterChildWindowHandler 5");
+
+                    }
+
+                    if (before != state.enabledState || beforeInverse != state.inverse)
+                    {
+                        states[name] = state;
+                        EditorPartList.Instance.Refresh();
+                        SaveConfig(selectedFilterList);
+                        //before = state.enabledState;
+                        //beforeInverse = state.inverse;
+                    }
                 }
-                else if (!state.enabled && state.latched)
-                {
-                    state.latched = false;
-                    states[name] = state;
-                    EditorPartList.Instance.Refresh();
-                }
-                if (before != state.enabled)
-                    SaveConfig(selectedFilterList);
             }
             GUILayout.EndScrollView();
             GUI.DragWindow();
-            ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
-            SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
-            ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabled == false).Count();
+            ModFilteredCount = modButtons.Where(p => p.Value.enabledState == false).Count();
+            ModInverseCount = modButtons.Where(p => p.Value.inverse == true).Count();
+            SizeFilteredCount = sizeButtons.Where(p => p.Value.enabledState == false).Count();
+            ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabledState == false).Count();
+            ModuleFilteredCount = partModuleButtons.Where(p => p.Value.enabledState == false).Count();
+            ModuleInverseCount = partModuleButtons.Where(p => p.Value.inverse == true).Count();
+            
         }
 
         private static String CONFIG_BASE_FOLDER;
         private static String JC_BASE_FOLDER;
         private static String JC_NODE;
+        private static String JC_READABLE_NAMES_NODE;
+        private static String JC_BLACKLIST_NODE;
+#if false
+        private static String JC_MERGELIST_NODE;
+#endif
         private static String JC_CFG_FILE;
+        private static String JC_FILTER_CONFIG_FILE;
 
         private static ConfigNode configFile = null;
         private static ConfigNode configFileNode = null;
@@ -631,6 +983,19 @@ namespace JanitorsCloset
 
  
         //-------------------------------------------------------------------------------------------------------------------------------------------
+        void SaveSelectType(string prefix, Dictionary<string, ToggleState> buttonList, string NodeName, ConfigNode fileNode)
+        {
+            configSectionNode = new ConfigNode(NodeName);
+
+            foreach (var mod in buttonList)
+            {
+                configSectionNode.SetValue(mod.Key, mod.Value.enabledState, true);
+                configSectionNode.SetValue(mod.Key + INVERSE, mod.Value.inverse, true);
+            }
+            configFileNode.SetNode(NodeName, configSectionNode, true);
+
+        }
+
         void SaveConfig(int selectedCfg) //string sorting = null)
         {
             Log.Info("SaveConfig");
@@ -640,47 +1005,28 @@ namespace JanitorsCloset
             configFile = new ConfigNode();
             configFileNode = new ConfigNode();
 
+            SaveSelectType("Mod", modButtons, "MOD", configFileNode);
+            SaveSelectType("Size", sizeButtons, "SIZE", configFileNode);
+            SaveSelectType("Res", resourceButtons, "RESOURCE", configFileNode);
+            SaveSelectType("Module", partModuleButtons, "MODULES", configFileNode);
 
-#if false
-            if (sorting != null)
-                config.SetValue("Sorting", sorting);
-#endif
-            configSectionNode = new ConfigNode("MOD");
-            int i = 0;
-            foreach (var mod in modButtons)
-            {
-                if (!mod.Value.enabled)
-                    //config.SetValue("Mod" + (i++).ToString(), mod.Key);
-                    configSectionNode.SetValue("Mod" + (i++).ToString(), mod.Key,true);
-            }
-            configFileNode.SetNode("MOD", configSectionNode, true);
-
-            configSectionNode = new ConfigNode("SIZE");
-            i = 0;
-            foreach (var size in sizeButtons)
-            {
-                if (!size.Value.enabled)
-                    //config.SetValue("Size" + (i++).ToString(), size.Key);
-                    configSectionNode.SetValue("Size" + (i++).ToString(), size.Key,true);
-            }
-            configFileNode.SetNode("SIZE", configSectionNode, true);
-#if false
-            i = 0;
-            foreach (var module in moduleButtons)
-            {
-                if (module.Value.enabled)
-                    config.SetValue("Module" + (i++).ToString(), module.Key);
-            }
-#endif
             //config.save();
             configFile.SetNode(JC_NODE, configFileNode, true);
             //configFile.AddNode (KRASH_CUSTOM_NODE, configFileNode);
             configFile.Save(JC_CFG_FILE + selectedCfg.ToString()+".cfg");
         }
         //-------------------------------------------------------------------------------------------------------------------------------------------
+
+        void LoadValuesFromSectionNode(string NodeName, Dictionary<string, ToggleState> buttonList, ConfigNode configFileNode, string prefix)
+        {
+            configSectionNode = configFileNode.GetNode(NodeName);
+            if (configSectionNode != null)
+                LoadConfigSection(NodeName, configSectionNode, prefix, buttonList);
+        }
+
         private void LoadValuesFromConfig(int selectedCfg)
         {
-            Log.Info("LoadValuesFromConfig");
+            Log.Info("LoadValuesFromConfig, selectedCfg: " + selectedCfg);
             resetAll();
             if (System.IO.File.Exists(JC_CFG_FILE + selectedCfg.ToString() + ".cfg"))
             {
@@ -691,44 +1037,253 @@ namespace JanitorsCloset
                     //PluginConfiguration config = PluginConfiguration.CreateForType<ModFilterWindow>();
                     //config.load();
                     //LoadConfigSection(config, "Module", moduleButtons);
-                    configSectionNode = configFileNode.GetNode("MOD");
-                    if (configSectionNode != null)
-                    LoadConfigSection(configSectionNode, "Mod", modButtons);
-                    configSectionNode = configFileNode.GetNode("SIZE");
-                    LoadConfigSection(configSectionNode, "Size", sizeButtons);
+                    LoadValuesFromSectionNode("MOD", modButtons, configFileNode, "Mod");
+                    LoadValuesFromSectionNode("SIZE", sizeButtons, configFileNode, "Size");
+                    LoadValuesFromSectionNode("RESOURCE", resourceButtons, configFileNode, "Res");
+                    LoadValuesFromSectionNode("MODULES", partModuleButtons, configFileNode, "Module");
 
-                    ModFilteredCount = modButtons.Where(p => p.Value.enabled == false).Count();
-                    SizeFilteredCount = sizeButtons.Where(p => p.Value.enabled == false).Count();
-                    ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabled == false).Count();
-#if false
-            string sorting = config.GetValue<string>("Sorting");
-            if (!String.IsNullOrEmpty(sorting))
-                RunSort(sorting);
-#endif
+                    ModFilteredCount = modButtons.Where(p => p.Value.enabledState == false).Count();
+                    ModInverseCount = modButtons.Where(p => p.Value.inverse == true).Count();
+                    SizeFilteredCount = sizeButtons.Where(p => p.Value.enabledState == false).Count();
+                    ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabledState == false).Count();
+                    ModuleFilteredCount = partModuleButtons.Where(p => p.Value.enabledState == false).Count();
+                    ModuleInverseCount = partModuleButtons.Where(p => p.Value.inverse == true).Count();
+
                 }
             }
         }
 
         //-------------------------------------------------------------------------------------------------------------------------------------------
-        void LoadConfigSection(ConfigNode cfgNode, string prefix, Dictionary<string, ToggleState> buttons)
+        void LoadConfigSection(string NodeName, ConfigNode cfgNode, string prefix, Dictionary<string, ToggleState> buttons)
         {
-            Log.Info(string.Format("LoadConfigSection {0}", prefix));
-            for (int i = 0; ; i++)
+            for (int i = 0; i < cfgNode.CountValues; i++)
             {
-                string sectionName = prefix + i.ToString();
-                string entryName = cfgNode.GetValue(sectionName); //  config.GetValue<string>(sectionName);
-                if (String.IsNullOrEmpty(entryName))
-                    return;
-                if (!buttons.ContainsKey(entryName))
-                    continue;
+                bool inverse = false;
+                var e = cfgNode.values[i].name;
+                if (e.EndsWith(INVERSE))
+                {
+                    inverse = true;
+                    e = cfgNode.values[i].name.Substring(0, cfgNode.values[i].name.Length - 8);
+                }
+                ToggleState s;
+                if (!buttons.ContainsKey(e))
+                {
+                    s = new ToggleState();
+                    s.inverse = false;
+                    s.enabledState = true;
+                }
+                else
+                {
+                    s = buttons[e];
+                }
 
-                ToggleState s = buttons[entryName];
-                s.enabled = false;
-                buttons[entryName] = s;
+                if (!inverse)
+                    s.enabledState = bool.Parse(cfgNode.values[i].value);
+                else
+                    s.inverse = bool.Parse(cfgNode.values[i].value);
+
+                buttons[e] = s;                
+            }
+
+        }
+
+        
+        /// <summary>
+        /// Get a readable name from the dictionary.  If not there, create it
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        string GetReadableName(string name)
+        {
+            string s;
+            try
+            {
+                s = readableNamesDict[name];
+                return s;
+            } catch
+            {
+#if false // for future use
+                if (mergeListDict.ContainsKey(name))
+                {
+                    name = mergeListDict[name];
+                    if (readableNamesDict.ContainsKey(name))
+                        return ""; // readableNamesDict[name];
+                }
+#endif
+
+                s = BestGuessReadableName(name);
+
+                if (s != "")
+                {
+                    readableNamesDict.Add(name, s);
+                    Log.Info("Adding " + name + " to readableNamesDict");
+                    SaveReadableNames();
+                }
+                //else
+                //{
+                //    show = false;
+                //}
+                return s;
             }
         }
 
+        
+        string[] deleteLeading = new string[] { "Module", "CModule" };
 
+        /// <summary>
+        /// Given the input string, create a readable name from it using the specified rules
+        /// </summary>
+        /// <param name="inputString"></param>
+        /// <returns></returns>
+        string BestGuessReadableName(string inputString)
+        {
+            string outputString = "";
+            // No change if any spaces in string
+            // lower followed by upper = word break
+            // numeric digit followed by upper = insert a dash
+            // Delete leading words:
+            //      Module
+            //      CModule
+            //      
+            //  Exclude the names in the blacklist
+            
+            if (blacklistNames.Contains(inputString))
+                return "";
 
+            if (inputString.Contains(" "))
+            {
+                return inputString;
+            }
+
+            foreach (string e in deleteLeading)
+            {
+                if (inputString.Length >= e.Length && inputString.Substring(0, e.Length) == e)
+                {
+                    inputString = inputString.Remove(0, e.Length);
+                }
+            }
+            while (inputString.Length > 1)
+            {
+                outputString += inputString[0];
+                if (Char.IsLower(inputString[0]) && char.IsUpper(inputString[1] ))
+                {
+                    outputString += " ";
+                }
+                if (char.IsDigit(inputString[0]) && char.IsUpper(inputString[1]))
+                {
+                    outputString += " ";
+                }
+                inputString = inputString.Remove(0, 1);
+            }
+            return outputString + inputString;
+        }
+
+        static List<string> blacklistNames = new List<string>();
+#if false
+        static private Dictionary<string, string> mergeListDict;
+#endif
+        static private Dictionary<string, string> readableNamesDict;
+        static bool readableNamesInitted = false;
+
+        /// <summary>
+        /// Load data from the file:FiltersConfig.cfg
+        /// </summary>
+        void LoadReadableNames()
+        {
+            if (!readableNamesInitted)
+            {
+                readableNamesInitted = true;
+                readableNamesDict = new Dictionary<string, string>();
+#if false
+                mergeListDict = new Dictionary<string, string>();
+#endif
+                if (System.IO.File.Exists(JC_FILTER_CONFIG_FILE))
+                {
+                    configFile = ConfigNode.Load(JC_FILTER_CONFIG_FILE);
+                    ConfigNode janitorsClosetNode = configFile.GetNode(JC_NODE);
+                    if (janitorsClosetNode != null)
+                    {
+                        //
+                        // Load the READABLENAMES node
+                        //
+                        configFileNode = janitorsClosetNode.GetNode(JC_READABLE_NAMES_NODE);
+                        if (configFileNode != null)
+                        {
+                            for (int i = 0; i < configFileNode.CountValues; i++)
+                            {
+                                readableNamesDict[configFileNode.values[i].name] = configFileNode.values[i].value;
+                            }
+                        }
+
+                        //
+                        // Load the MODULE_BLACKLIST node
+                        //
+                        configFileNode = janitorsClosetNode.GetNode(JC_BLACKLIST_NODE);
+                        if (configFileNode != null)
+                        {
+                            blacklistNames = configFileNode.GetValues("ignore").ToList();
+                        }
+#if false // Disabled for possible future update
+                        //
+                        // Load the MERGLIST node
+                        //
+                        configFileNode = janitorsClosetNode.GetNode(JC_MERGELIST_NODE);
+                        if (configFileNode != null)
+                        {
+                            Log.Info("configFileNode is not null 3");
+
+                            for (int i = 0; i < configFileNode.CountValues; i++)
+                            {
+                                mergeListDict[configFileNode.values[i].name] = configFileNode.values[i].value;
+                            }
+                        }
+#endif
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Write the updated data to the file FiltersConfig.cfg
+        /// </summary>
+        void SaveReadableNames()
+        {
+            Log.Info("SaveReadableNames");
+            ConfigNode configFile = new ConfigNode(JC_NODE);
+            ConfigNode configJCnode = new ConfigNode(JC_NODE);
+            ConfigNode configFileNode = new ConfigNode(JC_READABLE_NAMES_NODE);
+
+            if (blacklistNames != null)
+            {
+                ConfigNode configBLNode = new ConfigNode(JC_BLACKLIST_NODE);
+                foreach (var s in blacklistNames)
+                {
+                    configBLNode.AddValue("ignore", s);
+                }
+                configJCnode.AddNode(JC_BLACKLIST_NODE, configBLNode);
+            }
+#if false // disabled for possible future update
+            if (mergeListDict != null)
+            {
+                ConfigNode mergeListNode = new ConfigNode(JC_MERGELIST_NODE);
+                foreach (var s in mergeListDict)
+                {
+                    mergeListNode.AddValue(s.Key, s.Value);
+                }
+
+                configJCnode.AddNode(JC_MERGELIST_NODE, mergeListNode);
+            }
+#endif
+            if (readableNamesDict != null)
+            {
+                foreach (var s in readableNamesDict)
+                {
+                    configFileNode.AddValue(s.Key, s.Value);
+                }
+                configJCnode.SetNode(JC_READABLE_NAMES_NODE, configFileNode, true);
+            }
+            configFile.SetNode(JC_NODE, configJCnode, true);
+            configFile.Save(JC_FILTER_CONFIG_FILE);
+        }
     }
 }

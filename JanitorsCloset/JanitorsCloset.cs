@@ -421,12 +421,28 @@ namespace JanitorsCloset
             }
             GUIStyle styleButton = new GUIStyle(GUI.skin.button);
             string modFilter = "Mod Filter";
-            Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount.ToString() + "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount.ToString() + "   modFilterWindow.ResourceFilteredCount: " + modFilterWindow.ResourceFilteredCount.ToString());
-            if (modFilterWindow.ModFilteredCount > 0 || modFilterWindow.SizeFilteredCount > 0 || modFilterWindow.ResourceFilteredCount > 0)
+#if DEBUG
+            Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount +
+                "   modFilterWindow.ModInverseCount: " + modFilterWindow.ModInverseCount +
+                "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount + 
+                "   modFilterWindow.ResourceFilteredCount: " + modFilterWindow.ResourceFilteredCount +
+                "   modFilterWindow.ModuleFilteredCount: " + modFilterWindow.ModuleFilteredCount +
+                "   modFilterWindow.ModuleInverseCount: " + modFilterWindow.ModuleInverseCount);
+#endif
+            if (modFilterWindow.ModFilteredCount > 0 || 
+                modFilterWindow.SizeFilteredCount > 0 || 
+                modFilterWindow.ResourceFilteredCount > 0 || 
+                modFilterWindow.ModInverseCount > 0 ||
+                modFilterWindow.ModuleFilteredCount > 0)
             {
                 styleButton.normal.textColor = Color.yellow;
                 styleButton.hover.textColor = Color.yellow;
-                modFilter = "Mod Filter (" + modFilterWindow.ModFilteredCount.ToString() + ", " + modFilterWindow.SizeFilteredCount.ToString() + ", " + modFilterWindow.ResourceFilteredCount.ToString() + ")";
+                modFilter = "Mod Filter (" + modFilterWindow.ModFilteredCount + ", " +
+                    modFilterWindow.ModInverseCount + ", " +
+                    modFilterWindow.SizeFilteredCount + ", " +
+                    modFilterWindow.ResourceFilteredCount + ", " +
+                    modFilterWindow.ModuleFilteredCount +  ", " +
+                    modFilterWindow.ModuleInverseCount +")";
             }
             else
             {

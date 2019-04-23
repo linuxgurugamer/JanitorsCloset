@@ -760,7 +760,7 @@ namespace JanitorsCloset
                 img2.SetPixels32(pixelBlock);
                 Log.Info("GetPixels32 loaded image");
             }
-            catch (UnityException _e)
+            catch 
             {
 
                 img.filterMode = FilterMode.Point;

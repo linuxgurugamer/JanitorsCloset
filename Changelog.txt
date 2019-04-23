@@ -251,3 +251,14 @@ ChangeLog
 
 0.3.4.8
 	Added some more checks for null refs
+
+0.3.5
+	Fixed resource filter to also filter on propellents used by engines & RCS
+	Optimized filters a bit
+	Added an inverse filter, to exclude specific mods/ size/resources
+	Fixed the "Reset All" button to properly reset the Resources filters
+	Added help screen to mod filter window
+	Fixed inability to save Mod Filter Window settings properly
+	Added PartModule filter
+	Added Module Blacklist (ignores modules in the blacklist)
+	Added ReadableNames list
