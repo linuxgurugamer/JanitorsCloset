@@ -23,7 +23,7 @@ namespace JanitorsCloset
         {
             string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 1.5 (1.875m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
 
-            
+
             //-------------------------------------------------------------------------------------------------------------------------------
             public PartInfo(AvailablePart part)
             {
@@ -207,162 +207,272 @@ namespace JanitorsCloset
                 partInfo.defaultPos = index++;
 
                 // add the size to the list of all sizes known if it's the first time we've seen this part size
-                if (!sizeButtons.ContainsKey(partInfo.partSize))
+
+                try
                 {
-                    Log.Info(string.Format("define new size filter key {0}", partInfo.partSize));
-                    sizeButtons.Add(partInfo.partSize, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                    sizeHash.Add(partInfo.partSize, new HashSet<AvailablePart>());
+                    if (!sizeButtons.ContainsKey(partInfo.partSize))
+                    {
+                        Log.Info(string.Format("define new size filter key {0}", partInfo.partSize));
+                        sizeButtons.Add(partInfo.partSize, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                        sizeHash.Add(partInfo.partSize, new HashSet<AvailablePart>());
+                    }
+                    Log.Info(string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
+                    sizeHash[partInfo.partSize].Add(part);
                 }
-                Log.Info(string.Format("add {0} to sizeHash for {1}", part.name, partInfo.partSize));
-                sizeHash[partInfo.partSize].Add(part);
+                catch (Exception ex)
+                {
+                    Log.Error("Exception caught (1), message: " + ex.Message);
+                }
 
                 // Add any resources the part has listed
                 if (part.resourceInfos.Count > 0)
                 {
                     foreach (var res in part.resourceInfos)
                     {
-                        if (!resourceButtons.ContainsKey(res.resourceName))
+
+                        try
                         {
-                            Log.Info(string.Format("define new resource filter key {0}", res.resourceName));
-                            resourceButtons.Add(res.resourceName, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                            resourceHash.Add(res.resourceName, new HashSet<AvailablePart>());
+                            if (!resourceButtons.ContainsKey(res.resourceName))
+                            {
+                                Log.Info(string.Format("define new resource filter key {0}", res.resourceName));
+                                resourceButtons.Add(res.resourceName, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                resourceHash.Add(res.resourceName, new HashSet<AvailablePart>());
+                            }
+                            Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, res.resourceName));
+                            resourceHash[res.resourceName].Add(part);
                         }
-                        Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, res.resourceName));
-                        resourceHash[res.resourceName].Add(part);
+                        catch (Exception ex)
+                        {
+                            Log.Error("Exception caught (2), message: " + ex.Message);
+                        }
+
                     }
                 }
                 else
                 {
                     string resname = "None";
-                    if (!resourceButtons.ContainsKey(resname))
+
+                    try
                     {
-                        resourceButtons.Add(resname, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                        resourceHash.Add(resname, new HashSet<AvailablePart>());
+                        if (!resourceButtons.ContainsKey(resname))
+                        {
+                            resourceButtons.Add(resname, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                            resourceHash.Add(resname, new HashSet<AvailablePart>());
+                        }
+                        Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, resname));
+                        resourceHash[resname].Add(part);
                     }
-                    Log.Info(string.Format("add {0} to resourceHash for {1}", part.name, resname));
-                    resourceHash[resname].Add(part);
+                    catch (Exception ex)
+                    {
+                        Log.Error("Exception caught (3), message: " + ex.Message);
+                    }
+
                 }
-                foreach (var module in part.partPrefab.Modules)
+                
+                if (part.partPrefab.Modules.Count == 0)
                 {
-                    // First get all the part modules here
-
-                    Log.Info("module: name: " + module.name + ", moduleName: " + module.moduleName);
-                    
-                    if (!partModuleButtons.ContainsKey(module.moduleName))
+                    string moduleName = "None";
+                    try
                     {
-
-                        Log.Info(string.Format("define new module.moduleName filter key {0}", module.moduleName));
-                        partModuleButtons.Add(module.moduleName, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                        partModuleHash.Add(module.moduleName, new HashSet<AvailablePart>());
-                    }
-                    Log.Info(string.Format("add {0} to partModuleHash for modleName: {1}", part.name, module.moduleName));
-                    partModuleHash[module.moduleName].Add(part);
-
-                    // Now get the resources used by the modules
-
-                    foreach (var res in module.resHandler.inputResources)
-                    {
-                        if (!resourceButtons.ContainsKey(res.name))
+                        if (!partModuleButtons.ContainsKey(moduleName))
                         {
-                            Log.Info(string.Format("define new res.inputResource filter key {0}", res.name));
-                            resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                            resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                            Log.Info(string.Format("define new module.moduleName filter key {0}", moduleName));
+                            partModuleButtons.Add(moduleName, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                            partModuleHash.Add(moduleName, new HashSet<AvailablePart>());
                         }
-                        Log.Info(string.Format("add {0} to resourceHash for inputResource: {1}", part.name, res.name));
-                        resourceHash[res.name].Add(part);
+                        Log.Info(string.Format("add {0} to partModuleHash for moduleName: {1}", part.name, moduleName));
+                        partModuleHash[moduleName].Add(part);
                     }
-                    foreach (var res in module.resHandler.outputResources)
+                    catch (Exception ex)
                     {
-                        if (!resourceButtons.ContainsKey(res.name))
+                        Log.Error("Exception caught (6), message: " + ex.Message);
+                    }
+                }
+                else
+                {
+                    foreach (var module in part.partPrefab.Modules)
+                    {
+                        // First get all the part modules here
+
+                        Log.Info("module: part name: " + part.name + ", moduleName: " + module.moduleName);
+
+                        try
                         {
-                            Log.Info(string.Format("define new res.outputResources filter key {0}", res.name));
-                            resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                            resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                            if (!partModuleButtons.ContainsKey(module.moduleName))
+                            {
+
+                                Log.Info(string.Format("define new module.moduleName filter key {0}", module.moduleName));
+                                partModuleButtons.Add(module.moduleName, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                partModuleHash.Add(module.moduleName, new HashSet<AvailablePart>());
+                            }
+                            Log.Info(string.Format("add {0} to partModuleHash for moduleName: {1}", part.name, module.moduleName));
+                            partModuleHash[module.moduleName].Add(part);
                         }
-                        Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, res.name));
-                        resourceHash[res.name].Add(part);
+                        catch (Exception ex)
+                        {
+                            Log.Error("Exception caught (4), message: " + ex.Message);
+                        }
+
+                        // Now get the resources used by the modules
+
+                        foreach (var res in module.resHandler.inputResources)
+                        {
+
+                            try
+                            {
+                                if (!resourceButtons.ContainsKey(res.name))
+                                {
+                                    Log.Info(string.Format("define new res.inputResource filter key {0}", res.name));
+                                    resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                    resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                                }
+                                Log.Info(string.Format("add {0} to resourceHash for inputResource: {1}", part.name, res.name));
+                                resourceHash[res.name].Add(part);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Exception caught (5), message: " + ex.Message);
+                            }
+
+                        }
+                        foreach (var res in module.resHandler.outputResources)
+                        {
+
+                            try
+                            {
+                                if (!resourceButtons.ContainsKey(res.name))
+                                {
+                                    Log.Info(string.Format("define new res.outputResources filter key {0}", res.name));
+                                    resourceButtons.Add(res.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                    resourceHash.Add(res.name, new HashSet<AvailablePart>());
+                                }
+                                Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, res.name));
+                                resourceHash[res.name].Add(part);
+                            }
+                            catch (Exception ex)
+                            {
+                                Log.Error("Exception caught (6), message: " + ex.Message);
+                            }
+
+                        }
+                        switch (module.moduleName)
+                        {
+                            case "ModuleEngines":
+                                {
+                                    Log.Info("ModuleEngines");
+                                    ModuleEngines me = module as ModuleEngines;
+                                    for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                    {
+                                        Propellant propellant = me.propellants[i];
+
+                                        try
+                                        {
+                                            if (!resourceButtons.ContainsKey(propellant.name))
+                                            {
+                                                Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                                resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                                resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                            }
+                                            Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
+                                            resourceHash[propellant.name].Add(part);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error("Exception caught (7), message: " + ex.Message);
+                                        }
+
+                                    }
+                                    break;
+                                }
+                            case "ModuleEnginesFX":
+                                {
+                                    Log.Info("ModuleEnginesFX");
+
+                                    ModuleEngines me = module as ModuleEnginesFX;
+                                    for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                    {
+                                        Propellant propellant = me.propellants[i];
+
+                                        try
+                                        {
+                                            if (!resourceButtons.ContainsKey(propellant.name))
+                                            {
+                                                Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                                resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                                resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                            }
+                                            Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
+                                            resourceHash[propellant.name].Add(part);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error("Exception caught (8), message: " + ex.Message);
+                                        }
+
+                                    }
+                                    break;
+                                }
+                            case "ModuleRCS":
+                                {
+                                    Log.Info("ModuleRCS");
+
+                                    ModuleRCS me = module as ModuleRCS;
+                                    for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                    {
+                                        Propellant propellant = me.propellants[i];
+
+                                        try
+                                        {
+                                            if (!resourceButtons.ContainsKey(propellant.name))
+                                            {
+                                                Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                                resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                                resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                            }
+                                            Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
+                                            resourceHash[propellant.name].Add(part);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error("Exception caught (9), message: " + ex.Message);
+                                        }
+
+                                    }
+                                    break;
+                                }
+                            case "ModuleRCSFX":
+                                {
+                                    Log.Info("ModuleRCSFX");
+
+                                    ModuleRCSFX me = module as ModuleRCSFX;
+
+                                    for (int i = me.propellants.Count - 1; i >= 0; i--)
+                                    {
+                                        Propellant propellant = me.propellants[i];
+
+                                        try
+                                        {
+                                            if (!resourceButtons.ContainsKey(propellant.name))
+                                            {
+                                                Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
+                                                resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                                                resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
+                                            }
+                                            Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
+                                            resourceHash[propellant.name].Add(part);
+                                        }
+                                        catch (Exception ex)
+                                        {
+                                            Log.Error("Exception caught (10), message: " + ex.Message);
+                                        }
+
+
+                                    }
+
+                                    break;
+                                }
+                        }
                     }
-                    switch (module.moduleName)
-                    {
-                        case "ModuleEngines":
-                            {
-                                Log.Info("ModuleEngines");
-                                ModuleEngines me = module as ModuleEngines;
-                                for (int i = me.propellants.Count - 1; i >= 0; i--)
-                                {
-                                    Propellant propellant = me.propellants[i];
-                                    if (!resourceButtons.ContainsKey(propellant.name))
-                                    {
-                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
-                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
-                                    }
-                                    Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
-                                    resourceHash[propellant.name].Add(part);
-                                }
-                                break;
-                            }
-                        case "ModuleEnginesFX":
-                            {
-                                Log.Info("ModuleEnginesFX");
-
-                                ModuleEngines me = module as ModuleEnginesFX;
-                                for (int i = me.propellants.Count - 1; i >= 0; i--)
-                                {
-                                    Propellant propellant = me.propellants[i];
-                                    if (!resourceButtons.ContainsKey(propellant.name))
-                                    {
-                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
-                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
-                                    }
-                                    Log.Info(string.Format("add {0} to resourceHash for outputResources: {1}", part.name, propellant.name));
-                                    resourceHash[propellant.name].Add(part);
-                                }
-                                break;
-                            }
-                        case "ModuleRCS":
-                            {
-                                Log.Info("ModuleRCS");
-
-                                ModuleRCS me = module as ModuleRCS;
-                                for (int i = me.propellants.Count - 1; i >= 0; i--)
-                                {
-                                    Propellant propellant = me.propellants[i];
-                                    if (!resourceButtons.ContainsKey(propellant.name))
-                                    {
-                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
-                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
-                                    }
-                                    Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
-                                    resourceHash[propellant.name].Add(part);
-                                }
-                                break;
-                            }
-                        case "ModuleRCSFX":
-                            {
-                                Log.Info("ModuleRCSFX");
-
-                                ModuleRCSFX me = module as ModuleRCSFX;
-               
-                                for (int i = me.propellants.Count - 1; i >= 0; i--)
-                                {
-                                    Propellant propellant = me.propellants[i];
-                                    if (!resourceButtons.ContainsKey(propellant.name))
-                                    {
-                                        Log.Info(string.Format("define new propellant filter key {0}", propellant.name));
-                                        resourceButtons.Add(propellant.name, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                                        resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
-                                    }
-                                    Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
-                                    resourceHash[propellant.name].Add(part);
-                                }
-                            
-                                break;
-                            }
-                    }
-
                 }
 
                 // the part's base directory name is used to filter entire mods in and out
@@ -370,14 +480,23 @@ namespace JanitorsCloset
                 Log.Info("partModName: " + partModName);
                 if (partModName != "")
                 {
-                    if (!modButtons.ContainsKey(partModName))
+
+                    try
                     {
-                        Log.Info(string.Format("define new mod filter key {0}", partModName));
-                        modButtons.Add(partModName, new ToggleState() { enabledState = true, latched = false, inverse = false });
-                        modHash.Add(partModName, new HashSet<AvailablePart>());
+                        if (!modButtons.ContainsKey(partModName))
+                        {
+                            Log.Info(string.Format("define new mod filter key {0}", partModName));
+                            modButtons.Add(partModName, new ToggleState() { enabledState = true, latched = false, inverse = false });
+                            modHash.Add(partModName, new HashSet<AvailablePart>());
+                        }
+                        Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
+                        modHash[partModName].Add(part);
                     }
-                    Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
-                    modHash[partModName].Add(part);
+                    catch (Exception ex)
+                    {
+                        Log.Error("Exception caught (11), message: " + ex.Message);
+                    }
+
 
                     // save all the module names that are anywhere in this part
                     if (part.partPrefab == null)
@@ -448,35 +567,51 @@ namespace JanitorsCloset
             return loadedParts;
         }
 
-        bool PartInResourceFilteredButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInResourceFilteredButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             Log.Info("part: " + part.name);
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)                
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
-                if (!entry.Value.enabledState)
+                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
                     continue;
-                if (filterHash[entry.Key].Contains(part))
+                try
                 {
-                    Log.Info("part: " + part.name + " has resource: " + entry.Key);
-                    return true;
+                    if (filterHash[entry.Key].Contains(part))
+                    {
+                        Log.Info("part: " + part.name + " has resource: " + entry.Key);
+                        return true;
+                    }
+                }
+                catch
+                {
+                    Log.Error("PartInResourceFilteredButtons, filter: " + filter + " entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
+
+                }
+
+            }
+            return false;
+        }
+
+        bool PartInFilteredButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            foreach (KeyValuePair<string, ToggleState> entry in buttons)
+            {
+                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
+                    continue;
+                try
+                {
+                    if (filterHash[entry.Key].Contains(part))
+                        return true;
+                }
+                catch
+                {
+                    Log.Error("PartInFilteredButtons, filter: " + filter + " entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
                 }
             }
             return false;
         }
 
-        bool PartInFilteredButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
-        {
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
-            {
-                if (!entry.Value.enabledState)
-                    continue;
-                if (filterHash[entry.Key].Contains(part))
-                    return true;
-            }
-            return false;
-        }
-
-        bool PartInResourseExcludeButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInResourseExcludeButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -484,7 +619,7 @@ namespace JanitorsCloset
                     continue;
                 if (!filterHash.ContainsKey(entry.Key))
                 {
-                    Log.Error("filterHash does not contain key: " + entry.Key);
+                    Log.Error("PartInResourseExcludeButtons, filter: " + filter + ", filterHash does not contain key: " + entry.Key);
                 }
                 else
                 {
@@ -495,30 +630,36 @@ namespace JanitorsCloset
             return true;
         }
 
-        bool PartInUnpurchasedButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInUnpurchasedButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             if (!hideUnpurchased)
                 return true;
             return PartIsPurchased(part);
         }
 
-        
-        bool PartInModuleButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+
+        bool PartInModuleButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
-                if (!entry.Value.enabledState)
+                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
                     continue;
-        
-                if (filterHash[entry.Key].Contains(part))
+                try
                 {
-                    return true;
+                    if (filterHash[entry.Key].Contains(part))
+                    {
+                        return true;
+                    }
+                }
+                catch
+                {
+                    Log.Error("PartInModuleButtons, filter: " + filter + ", entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
                 }
             }
             return false;
         }
 
-        bool PartInModuleExcludeButtons(AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInModuleExcludeButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -527,7 +668,7 @@ namespace JanitorsCloset
 
                 if (!filterHash.ContainsKey(entry.Key))
                 {
-                    Log.Error("filterHash does not contain key: " + entry.Key);
+                    Log.Error("PartInModuleExcludeButtons, filter: " + filter + ", filterHash does not contain key: " + entry.Key);
                 }
                 else
                 {
@@ -544,19 +685,19 @@ namespace JanitorsCloset
             if (configs == null)
                 configs = GameDatabase.Instance.GetConfigs("PART");
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons(part, modButtons, modHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Mod Filter", (part => PartInFilteredButtons("Mod Filter", part, modButtons, modHash))));
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons(part, sizeButtons, sizeHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Size Filter", (part => PartInFilteredButtons("Size Filter", part, sizeButtons, sizeHash))));
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Filter", (part => PartInResourceFilteredButtons(part, resourceButtons, resourceHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Filter", (part => PartInResourceFilteredButtons("Resource Filter", part, resourceButtons, resourceHash))));
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Exclude Filter", (part => PartInResourseExcludeButtons(part, resourceButtons, resourceHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Resource Exclude Filter", (part => PartInResourseExcludeButtons("Resource Exclude Filter", part, resourceButtons, resourceHash))));
 
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons(part, sizeButtons, sizeHash))));
-
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Filter", (part => PartInModuleButtons(part, partModuleButtons, partModuleHash))));
-            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Exclude Filter", (part => PartInModuleExcludeButtons(part, partModuleButtons, partModuleHash))));
-
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Unpurchased Filter", (part => PartInUnpurchasedButtons("Unpurchased Filter", part, sizeButtons, sizeHash))));
+#if true
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Filter", (part => PartInModuleButtons("Module Filter", part, partModuleButtons, partModuleHash))));
+            EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Module Exclude Filter", (part => PartInModuleExcludeButtons("Module Exclude Filter", part, partModuleButtons, partModuleHash))));
+#endif
             //EditorPartList.Instance.ExcludeFilters.AddFilter(new EditorPartListFilter<AvailablePart>("Modules Filter", (part => !PartInFilteredButtons(part, moduleButtons, moduleHash))));
             EditorPartList.Instance.Refresh();
         }
@@ -596,7 +737,7 @@ namespace JanitorsCloset
             modwindowRectID = JanitorsCloset.getNextID();
             modFilterHelpWindowID = JanitorsCloset.getNextID();
             enabled = false;
-            
+
         }
 
         bool filtersDefined = false;
@@ -654,7 +795,7 @@ namespace JanitorsCloset
 
             modWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
             if (showFilterHelpWindow)
-             filterHelpWindow = ClickThruBlocker.GUILayoutWindow(modFilterHelpWindowID, filterHelpWindow, FilterHelpWindow, _windowTitle, tstyle);
+                filterHelpWindow = ClickThruBlocker.GUILayoutWindow(modFilterHelpWindowID, filterHelpWindow, FilterHelpWindow, _windowTitle, tstyle);
             if (helpPopup != null)
                 helpPopup.draw();
         }
@@ -665,7 +806,10 @@ namespace JanitorsCloset
             string right = GetReadableName(rght);
             if (left == right)
                 return 0;
-
+            if (left == "None")
+                return -1;
+            if (right == "None")
+                return 1;
             // Special cases for adapters so they are in height order, from smaller to larger
             if (left.Contains("Adapter") && right.Contains("larger"))
                 return 1;
@@ -686,7 +830,7 @@ namespace JanitorsCloset
         void resetAll()
         {
             var names = new List<string>(modButtons.Keys);
-            Dictionary<string, ToggleState>  states = modButtons;
+            Dictionary<string, ToggleState> states = modButtons;
             foreach (string name in names)
             {
                 ToggleState state = states[name];
@@ -730,13 +874,13 @@ namespace JanitorsCloset
             if (helpPopup == null)
             {
                 helpPopup = new HelpPopup(
-                    "Mod Filter", "Mod Name - filter mods by name\n" + 
+                    "Mod Filter", "Mod Name - filter mods by name\n" +
                     "Module Size - filter mods by size\nResources - filter mods by resource\n" +
                     "Modules - filter mods by modules\n\n" +
-                    "Resource filter can filter by two methods:\n" + 
+                    "Resource filter can filter by two methods:\n" +
                     "\t1. The green toggle says that the resource must be contained in the part or\n" +
                     "\t   (if an engine module) used by the part\n" +
-                    "\t2. The red toggle says that shown parts must NOT have or use the specified\n" + 
+                    "\t2. The red toggle says that shown parts must NOT have or use the specified\n" +
                     "\t   resource.  Clicking the button with the resource name will cycle\n" +
                     "\t   through the three modes of filtering for that resource.\n\n" +
 
@@ -789,7 +933,7 @@ namespace JanitorsCloset
                     break;
                 case 3:
                     states = partModuleButtons;
-                    break;                
+                    break;
             }
 
             GUILayout.EndHorizontal();
@@ -963,7 +1107,7 @@ namespace JanitorsCloset
             ResourceFilteredCount = resourceButtons.Where(p => p.Value.enabledState == false).Count();
             ModuleFilteredCount = partModuleButtons.Where(p => p.Value.enabledState == false).Count();
             ModuleInverseCount = partModuleButtons.Where(p => p.Value.inverse == true).Count();
-            
+
         }
 
         private static String CONFIG_BASE_FOLDER;
@@ -981,7 +1125,7 @@ namespace JanitorsCloset
         private static ConfigNode configFileNode = null;
         private static ConfigNode configSectionNode = null;
 
- 
+
         //-------------------------------------------------------------------------------------------------------------------------------------------
         void SaveSelectType(string prefix, Dictionary<string, ToggleState> buttonList, string NodeName, ConfigNode fileNode)
         {
@@ -1013,7 +1157,7 @@ namespace JanitorsCloset
             //config.save();
             configFile.SetNode(JC_NODE, configFileNode, true);
             //configFile.AddNode (KRASH_CUSTOM_NODE, configFileNode);
-            configFile.Save(JC_CFG_FILE + selectedCfg.ToString()+".cfg");
+            configFile.Save(JC_CFG_FILE + selectedCfg.ToString() + ".cfg");
         }
         //-------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -1082,12 +1226,12 @@ namespace JanitorsCloset
                 else
                     s.inverse = bool.Parse(cfgNode.values[i].value);
 
-                buttons[e] = s;                
+                buttons[e] = s;
             }
 
         }
 
-        
+
         /// <summary>
         /// Get a readable name from the dictionary.  If not there, create it
         /// </summary>
@@ -1100,7 +1244,8 @@ namespace JanitorsCloset
             {
                 s = readableNamesDict[name];
                 return s;
-            } catch
+            }
+            catch
             {
 #if false // for future use
                 if (mergeListDict.ContainsKey(name))
@@ -1127,7 +1272,7 @@ namespace JanitorsCloset
             }
         }
 
-        
+
         string[] deleteLeading = new string[] { "Module", "CModule" };
 
         /// <summary>
@@ -1146,7 +1291,7 @@ namespace JanitorsCloset
             //      CModule
             //      
             //  Exclude the names in the blacklist
-            
+
             if (blacklistNames.Contains(inputString))
                 return "";
 
@@ -1165,7 +1310,7 @@ namespace JanitorsCloset
             while (inputString.Length > 1)
             {
                 outputString += inputString[0];
-                if (Char.IsLower(inputString[0]) && char.IsUpper(inputString[1] ))
+                if (Char.IsLower(inputString[0]) && char.IsUpper(inputString[1]))
                 {
                     outputString += " ";
                 }

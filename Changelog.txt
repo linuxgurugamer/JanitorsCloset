@@ -262,3 +262,8 @@ ChangeLog
 	Added PartModule filter
 	Added Module Blacklist (ignores modules in the blacklist)
 	Added ReadableNames list
+
+0.3.5.1
+	Fixed Missing Key error when resources were listd in the filterconfig file and not available
+	Added "None" to modules (for those parts which didn't have any modules)
+	Adjusted the sort so that "None" is always first
