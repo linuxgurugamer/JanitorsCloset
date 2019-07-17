@@ -267,3 +267,8 @@ ChangeLog
 	Fixed Missing Key error when resources were listd in the filterconfig file and not available
 	Added "None" to modules (for those parts which didn't have any modules)
 	Adjusted the sort so that "None" is always first
+
+0.3.6
+	Fixed nullref when returning to the main menu (new in 1.7.3)
+	Added InstallChecker
+	Updated AssemblyVersion.tt

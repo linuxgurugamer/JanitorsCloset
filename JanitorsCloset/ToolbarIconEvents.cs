@@ -127,6 +127,8 @@ namespace JanitorsCloset
             double lasttimecheck = 0;
             private void FixedUpdate()
             {
+                if (HighLogic.CurrentGame == null)
+                    return;
                 if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     return;
 
