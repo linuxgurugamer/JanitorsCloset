@@ -272,3 +272,6 @@ ChangeLog
 	Fixed nullref when returning to the main menu (new in 1.7.3)
 	Added InstallChecker
 	Updated AssemblyVersion.tt
+
+0.3.6.1
+	Fixed another nullref when returning to the main menu, was happening in 1.7.2
