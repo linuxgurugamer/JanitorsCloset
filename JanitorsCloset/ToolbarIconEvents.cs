@@ -500,7 +500,7 @@ namespace JanitorsCloset
 
             private void Start()
             {
-                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
+                if (HighLogic.CurrentGame == null || !JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     return;
 
                 appButton = GetComponent<ApplicationLauncherButton>();
