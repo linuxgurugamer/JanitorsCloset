@@ -275,3 +275,7 @@ ChangeLog
 
 0.3.6.1
 	Fixed another nullref when returning to the main menu, was happening in 1.7.2
+
+0.3.7
+	Updated for KSP 1.8
+	Updated some old constants
