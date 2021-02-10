@@ -13,14 +13,24 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using UnityEngine;
 using Debug = UnityEngine.Debug;
+using KSP_Log;
+
 
 namespace JanitorsCloset
 {
     [KSPAddon(KSPAddon.Startup.Instantly, false)]
-    class JanitorsClosetLoader : MonoBehaviour
+    public class JanitorsClosetLoader : MonoBehaviour
     {
-        void Awake()
+        static public Log Log;
+
+        void Start()
         {
+#if DEBUG
+            Log = new Log("Janitor's Closet", Log.LEVEL.INFO);
+#else
+            Log = new Log("Janitor's Closet", Log.LEVEL.ERROR);
+#endif
+
             FileOperations f = new FileOperations();
             // Allow loading the background in the loading screen
             //Application.runInBackground = true;

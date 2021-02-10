@@ -1,113 +1,130 @@
 ﻿using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Collections;
 using System.Linq;
 using System.Text;
-
 using UnityEngine;
-using KSP.UI;
 using KSP.UI.Screens;
-using KSP.IO;
 using ClickThroughFix;
 
+using static JanitorsCloset.JanitorsClosetLoader;
 
 namespace JanitorsCloset
 {
-
     class ModFilterWindow : MonoBehaviour
     {
+        internal static ModFilterWindow instance;
+
         const string INVERSE = "-inverse";
 
-        public class PartInfo
+        public class PartSizeDescr
         {
-            string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 1.5 (1.875m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)" };
+            public string bulkheadProfile;
+            public string descr;
 
+            public PartSizeDescr(string size, string descr)
+            {
+                this.bulkheadProfile = size;
+                this.descr = descr;
+            }
+        }
+        static SortedDictionary<string, PartSizeDescr> partSizeDict = null;
+        public class PartInfo : IComparable
+        {
+            string partName;
+            //static string[] partSizeDescr = new string[] { "Size 0 (0.625m)", "Size 1 (1.25m)", "Size 1.5 /(1.875m)", "Size 2 (2.5m)", "Size 3 (3.75m)", "Size 4 (5m)", "Size 5 (7.5m)" };
 
-            //-------------------------------------------------------------------------------------------------------------------------------
+            // Implement IComparable CompareTo method - provide default sort order.
+            public int CompareTo(object obj1)
+            {
+                return String.Compare(this.partName, ((PartInfo)obj1).partName);
+            }
+            //----------------           ---------------------------------------------------------------------------------------------------------------
+            public string RemoveWhiteSpace(string input)
+            {
+                return new string(input.ToCharArray()
+                    .Where(c => !Char.IsWhiteSpace(c))
+                    .ToArray());
+            }
+
             public PartInfo(AvailablePart part)
             {
-                Log.Info("partSizeDescr.Length: " + partSizeDescr.Length.ToString());
-                if (part.partPrefab == null)
+                string key = "";
+                this.partName = part.name;
+                if (partSizeDict == null)
+                    Log.Error("partSizeDict is null in PartInfo");
+
+                Log.Info("Part: " + part.name + ", PartSizeDescrDict.Count: " + partSizeDict.Count);
+
+                //  Log.Info("partSizeDescr.Length: " + partSizeDescr.Length.ToString());
+
+                if (part.bulkheadProfiles != null && part.bulkheadProfiles != ""
+                    && part.bulkheadProfiles != "srf")
                 {
-                    Log.Info(string.Format("{0} has no partPrefab", part.name));
-                    partSize = "No Size";
-                }
-                else
-                // if the attach points have different sizes then it's probably an adapter and we'll place
-                // it half way between the smallest and largest attach point of the things it connects
-                if (part.partPrefab.attachNodes == null)
-                {
-                    Log.Info(string.Format("{0} has no attach points", part.name));
-                    partSize = "No Size";
-                }
-                else if (part.partPrefab.attachNodes.Count < 0)
-                {
-                    Log.Info(string.Format("{0} has negative attach points", part.name));
-                    partSize = "No Size";
-                }
-                else if (part.partPrefab.attachNodes.Count < 1)
-                {
-                    Log.Info(string.Format("{0} has no attachNodes", part.name));
-                    partSize = "No Size";
-                }
-                else
-                {
-                    double small = 99999;
-                    double large = 0;
-                    foreach (var attach in part.partPrefab.attachNodes)
+                    //bool srf = false;
+
+                    List<string> bulkheads = part.bulkheadProfiles.Split(',').ToList();
+                    for (int i = bulkheads.Count - 1; i >= 0; i--)
                     {
-                        small = Math.Min(small, attach.size);
-                        large = Math.Max(large, attach.size);
-                    }
-                    if (small < 0)
-                    {
-                        Log.Error(string.Format("{0} has attach point with size < 0", part.name));
-                        small = 0;
+                        bulkheads[i] = bulkheads[i].Trim().ToLower();
+                        if (bulkheads[i].Contains("srf"))
+                        {
+                            Log.Info("Part: " + part.name + ", removing bulkhead: " + bulkheads[i]);
+                            bulkheads.RemoveAt(i);
+                        }
                     }
 
-                    Log.Info("small: " + small.ToString() + "   large: " + large.ToString());
-                    sortSize = (small + large) / 2;
-                    int smallSize = (int)small;
-                    string smallSizeStr;
-                    if (smallSize < partSizeDescr.Length)
-                        smallSizeStr = partSizeDescr[smallSize];
-                    else
-                        smallSizeStr = partSizeDescr[partSizeDescr.Length - 1] + " and larger";
-                    Log.Info("smallSizeStr: " + smallSizeStr);
-                    if (small == large)
+                    if (bulkheads.Count > 1)
                     {
-                        partSize = smallSizeStr;
-                        //partSize = Math.Round(small, 2).ToString("0.00");
+                        bulkheads = bulkheads.OrderBy(x => x).ToList();
+                    }
+
+                    string smallSizeStr = bulkheads[0];
+                    string largeSizeStr = bulkheads[bulkheads.Count - 1];
+                    if (smallSizeStr == largeSizeStr)
+                    {
+                        partSize = BestGuessReadableName(smallSizeStr, capitalize: true);
+                        key = smallSizeStr;
                     }
                     else
                     {
-                        int largeSize = (int)large;
-                        string largeSizeStr;
-                        if (largeSize < partSizeDescr.Length)
-                            largeSizeStr = partSizeDescr[largeSize];
-                        else
-                            largeSizeStr = partSizeDescr[partSizeDescr.Length - 1];
-
-                        partSize = "Adapter: " + smallSizeStr + " to " + largeSizeStr;
-                        //partSize = Math.Round(small, 2).ToString("0.00") + " to " + Math.Round(large, 2).ToString("0.00");
+                        partSize = "Adapter: " + BestGuessReadableName(smallSizeStr, capitalize: true) + " to " + BestGuessReadableName(largeSizeStr, capitalize: true);
+                        key = smallSizeStr + "-" + largeSizeStr;
                     }
-                    Log.Info(string.Format("{0} is sortSize {1} partSize {2}", part.name, sortSize, partSize));
+                    //if (srf)
+                    //    partSize += ", Srf";
+
+                    //Log.Info("part: " + part.name + ", partSize: " + partSize + ", bulkheads[0]: [" + bulkheads[0] + "], bulkheads.Count: " + bulkheads.Count + ", bulkheads[bulkheads.Count - 1]: [" + bulkheads[bulkheads.Count - 1] + "]");
                 }
+                else
+                {
+                    partSize = "Srf";
+                    key = "srf";
+                }
+                if (partSizeDict.ContainsKey(key))
+                    partSize = partSizeDict[key].descr;
+                else
+                {
+                    if (!part.name.Contains("kerbalEVA") && part.name != "flag")
+                        Log.Error("Unknown BulkheadProfiles: part: " + part.name + ", bulkheadProfiles: " + part.bulkheadProfiles);
+                }
+#if false
+                try
+                { Log.Info("PartInfo, Part: " + part.name + ", partSize: " + key + " = " + partSize); }
+                catch (Exception ex) { Log.Error("Error: " + ex.Message); }
+#endif
             }
 
             //-------------------------------------------------------------------------------------------------------------------------------
             public string partSize;
-            public double sortSize;
+            //public double sortSize;
+
 
             public int defaultPos;
 
         };
 
 
-        //Rect filterWindowRect = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
-        Rect modWindowRect;
-        Rect filterHelpWindow = new Rect(200 + 90, Screen.height - 25 - 280, 150, 280);
+        static Rect modWindowRect = new Rect(0, 0, 0, 0);
 
         private const int MOD_WINDOW_ID = 94;
         private const int SIZE_WINDOW_ID = 95;
@@ -118,17 +135,18 @@ namespace JanitorsCloset
             public bool latched;
             public bool inverse;
         }
-        private Dictionary<string, ToggleState> modButtons = new Dictionary<string, ToggleState>();
-        private Dictionary<string, ToggleState> sizeButtons = new Dictionary<string, ToggleState>();
-        private Dictionary<string, ToggleState> resourceButtons = new Dictionary<string, ToggleState>();
-        private Dictionary<string, ToggleState> partModuleButtons = new Dictionary<string, ToggleState>();
 
-        private Dictionary<AvailablePart, PartInfo> partInfos = new Dictionary<AvailablePart, PartInfo>();
+        private static SortedDictionary<string, ToggleState> modButtons = new SortedDictionary<string, ToggleState>();
+        private static SortedDictionary<string, ToggleState> sizeButtons = new SortedDictionary<string, ToggleState>();
+        private static SortedDictionary<string, ToggleState> resourceButtons = new SortedDictionary<string, ToggleState>();
+        private static SortedDictionary<string, ToggleState> partModuleButtons = new SortedDictionary<string, ToggleState>();
 
-        private Dictionary<string, HashSet<AvailablePart>> modHash = new Dictionary<string, HashSet<AvailablePart>>();
-        private Dictionary<string, HashSet<AvailablePart>> sizeHash = new Dictionary<string, HashSet<AvailablePart>>();
-        private Dictionary<string, HashSet<AvailablePart>> resourceHash = new Dictionary<string, HashSet<AvailablePart>>();
-        private Dictionary<string, HashSet<AvailablePart>> partModuleHash = new Dictionary<string, HashSet<AvailablePart>>();
+        private static SortedDictionary<string, PartInfo> partInfos = new SortedDictionary<string, PartInfo>();
+
+        private static SortedDictionary<string, HashSet<AvailablePart>> modHash = new SortedDictionary<string, HashSet<AvailablePart>>();
+        private static SortedDictionary<string, HashSet<AvailablePart>> sizeHash = new SortedDictionary<string, HashSet<AvailablePart>>();
+        private static SortedDictionary<string, HashSet<AvailablePart>> resourceHash = new SortedDictionary<string, HashSet<AvailablePart>>();
+        private static SortedDictionary<string, HashSet<AvailablePart>> partModuleHash = new SortedDictionary<string, HashSet<AvailablePart>>();
 
         public int ModFilteredCount = 0;
         public int ModInverseCount = 0;
@@ -149,7 +167,6 @@ namespace JanitorsCloset
             return HighLogic.CurrentGame.Mode == Game.Modes.SANDBOX || ResearchAndDevelopment.PartModelPurchased(info);
         }
 
-
         static public string FindPartMod(AvailablePart part)
         {
             if (configs == null)
@@ -169,14 +186,20 @@ namespace JanitorsCloset
 
         public void Show()
         {
-            Log.Info("ModFilterWindow.Show()");
-            this.enabled = !enabled;
+            this.enabled = true;
+
+            modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, Math.Max(sizeButtons.Count, Math.Max(resourceButtons.Count, partModuleButtons.Count))));
+
+            if (JanitorsCloset.GetModFilterWin != null)
+            {
+                var r = (Rect)JanitorsCloset.GetModFilterWin;
+                modWindowRect.x = r.x;
+                modWindowRect.y = r.y;
+
+            }
         }
-        public void Hide()
-        {
-            Log.Info("ModFilterWindow.Hide()");
-            this.enabled = false;
-        }
+
+        public void Hide() { this.enabled = false; }
 
         static string UsefulModuleName(string longName)
         {
@@ -202,7 +225,7 @@ namespace JanitorsCloset
                 Log.Info(string.Format("PROCESS {0}", part.name));
 
                 PartInfo partInfo = new PartInfo(part);
-                partInfos.Add(part, partInfo);
+                partInfos.Add(part.name, partInfo);
 
                 partInfo.defaultPos = index++;
 
@@ -245,7 +268,6 @@ namespace JanitorsCloset
                         {
                             Log.Error("Exception caught (2), message: " + ex.Message);
                         }
-
                     }
                 }
                 else
@@ -266,9 +288,8 @@ namespace JanitorsCloset
                     {
                         Log.Error("Exception caught (3), message: " + ex.Message);
                     }
-
                 }
-                
+
                 if (part.partPrefab.Modules.Count == 0)
                 {
                     string moduleName = "None";
@@ -335,9 +356,12 @@ namespace JanitorsCloset
                             }
 
                         }
-                        foreach (var res in module.resHandler.outputResources)
+                        for (int i = 0; i < module.resHandler.outputResources.Count; i++)
                         {
-
+                            var res = module.resHandler.outputResources[i];
+                        //}
+                        //foreach (var res in module.resHandler.outputResources)
+                        //{
                             try
                             {
                                 if (!resourceButtons.ContainsKey(res.name))
@@ -475,6 +499,7 @@ namespace JanitorsCloset
                     }
                 }
 
+
                 // the part's base directory name is used to filter entire mods in and out
                 string partModName = FindPartMod(part);
                 Log.Info("partModName: " + partModName);
@@ -543,31 +568,41 @@ namespace JanitorsCloset
             loadedParts.AddRange(PartLoader.LoadedPartsList); // make a copy we can manipulate
 
             // these two parts are internal and just serve to mess up our lists and stuff
-            AvailablePart kerbalEVA = null;
-            AvailablePart flag = null;
-            foreach (var part in loadedParts)
+            //AvailablePart kerbalEVA = null;
+            //AvailablePart flag = null;
+            for (int i = loadedParts.Count - 1; i >= 0; i--)
             {
+                var part = loadedParts[i];
                 if (part.name.Contains("kerbalEVA"))
-                    kerbalEVA = part;
+                {
+                    //kerbalEVA = part;
+                    loadedParts.Remove(part);
+                    partInfos.Add(part.name, new PartInfo(part));
+                }
                 else if (part.name == "flag")
-                    flag = part;
+                {
+                    //flag = part;
+                    loadedParts.Remove(part);
+                    partInfos.Add(part.name, new PartInfo(part));
+                }
             }
-
+#if false
             // still need to prevent errors with null refs when looking up these parts though
             if (kerbalEVA != null)
             {
-                loadedParts.Remove(kerbalEVA);
+                //loadedParts.Remove(kerbalEVA);
                 partInfos.Add(kerbalEVA, new PartInfo(kerbalEVA));
             }
             if (flag != null)
             {
-                loadedParts.Remove(flag);
+                //loadedParts.Remove(flag);
                 partInfos.Add(flag, new PartInfo(flag));
             }
+#endif
             return loadedParts;
         }
 
-        bool PartInResourceFilteredButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInResourceFilteredButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             Log.Info("part: " + part.name);
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
@@ -592,7 +627,7 @@ namespace JanitorsCloset
             return false;
         }
 
-        bool PartInFilteredButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInFilteredButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -611,7 +646,7 @@ namespace JanitorsCloset
             return false;
         }
 
-        bool PartInResourseExcludeButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInResourseExcludeButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -630,7 +665,7 @@ namespace JanitorsCloset
             return true;
         }
 
-        bool PartInUnpurchasedButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInUnpurchasedButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             if (!hideUnpurchased)
                 return true;
@@ -638,7 +673,7 @@ namespace JanitorsCloset
         }
 
 
-        bool PartInModuleButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInModuleButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -659,7 +694,7 @@ namespace JanitorsCloset
             return false;
         }
 
-        bool PartInModuleExcludeButtons(string filter, AvailablePart part, Dictionary<string, ToggleState> buttons, Dictionary<string, HashSet<AvailablePart>> filterHash)
+        bool PartInModuleExcludeButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
             foreach (KeyValuePair<string, ToggleState> entry in buttons)
             {
@@ -705,38 +740,47 @@ namespace JanitorsCloset
         static GUIStyle styleButton = null;
         static GUIStyle styleButtonSettings;
 
-        Color origBackgroundColor;
-        GUIStyle styleButtonLeftAligned;
+        static Color origBackgroundColor;
+        static GUIStyle styleButtonLeftAligned;
 
-
+        static bool initted = false;
         void InitData()
         {
-            if (configs == null)
-                configs = GameDatabase.Instance.GetConfigs("PART");
-            List<AvailablePart> loadedParts = GetPartsList();
-            InitialPartsScan(loadedParts);
-            LoadValuesFromConfig(selectedFilterList);
-            LoadReadableNames();
-        }
-        public void Start()
-        {
-            CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
-            JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
-            JC_NODE = "JANITORSCLOSET";
-            JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter";
-            JC_FILTER_CONFIG_FILE = JC_BASE_FOLDER + "PluginData/FiltersConfig.cfg";
-            JC_READABLE_NAMES_NODE = "READABLENAMES";
-            JC_BLACKLIST_NODE = "MODULE_BLACKLIST";
+            if (!initted)
+            {
+                CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
+                JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
+                JC_NODE = "JANITORSCLOSET";
+                JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter-v2-";
+                JC_FILTER_CONFIG_FILE = JC_BASE_FOLDER + "PluginData/FiltersConfig.cfg";
+                JS_WINPOS_FILE = JC_BASE_FOLDER + "PluginData/WinPos.cfg";
+                JC_READABLE_NAMES_NODE = "READABLENAMES";
+                JC_BULKHEADPROFILES = "BULKHEADPROFILES";
+                JC_BLACKLIST_NODE = "MODULE_BLACKLIST";
 #if false
             JC_MERGELIST_NODE = "MERGELIST";
 #endif
+
+                initted = true;
+                if (configs == null)
+                    configs = GameDatabase.Instance.GetConfigs("PART");
+                LoadFiltersConfig();
+
+                List<AvailablePart> loadedParts = GetPartsList();
+                InitialPartsScan(loadedParts);
+                LoadValuesFromConfig(selectedFilterList);
+            }
+        }
+        public void Start()
+        {
+            Log.Info("ModFilterWindow.Start");
             InitData();
             // DefineFilters();
-            modWindowRect = FilterWindowRect("Mods", Math.Max(modButtons.Count, Math.Max(sizeButtons.Count, Math.Max(resourceButtons.Count, partModuleButtons.Count))));
 
             modwindowRectID = JanitorsCloset.getNextID();
             modFilterHelpWindowID = JanitorsCloset.getNextID();
             enabled = false;
+            instance = this;
 
         }
 
@@ -779,25 +823,30 @@ namespace JanitorsCloset
         int modwindowRectID;
         int modFilterHelpWindowID;
 
-        bool showFilterHelpWindow = false;
+        //bool showFilterHelpWindow = false;
 
         public void OnGUI()
         {
-            if (Event.current.type == EventType.Repaint)
-                GUI.skin = HighLogic.Skin;
             if (!enabled)
                 return;
+            if (Event.current.type == EventType.Repaint)
+                GUI.skin = HighLogic.Skin;
             if (styleButton == null)
                 InitStyles();
 
             _windowTitle = string.Format("Mod Filter");
             var tstyle = new GUIStyle(GUI.skin.window);
 
-            modWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
-            if (showFilterHelpWindow)
-                filterHelpWindow = ClickThruBlocker.GUILayoutWindow(modFilterHelpWindowID, filterHelpWindow, FilterHelpWindow, _windowTitle, tstyle);
+            var newModWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
+
             if (helpPopup != null)
                 helpPopup.draw();
+
+            if (newModWindowRect != modWindowRect)
+            {
+                modWindowRect = newModWindowRect;
+                JanitorsCloset.SetModFilterWin = modWindowRect;
+            }
         }
 
         int CompareEntries(string lft, string rght)
@@ -810,6 +859,9 @@ namespace JanitorsCloset
                 return -1;
             if (right == "None")
                 return 1;
+
+            // use of "larger" now discontinued due to using bulkhead profiles instead of nodes
+#if false
             // Special cases for adapters so they are in height order, from smaller to larger
             if (left.Contains("Adapter") && right.Contains("larger"))
                 return 1;
@@ -819,6 +871,7 @@ namespace JanitorsCloset
                 return 1;
             if (right.Contains("larger"))
                 return -1;
+#endif
             if (left.Contains("Adapter") && !right.Contains("Adapter"))
                 return 1;
             if (right.Contains("Adapter") && !left.Contains("Adapter"))
@@ -830,7 +883,7 @@ namespace JanitorsCloset
         void resetAll()
         {
             var names = new List<string>(modButtons.Keys);
-            Dictionary<string, ToggleState> states = modButtons;
+            SortedDictionary<string, ToggleState> states = modButtons;
             foreach (string name in names)
             {
                 ToggleState state = states[name];
@@ -896,7 +949,9 @@ namespace JanitorsCloset
             }
 
             helpPopup.showMenu = true;
-            showFilterHelpWindow = false;
+            helpPopup.SetWinName("FilterHelpWindow");
+
+            //showFilterHelpWindow = false;
         }
 
         Vector2 scrollPosition;
@@ -905,10 +960,11 @@ namespace JanitorsCloset
 
         private void FilterChildWindowHandler(int id)
         {
-            Dictionary<string, ToggleState> states = modButtons;
+            SortedDictionary<string, ToggleState> states = modButtons;
             if (GUI.Button(new Rect(12, 2, 30, 20), "?", styleButtonSettings))
             {
-                showFilterHelpWindow = !showFilterHelpWindow;
+                // showFilterHelpWindow = !showFilterHelpWindow;
+                FilterHelpWindow(modFilterHelpWindowID);
             }
             if (GUI.Button(new Rect(modWindowRect.width - 32, 2, 30, 20), "X", styleButtonSettings))
             {
@@ -974,7 +1030,6 @@ namespace JanitorsCloset
             }
             if (selFilter == 2 || selFilter == 3)
             {
-                Log.Info("FilterChildWindowHandler 1");
                 if (GUILayout.Button("Invert"))
                 {
                     var names = new List<string>(states.Keys);
@@ -1018,14 +1073,11 @@ namespace JanitorsCloset
                 EditorPartList.Instance.Refresh();
                 SaveConfig(selectedFilterList);
             }
-            var keys = new List<string>(states.Keys);
-
-            keys.Sort(CompareEntries);
 
             // This will hide the horizontal scrollbar
             scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
 
-            foreach (string name in keys)
+            foreach (string name in states.Keys)
             {
                 ToggleState state = states[name];
                 //string truncatedName = (name.Length > 35) ? name.Remove(34) : name;
@@ -1033,7 +1085,8 @@ namespace JanitorsCloset
                 bool beforeInverse = state.inverse;
 
                 string readableName = GetReadableName(name);
-                if (readableName != "")
+
+                if (readableName != "" && readableName != "None")
                 {
                     GUILayout.BeginHorizontal();
                     GUILayout.Space(5);
@@ -1049,7 +1102,7 @@ namespace JanitorsCloset
                     }
                     else
                     {
-                        Log.Info("FilterChildWindowHandler 3");
+                        //Log.Info("FilterChildWindowHandler 3");
                         state.enabledState = GUILayout.Toggle(state.enabledState, "");
                         GUILayout.Space(20);
                         if (state.enabledState && state.enabledState != before)
@@ -1061,7 +1114,7 @@ namespace JanitorsCloset
                         if (state.inverse && state.inverse != beforeInverse)
                             state.enabledState = false;
                         GUILayout.Space(20);
-                        Log.Info("readableName: " + readableName);
+
                         if (GUILayout.Button(readableName, styleButtonLeftAligned, GUILayout.Width(300)))
                         {
                             if (state.enabledState)
@@ -1080,12 +1133,12 @@ namespace JanitorsCloset
                             }
                         }
 
-                        Log.Info("FilterChildWindowHandler 4");
+                        //Log.Info("FilterChildWindowHandler 4");
 
                         GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();
                         GUILayout.Space(5);
-                        Log.Info("FilterChildWindowHandler 5");
+                        //Log.Info("FilterChildWindowHandler 5");
 
                     }
 
@@ -1094,6 +1147,10 @@ namespace JanitorsCloset
                         states[name] = state;
                         EditorPartList.Instance.Refresh();
                         SaveConfig(selectedFilterList);
+                        // Break here to avoid an error:  Collection was modified at the foreach
+                        // since the state was updated.  Nothing visible on screen when 
+                        // this happens
+                        break;
                         //before = state.enabledState;
                         //beforeInverse = state.inverse;
                     }
@@ -1114,12 +1171,14 @@ namespace JanitorsCloset
         private static String JC_BASE_FOLDER;
         private static String JC_NODE;
         private static String JC_READABLE_NAMES_NODE;
+        private static string JC_BULKHEADPROFILES;
         private static String JC_BLACKLIST_NODE;
 #if false
         private static String JC_MERGELIST_NODE;
 #endif
         private static String JC_CFG_FILE;
         private static String JC_FILTER_CONFIG_FILE;
+        private static string JS_WINPOS_FILE;
 
         private static ConfigNode configFile = null;
         private static ConfigNode configFileNode = null;
@@ -1127,7 +1186,7 @@ namespace JanitorsCloset
 
 
         //-------------------------------------------------------------------------------------------------------------------------------------------
-        void SaveSelectType(string prefix, Dictionary<string, ToggleState> buttonList, string NodeName, ConfigNode fileNode)
+        void SaveSelectType(string prefix, SortedDictionary<string, ToggleState> buttonList, string NodeName, ConfigNode fileNode)
         {
             configSectionNode = new ConfigNode(NodeName);
 
@@ -1142,9 +1201,6 @@ namespace JanitorsCloset
 
         void SaveConfig(int selectedCfg) //string sorting = null)
         {
-            Log.Info("SaveConfig");
-            //PluginConfiguration config = PluginConfiguration.CreateForType<ModFilterWindow>();
-
             Log.Info("SaveConfig");
             configFile = new ConfigNode();
             configFileNode = new ConfigNode();
@@ -1161,7 +1217,7 @@ namespace JanitorsCloset
         }
         //-------------------------------------------------------------------------------------------------------------------------------------------
 
-        void LoadValuesFromSectionNode(string NodeName, Dictionary<string, ToggleState> buttonList, ConfigNode configFileNode, string prefix)
+        void LoadValuesFromSectionNode(string NodeName, SortedDictionary<string, ToggleState> buttonList, ConfigNode configFileNode, string prefix)
         {
             configSectionNode = configFileNode.GetNode(NodeName);
             if (configSectionNode != null)
@@ -1198,7 +1254,7 @@ namespace JanitorsCloset
         }
 
         //-------------------------------------------------------------------------------------------------------------------------------------------
-        void LoadConfigSection(string NodeName, ConfigNode cfgNode, string prefix, Dictionary<string, ToggleState> buttons)
+        void LoadConfigSection(string NodeName, ConfigNode cfgNode, string prefix, SortedDictionary<string, ToggleState> buttons)
         {
             for (int i = 0; i < cfgNode.CountValues; i++)
             {
@@ -1237,12 +1293,13 @@ namespace JanitorsCloset
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        string GetReadableName(string name)
+        string GetReadableName(string name, bool add = true)
         {
             string s;
             try
             {
                 s = readableNamesDict[name];
+                //Log.Info("GetReadableName, name: [" + name + "], readableName: [" + s + "]");
                 return s;
             }
             catch
@@ -1258,31 +1315,31 @@ namespace JanitorsCloset
 
                 s = BestGuessReadableName(name);
 
-                if (s != "")
+                if (s != "" && add)
                 {
                     readableNamesDict.Add(name, s);
-                    Log.Info("Adding " + name + " to readableNamesDict");
+                    //Log.Info("GetReadableName, adding to readableNamesDict, name: [" + name + "], readableName: [" + s + "]");
                     SaveReadableNames();
                 }
-                //else
-                //{
-                //    show = false;
-                //}
+
                 return s;
             }
         }
 
 
-        string[] deleteLeading = new string[] { "Module", "CModule" };
+        static string[] deleteLeading = new string[] { "Module", "CModule" };
 
         /// <summary>
         /// Given the input string, create a readable name from it using the specified rules
         /// </summary>
         /// <param name="inputString"></param>
         /// <returns></returns>
-        string BestGuessReadableName(string inputString)
+        static string BestGuessReadableName(string inputString, bool allowSpaces = false, bool capitalize = false)
         {
-            string outputString = "";
+            //bool mk1 = (inputString == "mk1square");
+            StringBuilder outputStr = new StringBuilder("", 25);
+
+            // string outputString = "";
             // No change if any spaces in string
             // lower followed by upper = word break
             // numeric digit followed by upper = insert a dash
@@ -1295,50 +1352,82 @@ namespace JanitorsCloset
             if (blacklistNames.Contains(inputString))
                 return "";
 
-            if (inputString.Contains(" "))
+            if (!allowSpaces && inputString.Contains(" "))
             {
                 return inputString;
             }
-
-            foreach (string e in deleteLeading)
+            for (int i = 0; i < 2; i++)
             {
-                if (inputString.Length >= e.Length && inputString.Substring(0, e.Length) == e)
+                if (inputString.Length >= deleteLeading[i].Length && inputString.Substring(0, deleteLeading[i].Length) == deleteLeading[i])
                 {
-                    inputString = inputString.Remove(0, e.Length);
+                    inputString = inputString.Remove(0, deleteLeading[i].Length);
                 }
             }
-            while (inputString.Length > 1)
+
+            while (inputString.Length > 0 &&
+                   (!Char.IsDigit(inputString[0]) ||
+                    (inputString.Length > 1 && char.IsDigit(inputString[0]) &&
+                     ((!capitalize && char.IsUpper(inputString[1])) || (capitalize && char.IsLetter(inputString[1])))
+                    )
+                   )
+                  )
             {
-                outputString += inputString[0];
-                if (Char.IsLower(inputString[0]) && char.IsUpper(inputString[1]))
+                // Capitalize the 2nd character if the first char is numeric
+                if (inputString.Length > 1 &&
+                    capitalize &&
+                    char.IsDigit(inputString[0]) &&
+                    char.IsLower(inputString[1]))
                 {
-                    outputString += " ";
+                    //if (mk1) Log.Info("mk1Debug 1: " + inputString);
+
+                    string tmp = inputString.Substring(0, 1);
+                    tmp += Char.ToUpper(inputString[1]);
+                    if (inputString.Length > 2)
+                        tmp += inputString.Substring(2);
+                    inputString = tmp;
+                    //if (mk1) Log.Info("mk1Debug 2: " + inputString);
                 }
-                if (char.IsDigit(inputString[0]) && char.IsUpper(inputString[1]))
+
+                //  Capiutalize first char if requested
+                if (capitalize && outputStr.Length == 0)
+                    outputStr.Append(Char.ToUpper(inputString[0]));
+                else
+                    outputStr.Append(inputString[0]);
+                if (inputString.Length > 1)
                 {
-                    outputString += " ";
+                    if (Char.IsLower(inputString[0]) && char.IsUpper(inputString[1]))
+                    {
+                        outputStr.Append(" ");
+                    }
+                    if (char.IsDigit(inputString[0]) && char.IsUpper(inputString[1]))
+                    {
+                        outputStr.Append(" ");
+                    }
                 }
                 inputString = inputString.Remove(0, 1);
             }
-            return outputString + inputString;
+            if (capitalize && inputString.Length > 0)
+                return outputStr.ToString() + "-" + inputString;
+            else
+                return outputStr.ToString() + inputString;
         }
 
         static List<string> blacklistNames = new List<string>();
 #if false
         static private Dictionary<string, string> mergeListDict;
 #endif
-        static private Dictionary<string, string> readableNamesDict;
-        static bool readableNamesInitted = false;
+        static private SortedDictionary<string, string> readableNamesDict;
+        static bool filtersConfigInitted = false;
 
         /// <summary>
         /// Load data from the file:FiltersConfig.cfg
         /// </summary>
-        void LoadReadableNames()
+        void LoadFiltersConfig()
         {
-            if (!readableNamesInitted)
+            if (!filtersConfigInitted)
             {
-                readableNamesInitted = true;
-                readableNamesDict = new Dictionary<string, string>();
+                filtersConfigInitted = true;
+                readableNamesDict = new SortedDictionary<string, string>();
 #if false
                 mergeListDict = new Dictionary<string, string>();
 #endif
@@ -1360,6 +1449,8 @@ namespace JanitorsCloset
                             }
                         }
 
+
+                        //
                         //
                         // Load the MODULE_BLACKLIST node
                         //
@@ -1368,6 +1459,27 @@ namespace JanitorsCloset
                         {
                             blacklistNames = configFileNode.GetValues("ignore").ToList();
                         }
+
+                        //
+                        // Now all the bulkhead profiles
+                        //
+                        if (partSizeDict == null)
+                        {
+                            partSizeDict = new SortedDictionary<string, PartSizeDescr>();
+
+                            configFileNode = janitorsClosetNode.GetNode(JC_BULKHEADPROFILES);
+                            if (configFileNode != null)
+                            {
+                                Log.Info(JC_BULKHEADPROFILES + " loaded: " + configFileNode.CountValues);
+                                for (int i = 0; i < configFileNode.CountValues; i++)
+                                {
+                                    PartSizeDescr psd = new PartSizeDescr(configFileNode.values[i].name, configFileNode.values[i].value);
+
+                                    partSizeDict[configFileNode.values[i].name] = psd;
+                                }
+                            }
+                        }
+
 #if false // Disabled for possible future update
                         //
                         // Load the MERGLIST node
@@ -1397,6 +1509,7 @@ namespace JanitorsCloset
             ConfigNode configFile = new ConfigNode(JC_NODE);
             ConfigNode configJCnode = new ConfigNode(JC_NODE);
             ConfigNode configFileNode = new ConfigNode(JC_READABLE_NAMES_NODE);
+            ConfigNode configBulkheadProfileNode = new ConfigNode(JC_BULKHEADPROFILES);
 
             if (blacklistNames != null)
             {
@@ -1427,6 +1540,21 @@ namespace JanitorsCloset
                 }
                 configJCnode.SetNode(JC_READABLE_NAMES_NODE, configFileNode, true);
             }
+
+
+            //
+            // Now all the bulkhead profiles
+            //
+            if (partSizeDict != null)
+            {
+                foreach (var s in partSizeDict)
+                {
+                    configBulkheadProfileNode.AddValue(s.Key, s.Value.descr);
+                }
+                configJCnode.SetNode(JC_BULKHEADPROFILES, configBulkheadProfileNode, true);
+            }
+
+
             configFile.SetNode(JC_NODE, configJCnode, true);
             configFile.Save(JC_FILTER_CONFIG_FILE);
         }

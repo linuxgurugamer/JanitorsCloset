@@ -10,6 +10,8 @@ using KSP.UI;
 using KSP.UI.Screens;
 using ClickThroughFix;
 
+using static JanitorsCloset.JanitorsClosetLoader;
+
 
 namespace JanitorsCloset
 {

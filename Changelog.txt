@@ -279,3 +279,15 @@ ChangeLog
 0.3.7
 	Updated for KSP 1.8
 	Updated some old constants
+
+0.3.7.1 (unreleased)
+	Added check for "None" in ModFilterWindow 
+	Changed non-static vars to static to fix nullrefs
+		origBackgroundColor;
+		styleButtonLeftAligned;
+	Revamped part sizes to use bulkhead profiles instead of node sizes
+	Added new section to FiltersConfig.cfg for all known bulkheadProfiles
+	Made initialization static to minimize entry time into the editor after the first time
+	Improved sort of entries in filter window
+	Added "-v2" to the name of the JCModfilter file names
+	Added saving of window positions in the Editor

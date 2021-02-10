@@ -1,14 +1,8 @@
-﻿using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using KSP.UI;
-using KSP.UI.Screens;
 using ClickThroughFix;
+
+using static JanitorsCloset.JanitorsClosetLoader;
 
 
 namespace JanitorsCloset

@@ -1,18 +1,15 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using System.Security.Cryptography;
 using System.Linq;
-using System.Text;
 
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
-using System.IO;
 using ClickThroughFix;
+
+using static JanitorsCloset.JanitorsClosetLoader;
 
 namespace JanitorsCloset
 {
@@ -222,6 +219,7 @@ namespace JanitorsCloset
                         Log.Error("***** Incompatible version of TextureReplacer installed ******");
                         helpPopup = new HelpPopup("Janitor's Toolbar Warning", "Incompatible version of Texture Replacer is installed (needs to be 2.5.4 or greater)\n\nToolbar functionality disabled!", JanitorsCloset.getNextID());
                         helpPopup.showMenu = true;
+                        helpPopup.SetWinName( "HelpPopupWindow");
                         NoIncompatabilities = false;
                     }
                 }
@@ -342,7 +340,7 @@ namespace JanitorsCloset
         private void OnGuiAppLauncherReady()
         {
 
-            if (this.primaryAppButton == null && HighLogic.CurrentGame != null)
+            if (this.primaryAppButton == null && HighLogic.CurrentGame != null && ApplicationLauncher.Instance!= null)
             {
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
                 if (!NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
@@ -771,7 +769,7 @@ namespace JanitorsCloset
                 Graphics.Blit(img, rt);
                 img2 = new Texture2D(img.width, img.height, TextureFormat.ARGB32, false);
                 img2.ReadPixels(new Rect(0, 0, img.width, img.height), 0, 0);
-                Log.Info("GetPixels32 had Exception, img name: " + img.name);
+                //Log.Info("GetPixels32 had Exception, img name: " + img.name);
                 RenderTexture.ReleaseTemporary(rt);
                 RenderTexture.active = origrt;
             }
@@ -910,6 +908,7 @@ namespace JanitorsCloset
             toolbarMenuRectID = JanitorsCloset.getNextID();
             showToolbarMenu = ShowMenuState.starting;
             lastTimeShown = Time.fixedTime;
+            Log.Info("lastTimeShown 2");
         }
 
         public void HideToolbarMenu()
@@ -1039,10 +1038,13 @@ namespace JanitorsCloset
         {
             showToolbarMenu = ShowMenuState.visible;
             if (toolbarMenuRect.Contains(Event.current.mousePosition))
+            {
                 lastTimeShown = Time.fixedTime;
-            //        if (ClickedButton.sprite.texture.name == "TextureReplacer/Plugins/AppIcon")
-            //             return;
-            if (GUILayout.Button("Hide here"))
+                Log.Info("lastTimeShown 1");
+            }
+                //        if (ClickedButton.sprite.texture.name == "TextureReplacer/Plugins/AppIcon")
+                //             return;
+                if (GUILayout.Button("Hide here"))
             {
                 addToHiddenBlockList(ClickedButton, Blocktype.hideHere);
 

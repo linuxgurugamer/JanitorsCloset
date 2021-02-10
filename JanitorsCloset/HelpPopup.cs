@@ -10,13 +10,14 @@ using UnityEngine;
 
 namespace JanitorsCloset
 {
-    
-    class HelpPopup
+
+    internal class HelpPopup
     {
+        private string popupWinName;
         private string text = string.Empty;
         private bool textInitialized = false;
         public string windowTitle = string.Empty;
-        Rect windowRect = new Rect(500f, 300f, 600f, 500f);
+        private Rect helpPopupWindow = new Rect(500f, 300f, 600f, 500f);
         private Rect scrollRect;
         private Rect textRect;
         public bool scrollBar = true;
@@ -30,12 +31,44 @@ namespace JanitorsCloset
 
         private float textAreaHeight;
 
+
+        internal void SetWinName(string s)
+        {
+            helpPopupWindow = new Rect(500f, 300f, 600f, 500f);
+
+            popupWinName = s;
+
+            if (popupWinName == "FilterHelpWindow")
+            {
+                if (JanitorsCloset.GetModFilterWin != null)
+                {
+                    if (JanitorsCloset.GetFilterHelpWindow != null)
+                    {
+                        var rect = (Rect)JanitorsCloset.GetFilterHelpWindow;
+                        helpPopupWindow.x = rect.x;
+                        helpPopupWindow.y = rect.y;
+                    }
+                }
+            }
+            else
+            {
+                if (JanitorsCloset.GetHelpPopupWinRect != null)
+                {
+                    if (JanitorsCloset.GetHelpPopupWinRect != null)
+                    {
+                        var rect = (Rect)JanitorsCloset.GetHelpPopupWinRect;
+                        helpPopupWindow.x = rect.x;
+                        helpPopupWindow.y = rect.y;
+                    }
+                }
+            }
+        }
+
         void doHelpPopup(string _windowTitle, string _text, int layer)
         {
             text = _text;
             windowTitle = _windowTitle;
             GUIlayer = layer;
-           // windowRect = new Rect(500f, 300f, 300f, 500f);
         }
         public HelpPopup(string _windowTitle, string _text, int layer)
         {
@@ -43,14 +76,14 @@ namespace JanitorsCloset
         }
         public HelpPopup(string _windowTitle, string _text, int layer, Rect winRect)
         {
-            windowRect = winRect;
+            helpPopupWindow = winRect;
             doHelpPopup(_windowTitle, _text, layer);
         }
 
         public void setText(string _text)
         {
             content = new GUIContent(_text);
-            scrollRect = new Rect(2f, 25f, windowRect.width - 4f, windowRect.height - 25f);
+            scrollRect = new Rect(2f, 25f, helpPopupWindow.width - 4f, helpPopupWindow.height - 25f);
             textAreaHeight = style.CalcHeight(content, scrollRect.width - 20f);
             textRect = new Rect(0f, 0f, scrollRect.width - 20f, textAreaHeight);
         }
@@ -59,7 +92,7 @@ namespace JanitorsCloset
         {
             if (showCloseButton)
             {
-                if (GUI.Button(new Rect(windowRect.width - 18f, 2f, 16f, 16f), ""))
+                if (GUI.Button(new Rect(helpPopupWindow.width - 18f, 2f, 16f, 16f), ""))
                 {
                     showMenu = false;
                 }
@@ -92,7 +125,15 @@ namespace JanitorsCloset
                     setText(text);
                     textInitialized = true;
                 }
-                windowRect = GUI.Window(GUIlayer, windowRect, drawWindow, windowTitle);
+                var newHelpPopupWindow = GUI.Window(GUIlayer, helpPopupWindow, drawWindow, windowTitle);
+                if (newHelpPopupWindow != helpPopupWindow)
+                {
+                    helpPopupWindow = newHelpPopupWindow;
+                    if (popupWinName == "FilterHelpWindow")
+                        JanitorsCloset.SetFilterHelpWindow = helpPopupWindow;
+                    else
+                        JanitorsCloset.SetHelpPopupWinRect = helpPopupWindow;
+                }
             }
         }
     }

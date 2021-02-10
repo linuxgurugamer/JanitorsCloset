@@ -1,21 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Security.Cryptography;
-using System.Linq;
-using System.Text;
-
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.EventSystems;
-using UnityEngine.UI;
-using KSP.UI;
 using KSP.UI.Screens;
-using System.IO;
 using ClickThroughFix;
-
-
 using System.Collections;
+
+using static JanitorsCloset.JanitorsClosetLoader;
 
 namespace JanitorsCloset
 {
@@ -179,7 +172,7 @@ namespace JanitorsCloset
 
         new void Start()
         {
-            Log.setTitle("Janitor's Closet");
+           // Log.setTitle("Janitor's Closet");
             Log.Info("JanitorsCloset.Start");
             blacklistIcons = JanitorsCloset.Instance.loadBlacklistData();
 
@@ -317,7 +310,10 @@ namespace JanitorsCloset
             OnGUIToolbar();
 
             if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f)))
-                _menuRect = ClickThruBlocker.GUILayoutWindow(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
+            {
+                if (_menuRect.x > 0 && _menuRect.y > 0)
+                    _menuRect = ClickThruBlocker.GUILayoutWindow(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
+            }
             else
                 _menuRect = new Rect();
 
@@ -399,12 +395,15 @@ namespace JanitorsCloset
 
 
 
-        float lastTimeShown = 0.0f;
+        float lastTimeShown = 0;
 
         void MenuContent(int WindowID)
         {
             if (_showMenu || _menuRect.Contains(Event.current.mousePosition))
+            {
+                Log.Info("lastTimeShown 1");
                 lastTimeShown = Time.fixedTime;
+            }
             GUILayout.BeginVertical();
             if (GUILayout.Button("Show Blocked"))
             {

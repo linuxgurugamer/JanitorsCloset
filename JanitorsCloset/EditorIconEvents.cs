@@ -1,13 +1,12 @@
-﻿using System;
-using System.Collections;
-using System.Linq;
-using System.Text;
-
+﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
 using KSP.UI;
 using KSP.UI.Screens;
+
+using static JanitorsCloset.JanitorsClosetLoader;
+
 
 namespace JanitorsCloset
 {

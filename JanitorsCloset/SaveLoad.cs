@@ -5,6 +5,10 @@ using System.Text;
 using System.IO;
 using KSP.UI;
 using KSP.UI.Screens;
+using UnityEngine;
+
+using static JanitorsCloset.JanitorsClosetLoader;
+
 
 namespace JanitorsCloset
 {
@@ -22,6 +26,8 @@ namespace JanitorsCloset
         private static String JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
         private static String JC_NODE = "JANITORSCLOSET";
         private static String JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JanitorsCloset.cfg";
+        private static String JC_WINPOS_FILE = JC_BASE_FOLDER + "PluginData/WinPos.cfg";
+
         private static String JC_DEFAULT_CFG_FILE = JC_BASE_FOLDER + "PluginData/JanitorsClosetDefault.cfg";
         private static String JC_BLACKLIST_FILE = JC_BASE_FOLDER + "PluginData/JCBlacklist.cfg";
 
@@ -218,14 +224,14 @@ namespace JanitorsCloset
             }
         }
 
-        void saveBlacklistData(Dictionary<string,string> blacklistData)
+        void saveBlacklistData(Dictionary<string, string> blacklistData)
         {
             ConfigNode blacklistNode = new ConfigNode("BLACKLIST");
             ConfigNode janitorsClosetNode = new ConfigNode(JC_NODE);
             configFile = new ConfigNode(JC_BLACKLIST_FILE);
             foreach (var bld in blacklistData)
             {
-                blacklistNode.AddValue("blacklistIconHash", bld.Value);               
+                blacklistNode.AddValue("blacklistIconHash", bld.Value);
             }
             janitorsClosetNode.AddNode(blacklistNode);
             configFile.AddNode(janitorsClosetNode);
@@ -265,5 +271,127 @@ namespace JanitorsCloset
             }
             return loadedBlacklist;
         }
+
+
+        static Rect? modFilterWin;
+        static Rect? filterHelpWindow;
+        static Rect? helpPopupWindow;
+
+        internal static Rect SetModFilterWin { set { LoadWinPos(); modFilterWin = value; SaveWinPos(); } }
+        internal static Rect? GetModFilterWin { get { LoadWinPos(); return modFilterWin; } }
+
+        internal static Rect SetFilterHelpWindow {  set { LoadWinPos(); filterHelpWindow = value; SaveWinPos(); } }
+        internal static Rect? GetFilterHelpWindow { get { LoadWinPos(); return filterHelpWindow; }  }
+
+        internal static Rect SetHelpPopupWinRect { set { LoadWinPos(); helpPopupWindow = value; SaveWinPos(); } }
+        internal static Rect GetHelpPopupWinRect { get { LoadWinPos(); return (Rect)helpPopupWindow; }  }
+
+
+        static public void SaveWinPos()
+        {
+            configFile = new ConfigNode();
+
+            // JC_WINPOS_FILE
+            ConfigNode node = new ConfigNode("JanitorsCloset");
+            ConfigNode n = new ConfigNode("WINDOWS");
+
+            if (modFilterWin != null)
+                n.AddNode(SetValue("ModFilterWin", (Rect)modFilterWin));
+            if (filterHelpWindow != null)
+                n.AddNode(SetValue("FilterHelpWindow", (Rect)filterHelpWindow));
+            if (helpPopupWindow != null)
+                n.AddNode(SetValue("HelpPopupWindow", (Rect)helpPopupWindow));
+
+            node.AddNode(n);
+            configFile.AddNode(node);
+            configFile.Save(JC_WINPOS_FILE);
+        }
+
+        static public void LoadWinPos()
+        {
+            if (System.IO.File.Exists(JC_WINPOS_FILE))
+            {
+                ConfigNode configFile = ConfigNode.Load(JC_WINPOS_FILE);
+                ConfigNode node = configFile.GetNode("JanitorsCloset");
+                if (node != null)
+                {
+                    var n = node.GetNode("WINDOWS");
+
+                    if (n != null)
+                    {
+                        modFilterWin = GetValue(n, "ModFilterWin");
+                        filterHelpWindow = GetValue(n, "FilterHelpWindow");
+                        helpPopupWindow = GetValue(n, "HelpPopupWindow");
+                    }
+                }
+            }
+            else
+                Log.Error("File does not exist: " + JC_WINPOS_FILE);
+        }
+
+        public static ConfigNode SetValue(string key, Rect value)
+        {
+            ConfigNode settingsNode = new ConfigNode(key);
+
+            SetValue(settingsNode, "x", value.x);
+            SetValue(settingsNode, "y", value.y);
+            //SetValue(settingsNode, "width", value.width);
+            //SetValue(settingsNode, "height", value.height);
+            return settingsNode;
+        }
+        private static void SetValue(ConfigNode node, string key, float value)
+        {
+            if (node == null)
+                throw new ArgumentNullException("node");
+
+            // key is validated by public facing methods.
+
+            if (node.HasValue(key))
+            {
+                node.RemoveValue(key);
+            }
+
+            node.AddValue(key, value);
+        }
+
+        public static Rect? GetValue(ConfigNode n, string key)
+        {
+            if (n != null)
+            {
+                Rect result = new Rect();
+                ConfigNode d = n.GetNode(key);
+                if (d != null)
+                {
+                    Log.Info("GetValue, key: " + key + ", data: " + d.ToString());
+
+                    result.x = GetValue(d, "x", 0);
+                    result.y = GetValue(d, "y", 0);
+                    //result.width = GetValue(d, "width", 0);
+                    //result.height = GetValue(d, "height", 0);
+                    return result;
+                }
+            }
+            return null;
+        }
+
+        private static float GetValue(ConfigNode node, string key, float defaultValue)
+        {
+            if (node == null)
+                throw new ArgumentNullException("node");
+
+            // key is validated by public facing methods.
+
+            float result = default(float);
+
+            if (!float.TryParse(node.GetValue(key), out result))
+            {
+                result = defaultValue;
+            }
+
+            return result;
+        }
+
+
+
     }
 }

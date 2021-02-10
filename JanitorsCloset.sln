@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27428.2005
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JanitorsCloset", "JanitorsCloset\JanitorsCloset.csproj", "{E46D419E-3857-4A29-B319-6C14E5093E04}"
 EndProject
@@ -12,6 +12,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		deploy.bat = deploy.bat
 		JanitorsCloset.version = JanitorsCloset.version
 		jenkins.txt = jenkins.txt
+		TODO.txt = TODO.txt
 	EndProjectSection
 EndProject
 Global
