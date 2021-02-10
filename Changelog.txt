@@ -280,7 +280,7 @@ ChangeLog
 	Updated for KSP 1.8
 	Updated some old constants
 
-0.3.7.1 (unreleased)
+0.3.7.1
 	Added check for "None" in ModFilterWindow 
 	Changed non-static vars to static to fix nullrefs
 		origBackgroundColor;
