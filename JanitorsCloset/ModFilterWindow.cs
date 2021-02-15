@@ -753,7 +753,7 @@ namespace JanitorsCloset
                 JC_NODE = "JANITORSCLOSET";
                 JC_CFG_FILE = JC_BASE_FOLDER + "PluginData/JCModfilter-v2-";
                 JC_FILTER_CONFIG_FILE = JC_BASE_FOLDER + "PluginData/FiltersConfig.cfg";
-                JS_WINPOS_FILE = JC_BASE_FOLDER + "PluginData/WinPos.cfg";
+                //JS_WINPOS_FILE = JC_BASE_FOLDER + "PluginData/WinPos.cfg";
                 JC_READABLE_NAMES_NODE = "READABLENAMES";
                 JC_BULKHEADPROFILES = "BULKHEADPROFILES";
                 JC_BLACKLIST_NODE = "MODULE_BLACKLIST";
@@ -1178,7 +1178,7 @@ namespace JanitorsCloset
 #endif
         private static String JC_CFG_FILE;
         private static String JC_FILTER_CONFIG_FILE;
-        private static string JS_WINPOS_FILE;
+        //private static string JS_WINPOS_FILE;
 
         private static ConfigNode configFile = null;
         private static ConfigNode configFileNode = null;

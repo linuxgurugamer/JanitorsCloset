@@ -280,7 +280,7 @@ ChangeLog
 	Updated for KSP 1.8
 	Updated some old constants
 
-0.3.7.1
+0.3.7.1 (released as beta)
 	Added check for "None" in ModFilterWindow 
 	Changed non-static vars to static to fix nullrefs
 		origBackgroundColor;
@@ -291,3 +291,9 @@ ChangeLog
 	Improved sort of entries in filter window
 	Added "-v2" to the name of the JCModfilter file names
 	Added saving of window positions in the Editor
+
+	New Dependency
+		SpaceTuxLibrary
+
+0.3.7.2 
+	Removed unnecessary message about missing WinPos.cfg file

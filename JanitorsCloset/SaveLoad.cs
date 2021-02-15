@@ -325,8 +325,6 @@ namespace JanitorsCloset
                     }
                 }
             }
-            else
-                Log.Error("File does not exist: " + JC_WINPOS_FILE);
         }
 
         public static ConfigNode SetValue(string key, Rect value)
