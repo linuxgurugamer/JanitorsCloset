@@ -297,3 +297,6 @@ ChangeLog
 
 0.3.7.2 
 	Removed unnecessary message about missing WinPos.cfg file
+
+0.3.7.3
+	Added check for part already added.  PlumeParty has a part: pp.vvmach, which apparently has been included in other mods (ChrayolDesign is one) and was causing errors because of duplicate parts

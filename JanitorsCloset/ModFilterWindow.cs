@@ -225,7 +225,10 @@ namespace JanitorsCloset
                 Log.Info(string.Format("PROCESS {0}", part.name));
 
                 PartInfo partInfo = new PartInfo(part);
-                partInfos.Add(part.name, partInfo);
+                if (!partInfos.ContainsKey(part.name))
+                    partInfos.Add(part.name, partInfo);
+                else
+                    Log.Error("Part already loaded: " + part.name);
 
                 partInfo.defaultPos = index++;
 
@@ -454,7 +457,10 @@ namespace JanitorsCloset
                                                 resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
                                             }
                                             Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
-                                            resourceHash[propellant.name].Add(part);
+                                            if (!resourceHash[propellant.name].Contains(part))
+                                                resourceHash[propellant.name].Add(part);
+                                            else
+                                                Log.Error("Part: " + part.name + "  already added to hash: " + propellant.name);
                                         }
                                         catch (Exception ex)
                                         {
@@ -483,7 +489,10 @@ namespace JanitorsCloset
                                                 resourceHash.Add(propellant.name, new HashSet<AvailablePart>());
                                             }
                                             Log.Info(string.Format("add {0} to resourceHash for propellant: {1}", part.name, propellant.name));
-                                            resourceHash[propellant.name].Add(part);
+                                            if (!resourceHash[propellant.name].Contains(part))
+                                                resourceHash[propellant.name].Add(part);
+                                            else
+                                                Log.Error("Part: " + part.name + "  already added to hash: " + propellant.name);
                                         }
                                         catch (Exception ex)
                                         {
@@ -515,7 +524,10 @@ namespace JanitorsCloset
                             modHash.Add(partModName, new HashSet<AvailablePart>());
                         }
                         Log.Info(string.Format("add {0} to modHash for {1}", part.name, partModName));
-                        modHash[partModName].Add(part);
+                        if (!modHash[partModName].Contains(part))
+                            modHash[partModName].Add(part);
+                        else
+                            Log.Error("Part: " + part.name + "  already added to hash: " + partModName);
                     }
                     catch (Exception ex)
                     {
