@@ -300,3 +300,6 @@ ChangeLog
 
 0.3.7.3
 	Added check for part already added.  PlumeParty has a part: pp.vvmach, which apparently has been included in other mods (ChrayolDesign is one) and was causing errors because of duplicate parts
+
+0.3.7.4
+	Fixed Nullref when moving cursor over BG icon inventory spaces which didn't have any parts in them, also fixes nullref when trying to pull the breaking ground parts, and they don't pulled into the container

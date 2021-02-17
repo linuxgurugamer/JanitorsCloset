@@ -205,6 +205,8 @@ namespace JanitorsCloset
 
         private void IconHover(EditorPartIcon icon, bool hover)
         {
+            if (icon == null || icon.partInfo == null)
+                return;
             Log.Info("IconHover,  ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary): " + ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary).ToString());
             if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod || 
                 ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) || ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary)) 
