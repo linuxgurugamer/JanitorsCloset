@@ -229,6 +229,7 @@ namespace JanitorsCloset
                 }
                 else
                     OnGuiAppLauncherReady();
+                GameEvents.OnGameSettingsApplied.Add(OnGameSettingsApplied);
 
                 folderIconHashes = new string[folderIcons.Count()];
                 for (int i = 0; i < folderIcons.Count(); i++)
@@ -334,6 +335,13 @@ namespace JanitorsCloset
             }
         }
 
+        void OnGameSettingsApplied()
+        {
+            if (this.primaryAppButton != null)
+                ApplicationLauncher.Instance.RemoveModApplication(this.primaryAppButton);
+            this.primaryAppButton = null;
+            OnGuiAppLauncherReady();
+        }
         /// <summary>
         /// Add the JanitorsToolbar button
         /// </summary>
@@ -345,6 +353,8 @@ namespace JanitorsCloset
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
                 if (!NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
                     validScenes = ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB;
+                if ((GameSceneToLoadedScene() & validScenes) == ApplicationLauncher.AppScenes.NEVER)
+                    return;
 
                 ButtonBarItem buttonBarEntry = new ButtonBarItem();
                 buttonBarEntry.buttonHash = "";

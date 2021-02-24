@@ -338,7 +338,10 @@ namespace JanitorsCloset
                                 if (!JanitorsCloset.buttonBarList[(int)cfg.scene].TryGetValue(cfg.toolbarButtonHash, out bbi))
                                 {
                                     bbi = JanitorsCloset.Instance.AddAdditionalToolbarButton(cfg.toolbarButtonIndex, cfg.scene);
+                                    if (bbi == null)
+                                        return;
                                 }
+
                                 if (JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1))
                                 {
 

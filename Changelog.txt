@@ -303,3 +303,8 @@ ChangeLog
 
 0.3.7.4
 	Fixed Nullref when moving cursor over BG icon inventory spaces which didn't have any parts in them, also fixes nullref when trying to pull the breaking ground parts, and they don't pulled into the container
+
+0.3.7.5
+	Fixed stock toolbar button coming back after being disabled
+	Removed need to restart after changing toolbar button option
+	Updated description and added tooltip to toolbar button option

@@ -24,7 +24,8 @@ namespace JanitorsCloset
         public override bool HasPresets { get { return false; } }
 
 
-        [GameParameters.CustomParameterUI("Toolbar Enabled (changing this requires a restart)")]
+        [GameParameters.CustomParameterUI("Toolbar Enabled",
+            toolTip = "Enables/hides button in scenes other than the editor)")]
         public bool toolbarEnabled = true;
 
         [GameParameters.CustomParameterUI("Toolbar popups enabled")]
