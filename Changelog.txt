@@ -308,3 +308,6 @@ ChangeLog
 	Fixed stock toolbar button coming back after being disabled
 	Removed need to restart after changing toolbar button option
 	Updated description and added tooltip to toolbar button option
+
+0.3.7.6
+	Fixed button being removed in the editor when disabled in other scenes

@@ -223,11 +223,8 @@ namespace JanitorsCloset
                         NoIncompatabilities = false;
                     }
                 }
-                if (ApplicationLauncher.Instance == null)
-                {
-                    GameEvents.onGUIApplicationLauncherReady.Add(OnGuiAppLauncherReady);
-                }
-                else
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGuiAppLauncherReady);
+                if (ApplicationLauncher.Instance != null)
                     OnGuiAppLauncherReady();
                 GameEvents.OnGameSettingsApplied.Add(OnGameSettingsApplied);
 
