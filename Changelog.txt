@@ -311,3 +311,6 @@ ChangeLog
 
 0.3.7.6
 	Fixed button being removed in the editor when disabled in other scenes
+
+0.3.7.7
+	Fixed error when invalid entries are in a bulkheadProfiles (ie: missing commas)

@@ -68,8 +68,8 @@ namespace JanitorsCloset
                         bulkheads[i] = bulkheads[i].Trim().ToLower();
                         if (bulkheads[i].Contains("srf"))
                         {
-                            Log.Info("Part: " + part.name + ", removing bulkhead: " + bulkheads[i]);
-                            bulkheads.RemoveAt(i);
+                            Log.Info("Part: " + part.name + ", i: " + i + ", removing bulkhead: " + bulkheads[i]);
+                                bulkheads.RemoveAt(i);
                         }
                     }
 
@@ -77,18 +77,20 @@ namespace JanitorsCloset
                     {
                         bulkheads = bulkheads.OrderBy(x => x).ToList();
                     }
-
-                    string smallSizeStr = bulkheads[0];
-                    string largeSizeStr = bulkheads[bulkheads.Count - 1];
-                    if (smallSizeStr == largeSizeStr)
+                    if (bulkheads.Count > 0)
                     {
-                        partSize = BestGuessReadableName(smallSizeStr, capitalize: true);
-                        key = smallSizeStr;
-                    }
-                    else
-                    {
-                        partSize = "Adapter: " + BestGuessReadableName(smallSizeStr, capitalize: true) + " to " + BestGuessReadableName(largeSizeStr, capitalize: true);
-                        key = smallSizeStr + "-" + largeSizeStr;
+                        string smallSizeStr = bulkheads[0];
+                        string largeSizeStr = bulkheads[bulkheads.Count - 1];
+                        if (smallSizeStr == largeSizeStr)
+                        {
+                            partSize = BestGuessReadableName(smallSizeStr, capitalize: true);
+                            key = smallSizeStr;
+                        }
+                        else
+                        {
+                            partSize = "Adapter: " + BestGuessReadableName(smallSizeStr, capitalize: true) + " to " + BestGuessReadableName(largeSizeStr, capitalize: true);
+                            key = smallSizeStr + "-" + largeSizeStr;
+                        }
                     }
                     //if (srf)
                     //    partSize += ", Srf";
