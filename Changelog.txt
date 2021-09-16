@@ -314,3 +314,8 @@ ChangeLog
 
 0.3.7.7
 	Fixed error when invalid entries are in a bulkheadProfiles (ie: missing commas)
+
+0.3.7.8
+	Added AssemblyFileVersion
+	Updated version file for 1.12
+
