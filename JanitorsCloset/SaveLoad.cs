@@ -192,7 +192,8 @@ namespace JanitorsCloset
                                             b.button = new ApplicationLauncherButton();
                                             // b.button.name = cnt.ToString();
                                             //   cnt++;
-                                            JanitorsCloset.buttonDictionary.Add(b.button, b);
+                                            if (!buttonDictionary.ContainsKey(b.button))
+                                                JanitorsCloset.buttonDictionary.Add(b.button, b);
                                         }
                                     }
                                 }
@@ -212,9 +213,15 @@ namespace JanitorsCloset
                                         bsb.active = Boolean.Parse(n2.GetValue("active"));
                                         Log.Info("hidden button: " + bsb.buttonHash + "  blocktype: " + bsb.blocktype.ToString());
                                         if (bsb.blocktype == Blocktype.hideHere)
-                                            loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
+                                        {
+                                            if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash + bsb.scene.ToString()))
+                                                loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
+                                        }
                                         else
-                                            loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                                        {
+                                            if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash)) 
+                                                loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                                        }
                                     }
                                 }
                             }

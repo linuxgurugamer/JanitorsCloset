@@ -319,3 +319,6 @@ ChangeLog
 	Added AssemblyFileVersion
 	Updated version file for 1.12
 
+0.3.7.9
+	Replaced LINQ ToDictionary with simple foreach loop (fixes some nullrefs)
+	Added check for existing key in addToHiddenBlockList() (fixes some nullrefs)

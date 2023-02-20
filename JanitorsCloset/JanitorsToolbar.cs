@@ -368,7 +368,12 @@ namespace JanitorsCloset
                             hidable = false;
                             showByHover = false;
                             Dictionary<string, ButtonSceneBlock> hiddenButtons = new Dictionary<string, ButtonSceneBlock>(JanitorsCloset.hiddenButtonBlockList[0]);
-                            hiddenButtons = hiddenButtons.Concat(JanitorsCloset.hiddenButtonBlockList[(int)JanitorsCloset.appScene]).ToDictionary(x => x.Key, x => x.Value);
+                            //hiddenButtons = hiddenButtons.Concat(JanitorsCloset.hiddenButtonBlockList[(int)JanitorsCloset.appScene]).ToDictionary(x => x.Key, x => x.Value);
+
+
+                            foreach (var i in hiddenButtonBlockList[(int)JanitorsCloset.appScene])
+                                if (!hiddenButtons.ContainsKey(i.Key))
+                                    hiddenButtons.Add(i.Key, i.Value);
 
                             ToolbarShow(this.primaryAppButton, "", hiddenButtons);
 
@@ -405,7 +410,8 @@ namespace JanitorsCloset
                     this.primaryAppButton.onRightClick = showToolbarRightClickToggle;
 
                     buttonBarEntry.button = primaryAppButton;
-                    buttonBarList[0].Add(buttonBarEntry.buttonHash, buttonBarEntry);
+                    if (!buttonBarList[0].ContainsKey(buttonBarEntry.buttonHash))
+                        buttonBarList[0].Add(buttonBarEntry.buttonHash, buttonBarEntry);
 
                 }
                 catch (Exception ex)
@@ -975,6 +981,7 @@ namespace JanitorsCloset
             ButtonSceneBlock bsb = new ButtonSceneBlock();
             bsb.buttonHash = buttonId(selectedButton);
             Log.Info("hash of hidden button: " + bsb.buttonHash);
+
             bsb.scene = HighLogic.LoadedScene;
             bsb.blocktype = btype;
             bsb.origButton = selectedButton;
@@ -982,11 +989,17 @@ namespace JanitorsCloset
             bsb.buttonTexture = GetButtonTexture(selectedButton.sprite);
             bsb.buttonTexture2 = selectedButton.sprite.texture;
             if (btype == Blocktype.hideHere)
-                hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
+            {
+                if (!hiddenButtonBlockList[(int)appScene].ContainsKey(bsb.buttonHash))
+                    hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
+            }
             else
-                hiddenButtonBlockList[0].Add(bsb.buttonHash, bsb);
-
-            allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+            {
+                if (!hiddenButtonBlockList[0].ContainsKey(bsb.buttonHash))
+                    hiddenButtonBlockList[0].Add(bsb.buttonHash, bsb);
+            }
+            if (!allBlockedButtonsList.ContainsKey(bsb.buttonHash))
+                allBlockedButtonsList.Add(bsb.buttonHash, bsb);
 
             showToolbarMenu = ShowMenuState.hiding;
         }
