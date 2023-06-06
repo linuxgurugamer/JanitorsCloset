@@ -159,9 +159,10 @@ namespace JanitorsCloset
             Dictionary<string, blackListPart> blpD = loadData(fname);
             foreach (KeyValuePair<string, blackListPart> entry in blpD)
             {
+                JanitorsCloset.blackList[entry.Key]= entry.Value;
                 // do something with entry.Value or entry.Key
-                if (!JanitorsCloset.blackList.ContainsKey(entry.Key))
-                    JanitorsCloset.blackList.Add(entry.Key, entry.Value);
+                //if (!JanitorsCloset.blackList.ContainsKey(entry.Key))
+                //    JanitorsCloset.blackList.Add(entry.Key, entry.Value);
             }
             return blpD;
         }

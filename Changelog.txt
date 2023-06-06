@@ -322,3 +322,8 @@ ChangeLog
 0.3.7.9
 	Replaced LINQ ToDictionary with simple foreach loop (fixes some nullrefs)
 	Added check for existing key in addToHiddenBlockList() (fixes some nullrefs)
+
+0.3.8
+	Cleaned up most (all) of debugging error messages showing duplicate buttons, etc
+	Replaced all unnecessary type/catch which were simply reporting if an entry was already in a list,
+		replaced with simple indexing

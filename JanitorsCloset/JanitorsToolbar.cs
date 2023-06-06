@@ -372,8 +372,9 @@ namespace JanitorsCloset
 
 
                             foreach (var i in hiddenButtonBlockList[(int)JanitorsCloset.appScene])
-                                if (!hiddenButtons.ContainsKey(i.Key))
-                                    hiddenButtons.Add(i.Key, i.Value);
+                                hiddenButtons[i.Key]= i.Value;
+                            //if (!hiddenButtons.ContainsKey(i.Key))
+                            //        hiddenButtons.Add(i.Key, i.Value);
 
                             ToolbarShow(this.primaryAppButton, "", hiddenButtons);
 
@@ -410,8 +411,9 @@ namespace JanitorsCloset
                     this.primaryAppButton.onRightClick = showToolbarRightClickToggle;
 
                     buttonBarEntry.button = primaryAppButton;
-                    if (!buttonBarList[0].ContainsKey(buttonBarEntry.buttonHash))
-                        buttonBarList[0].Add(buttonBarEntry.buttonHash, buttonBarEntry);
+                    buttonBarList[0][buttonBarEntry.buttonHash]= buttonBarEntry;
+                    //if (!buttonBarList[0].ContainsKey(buttonBarEntry.buttonHash))
+                    //    buttonBarList[0].Add(buttonBarEntry.buttonHash, buttonBarEntry);
 
                 }
                 catch (Exception ex)
@@ -948,27 +950,29 @@ namespace JanitorsCloset
             foreach (var s in buttonBlockList)
                 Log.Info("addToButtonBlockList,  buttonBlockList key: " + s.Key);
 #endif
-            try
-            {
-                buttonBlockList.Add(bsb.buttonHash, bsb);
-            } catch
-            {
-                Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in buttonBlockList, not being added");
-                return false;
-            }
+            buttonBlockList[bsb.buttonHash] = bsb;
+            //try
+            //{
+            //    buttonBlockList.Add(bsb.buttonHash, bsb);
+            //} catch
+            //{
+            //    Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in buttonBlockList, not being added");
+            //    return false;
+            //}
 
 #if DEBUG
             foreach (var s in allBlockedButtonsList)
                 Log.Info("addToButtonBlockList, allBlockedButtonsList key: " + s.Key);
 #endif
-            try
-            {
-                allBlockedButtonsList.Add(bsb.buttonHash, bsb);
-            } catch
-            {
-                Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in allBlockedButtonsList, not being added");
-                return false;
-            }
+            allBlockedButtonsList[bsb.buttonHash] = bsb;
+            //try
+            //{
+            //    allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+            //} catch
+            //{
+            //    Log.Error("Buttonhash: [" + bsb.buttonHash + "] already in allBlockedButtonsList, not being added");
+            //    return false;
+            //}
 
             showToolbarMenu = ShowMenuState.hiding;
             return true;
@@ -990,16 +994,19 @@ namespace JanitorsCloset
             bsb.buttonTexture2 = selectedButton.sprite.texture;
             if (btype == Blocktype.hideHere)
             {
-                if (!hiddenButtonBlockList[(int)appScene].ContainsKey(bsb.buttonHash))
-                    hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
+                hiddenButtonBlockList[(int)appScene][bsb.buttonHash] = bsb;
+                //if (!hiddenButtonBlockList[(int)appScene].ContainsKey(bsb.buttonHash))
+                //    hiddenButtonBlockList[(int)appScene].Add(bsb.buttonHash, bsb);
             }
             else
             {
-                if (!hiddenButtonBlockList[0].ContainsKey(bsb.buttonHash))
-                    hiddenButtonBlockList[0].Add(bsb.buttonHash, bsb);
+                hiddenButtonBlockList[0][bsb.buttonHash] = bsb;
+                //if (!hiddenButtonBlockList[0].ContainsKey(bsb.buttonHash))
+                //    hiddenButtonBlockList[0].Add(bsb.buttonHash, bsb);
             }
-            if (!allBlockedButtonsList.ContainsKey(bsb.buttonHash))
-                allBlockedButtonsList.Add(bsb.buttonHash, bsb);
+            allBlockedButtonsList[bsb.buttonHash] = bsb;
+            //if (!allBlockedButtonsList.ContainsKey(bsb.buttonHash))
+            //    allBlockedButtonsList.Add(bsb.buttonHash, bsb);
 
             showToolbarMenu = ShowMenuState.hiding;
         }

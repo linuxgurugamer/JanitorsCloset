@@ -227,10 +227,11 @@ namespace JanitorsCloset
                 Log.Info(string.Format("PROCESS {0}", part.name));
 
                 PartInfo partInfo = new PartInfo(part);
-                if (!partInfos.ContainsKey(part.name))
-                    partInfos.Add(part.name, partInfo);
-                else
-                    Log.Error("Part already loaded: " + part.name);
+                partInfos[part.name]= partInfo;
+                //if (!partInfos.ContainsKey(part.name))
+                //    partInfos.Add(part.name, partInfo);
+                //else
+                //    Log.Error("Part already loaded: " + part.name);
 
                 partInfo.defaultPos = index++;
 

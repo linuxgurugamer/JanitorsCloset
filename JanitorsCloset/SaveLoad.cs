@@ -192,8 +192,9 @@ namespace JanitorsCloset
                                             b.button = new ApplicationLauncherButton();
                                             // b.button.name = cnt.ToString();
                                             //   cnt++;
-                                            if (!buttonDictionary.ContainsKey(b.button))
-                                                JanitorsCloset.buttonDictionary.Add(b.button, b);
+                                            JanitorsCloset.buttonDictionary[b.button]= b;
+                                            //if (!buttonDictionary.ContainsKey(b.button))
+                                            //    JanitorsCloset.buttonDictionary.Add(b.button, b);
                                         }
                                     }
                                 }
@@ -214,13 +215,15 @@ namespace JanitorsCloset
                                         Log.Info("hidden button: " + bsb.buttonHash + "  blocktype: " + bsb.blocktype.ToString());
                                         if (bsb.blocktype == Blocktype.hideHere)
                                         {
-                                            if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash + bsb.scene.ToString()))
-                                                loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
+                                            loadedHiddenCfgs[bsb.buttonHash + bsb.scene.ToString()]= bsb;
+                                            //if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash + bsb.scene.ToString()))
+                                            //    loadedHiddenCfgs.Add(bsb.buttonHash + bsb.scene.ToString(), bsb);
                                         }
                                         else
                                         {
-                                            if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash)) 
-                                                loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
+                                            loadedHiddenCfgs[bsb.buttonHash] = bsb;
+                                            //if (!loadedHiddenCfgs.ContainsKey(bsb.buttonHash)) 
+                                            //    loadedHiddenCfgs.Add(bsb.buttonHash, bsb);
                                         }
                                     }
                                 }
