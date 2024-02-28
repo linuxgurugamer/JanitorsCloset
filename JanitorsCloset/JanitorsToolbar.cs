@@ -10,6 +10,8 @@ using KSP.UI.Screens;
 using ClickThroughFix;
 
 using static JanitorsCloset.JanitorsClosetLoader;
+using JetBrains.Annotations;
+
 
 namespace JanitorsCloset
 {
@@ -71,6 +73,22 @@ namespace JanitorsCloset
 
     }
     #endregion
+    public class Resizer : MonoBehaviour
+    {
+        public Texture2D inputtexture2D;
+        public RawImage rawImage;
+
+        public static Texture2D Resize(Texture2D texture2D, int targetX, int targetY)
+        {
+            RenderTexture rt = new RenderTexture(targetX, targetY, 24);
+            RenderTexture.active = rt;
+            Graphics.Blit(texture2D, rt);
+            Texture2D result = new Texture2D(targetX, targetY);
+            result.ReadPixels(new Rect(0, 0, targetX, targetY), 0, 0);
+            result.Apply();
+            return result;
+        }
+    }
 
     //   [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     partial class JanitorsCloset// : BaseRaycaster
@@ -254,8 +272,8 @@ namespace JanitorsCloset
                 }
 
             }
-            
 
+            float UI_Scaler = GameSettings.UI_SCALE;
             toolbarButtonStyle.onActive.background = HighLogic.Skin.button.onActive.background;
             toolbarButtonStyle.onFocused.background = HighLogic.Skin.button.onFocused.background;
             toolbarButtonStyle.onNormal.background = HighLogic.Skin.button.onNormal.background;
@@ -264,6 +282,8 @@ namespace JanitorsCloset
             toolbarButtonStyle.focused.background = HighLogic.Skin.button.focused.background;
             toolbarButtonStyle.hover.background = HighLogic.Skin.button.hover.background;
             toolbarButtonStyle.normal.background = HighLogic.Skin.button.normal.background;
+            toolbarButtonStyle.fixedHeight = 38 * UI_Scaler;
+            toolbarButtonStyle.fixedWidth = 38 * UI_Scaler;
             //GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
         }
 
@@ -638,7 +658,7 @@ namespace JanitorsCloset
 
             screenPos.y = Screen.height - screenPos.y;
 
-
+            float UI_Scaler = GameSettings.UI_SCALE;
             showToolbar = ShowMenuState.starting;
 
             int btnCnt;
@@ -652,10 +672,10 @@ namespace JanitorsCloset
                 // Assume vertical menu, therefor this needs to be horizontal
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x - btnCnt * (iconSize),
+                    xMin = screenPos.x - btnCnt * (iconSize * UI_Scaler),
                     xMax = screenPos.x + 5, // - offset,
                     yMin = screenPos.y + 2,
-                    yMax = screenPos.y + iconSize 
+                    yMax = screenPos.y + iconSize * UI_Scaler
                 };
             }
             else
@@ -664,8 +684,8 @@ namespace JanitorsCloset
                 toolbarRect = new Rect()
                 {
                     xMin = screenPos.x + 2,
-                    xMax = screenPos.x + iconSize,
-                    yMin = screenPos.y - btnCnt * iconSize,
+                    xMax = screenPos.x + iconSize * UI_Scaler,
+                    yMin = screenPos.y - btnCnt * iconSize * UI_Scaler,
                     yMax = screenPos.y + 5
                 };
             }
@@ -1335,34 +1355,45 @@ namespace JanitorsCloset
 
             int cnt = 0;
             drawTooltip = false;
-
+            float UI_Scaler = GameSettings.UI_SCALE;
             foreach (var curButton in activeButtonBlockList)
             {
 #if true
                 if (curButton.Value.blocktype == Blocktype.hideEverywhere ||
                     ApplicationLauncher.Instance.ShouldBeVisible(curButton.Value.origButton))
-                //curButton.Value.scene == HighLogic.LoadedScene)
+                //  curButton.Value.scene == HighLogic.LoadedScene)
                 {
                     Rect brect;
                     if (!ApplicationLauncher.Instance.IsPositionedAtTop)
-                        brect = new Rect(0, 41 * cnt, 38, 38);
+                        brect = new Rect(0, (int)(41 * UI_Scaler) * cnt, (int)(38 * UI_Scaler), (int)(38 * UI_Scaler));
                     else
-                        brect = new Rect(41 * cnt, 0, 38, 38);
-
+                        brect = new Rect((int)(41 * UI_Scaler) * cnt, 0, (int)(38 * UI_Scaler), (int)(38 * UI_Scaler));
 
                     Log.Info("scene: " + HighLogic.LoadedScene.ToString() + "   cnt: " + cnt.ToString() + "   brect, x,y: " + brect.x.ToString() + ", " + brect.y.ToString() + "   width, height: " + brect.width.ToString() + ", " + brect.height.ToString());
 
                     cnt++;
 
-                   
-                    if (GUI.Button(brect, curButton.Value.buttonTexture2, toolbarButtonStyle /* as Texture */ /* , GUILayout.Width(41), GUILayout.Height(41)*/))
+                    // ReScale button
+                    //Debug.Log("[Janitor] 1: W x H: " + curButton.Value.buttonTexture2.width + "x" + curButton.Value.buttonTexture2.height + " - " + curButton.Value.buttonHash);
+                    if (curButton.Value.buttonTexture2 != null &&
+                        curButton.Value.buttonTexture2.width != (int)(38 * UI_Scaler) &&
+                        curButton.Value.buttonTexture2.height != (int)(38 * UI_Scaler))
+                    {
+                        Texture2D img = Resizer.Resize((Texture2D)curButton.Value.buttonTexture2, (int)(38 * UI_Scaler), (int)(38 * UI_Scaler));
+                        //Debug.Log("[Janitor] 2: W x H: " + img.width + "x" + img.height + " - " + curButton.Value.buttonHash);
+                        curButton.Value.buttonTexture2 = img as Texture;
+                        curButton.Value.origButton.sprite.texture = img as Texture;
+                    }
+                    //Debug.Log("[Janitor] 3: W x H: " + curButton.Value.buttonTexture2.width + "x" + curButton.Value.buttonTexture2.height + " - " + curButton.Value.buttonHash);
+
+                    if ( GUI.Button(brect, curButton.Value.buttonTexture2, toolbarButtonStyle) )
                     {
                         Log.Info("Clicking, keyCode: " + Event.current.keyCode.ToString());
 
                         if (Input.GetMouseButtonUp(0))
                         {
                             if (curButton.Value.active)
-                            //                            if (curButton.Value.origButton.toggleButton.Value == true)
+                            // if (curButton.Value.origButton.toggleButton.Value == true)
                             {
                                 curButton.Value.origButton.onFalse();
                                 curButton.Value.active = false;
