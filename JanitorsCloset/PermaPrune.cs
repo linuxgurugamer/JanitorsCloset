@@ -521,8 +521,8 @@ namespace JanitorsCloset
                 : Enumerable.Empty<string>();
 
         private static string OriginalGameDataRelativePath(prunedPart pp)
-            => Path.Combine("GameData", pp.path.Replace("\\", "/")
-                                               .Replace(PRUNED, ""));
+            => "GameData/" + pp.path.Replace("\\", "/")
+                                    .Replace(PRUNED, "");
 
         void unpruner()
         {
