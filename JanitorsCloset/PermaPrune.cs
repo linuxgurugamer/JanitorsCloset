@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Collections;
@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 
 using UnityEngine;
+using EdyCommonTools;
 using KSP.UI;
 using KSP.UI.Screens;
 using ClickThroughFix;
@@ -217,7 +218,7 @@ namespace JanitorsCloset
             return model;
         }
 
-        const string PRUNED = ".prune";
+        private const string PRUNED = ".prune";
         public  IEnumerator pruning()
         {
             permapruneInProgress = true;
@@ -482,9 +483,46 @@ namespace JanitorsCloset
             FileOperations.Instance.saveRenamedFiles(renamedFilesList);
             permapruneInProgress = false;
 
+            UpdateCKANFilters(Path.Combine(KSPUtil.ApplicationRootPath,
+                                           "CKAN",
+                                           "install_filters.json"),
+                              renamedFilesList);
+
             yield break;
             //JanitorsCloset.Instance.clearBlackList();
         }
+
+        private void UpdateCKANFilters(string                  filterPath,
+                                       IEnumerable<prunedPart> pruned)
+        {
+            try
+            {
+                // Create or overwrite if parent directory exists
+                if (Directory.Exists(Path.GetDirectoryName(filterPath)))
+                {
+                    File.WriteAllText(filterPath,
+                                      MiniJSON.jsonEncode(
+                                          GetCKANFilters(filterPath)
+                                              .Concat(pruned.Select(OriginalGameDataRelativePath))
+                                              .Distinct()
+                                              .ToArray()));
+                }
+            }
+            catch
+            {
+                // Never disrupt the outer program with exceptions
+            }
+        }
+
+        private IEnumerable<string> GetCKANFilters(string path)
+            => File.Exists(path)
+                ? MiniJsonExtensions.arrayListFromJson(File.ReadAllText(path))
+                                    .OfType<string>()
+                : Enumerable.Empty<string>();
+
+        private static string OriginalGameDataRelativePath(prunedPart pp)
+            => Path.Combine("GameData", pp.path.Replace("\\", "/")
+                                               .Replace(PRUNED, ""));
 
         void unpruner()
         {
