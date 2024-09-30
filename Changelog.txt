@@ -327,3 +327,7 @@ ChangeLog
 	Cleaned up most (all) of debugging error messages showing duplicate buttons, etc
 	Replaced all unnecessary type/catch which were simply reporting if an entry was already in a list,
 		replaced with simple indexing
+
+0.3.9
+	Thanks to @hebaruSan for this:
+		The perma-prune button now updates the CKAN installation filters from Global install filters if a CKAN folder is found in the game root, which will tell CKAN that it should not consider perma-pruned files as missing because the user chose to remove them. This will prevent CKAN v1.35.0 and later from prompting the user to reinstall the mods that the pruned files came from.
