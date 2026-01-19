@@ -53,18 +53,18 @@ namespace JanitorsCloset
 
         bool _showMenu = false;
         Rect _menuRect = new Rect();
-        const float _menuWidth = 100.0f;
-        const float _menuHeight = 150.0f;
+        const float _menuWidth = 200.0f;
+        const float _menuHeight = 200.0f;
         //const float _menuHeight = 165.0f;
         const int _toolbarHeight = 42;
         //37
 
         public void ShowMenu()
         {
-            if (HighLogic.LoadedScene == GameScenes.EDITOR && 
+            if (HighLogic.LoadedScene == GameScenes.EDITOR &&
                 (helpPopup == null ||
                 (helpPopup != null && !helpPopup.showMenu)))
-            { 
+            {
                 Vector3 position = Input.mousePosition;
                 int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
                 _menuRect = new Rect()
@@ -83,7 +83,7 @@ namespace JanitorsCloset
         public void HideMenu()
         {
             Log.Info("HideMenu");
-           // _menuRect = new Rect();
+            // _menuRect = new Rect();
             _showMenu = false;
             showToolbar = ShowMenuState.hidden;
         }
@@ -150,7 +150,7 @@ namespace JanitorsCloset
         }
 
         public IEnumerator sceneReady()
-        { 
+        {
             while (EditorPartList.Instance == null)
                 yield return new WaitForSeconds(0.2f);
 
@@ -172,12 +172,12 @@ namespace JanitorsCloset
 
         new void Start()
         {
-           // Log.setTitle("Janitor's Closet");
+            // Log.setTitle("Janitor's Closet");
             Log.Info("JanitorsCloset.Start");
             blacklistIcons = JanitorsCloset.Instance.loadBlacklistData();
 
             lastUsedID = this.GetInstanceID();
-            StartToolbar();            
+            StartToolbar();
         }
 
         new void OnDestroy()
@@ -208,11 +208,11 @@ namespace JanitorsCloset
             if (icon == null || icon.partInfo == null)
                 return;
             Log.Info("IconHover,  ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary): " + ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary).ToString());
-            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod || 
-                ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) || ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary)) 
+            if (HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().showMod ||
+                ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) || ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary))
             {
                 string mod = ModFilterWindow.FindPartMod(icon.partInfo);
-             
+
                 drawTooltip = true;
                 if (hover)
                     tooltip = mod;
@@ -228,7 +228,7 @@ namespace JanitorsCloset
         {
             instance = this;
             DontDestroyOnLoad(this);
-            
+
             //getPartData();
 
             _windowFunction = PruneMenuContent;
@@ -244,17 +244,17 @@ namespace JanitorsCloset
         const float _pruneMenuWidth = 100.0f;
         const float _pruneMenuHeight = 73.0f;
 
-        
+
 
         // these two save a bit on garbage created in OnGUI
-    //    private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
+        //    private readonly GUILayoutOption[] _emptyOptions = new GUILayoutOption[0];
         private GUI.WindowFunction _windowFunction;
 
 
         // enable/disable this to prevent the "No Target" from popping up by double-clicking on the window 
         private Mouse _mouseController;
 
-#region PruneParts
+        #region PruneParts
         public void ShowPruneMenu()
         {
             InputLockManager.SetControlLock(ControlTypes.EDITOR_ICON_PICK | ControlTypes.EDITOR_ICON_HOVER, "Pruner");
@@ -288,20 +288,20 @@ namespace JanitorsCloset
 
         int pruneMenuID;
         int menuContentID;
-        
+
 
         //Unity GUI loop
         void OnGUI()
         {
             if (HighLogic.CurrentGame == null)
                 return;
-            if (drawTooltip &&  HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip && tooltip != null && tooltip.Trim().Length > 0)
+            if (drawTooltip && HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip && tooltip != null && tooltip.Trim().Length > 0)
             {
                 SetupTooltip();
                 GUI.Window(1234, tooltipRect, TooltipWindow, "");
             }
-                    
-                //DrawTooltip();
+
+            //DrawTooltip();
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
             if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
                 _pruneMenuRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
@@ -325,7 +325,7 @@ namespace JanitorsCloset
         {
             //DrawTooltip();
             Log.Info("TooltipWindow, tooltip: " + tooltip);
-            GUI.Label(new Rect(2,0,tooltipRect.width-2, tooltipRect.height), tooltip, HighLogic.Skin.label);
+            GUI.Label(new Rect(2, 0, tooltipRect.width - 2, tooltipRect.height), tooltip, HighLogic.Skin.label);
         }
 
         void addToBlackList(string p, string title, blackListType type)
@@ -407,6 +407,15 @@ namespace JanitorsCloset
                 lastTimeShown = Time.fixedTime;
             }
             GUILayout.BeginVertical();
+
+            GUILayout.BeginHorizontal();
+            string AssetsLabel;
+            AssetsLabel = "Parts count: " + AssetsDatabase.Instance.PartsCount.ToString() + "\n" +
+              "Models: " + AssetsDatabase.Instance.models.AssetsCount + " (" + Utilities.FormatFileSize(AssetsDatabase.Instance.models.AssetsSize) + ")\n" +
+              "Textures: " + AssetsDatabase.Instance.textures.AssetsCount + " (" + Utilities.FormatFileSize(AssetsDatabase.Instance.textures.AssetsSize) + ")";
+            GUILayout.Label(AssetsLabel);
+            GUILayout.EndHorizontal();
+
             if (GUILayout.Button("Show Blocked"))
             {
                 // Dialog to show list of blocked parts, with buttons to temp/perm unblock a part
@@ -427,14 +436,14 @@ namespace JanitorsCloset
 #if DEBUG
             Log.Info("modFilterWindow.ModFilteredCount: " + modFilterWindow.ModFilteredCount +
                 "   modFilterWindow.ModInverseCount: " + modFilterWindow.ModInverseCount +
-                "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount + 
+                "   modFilterWindow.SizeFilteredCount: " + modFilterWindow.SizeFilteredCount +
                 "   modFilterWindow.ResourceFilteredCount: " + modFilterWindow.ResourceFilteredCount +
                 "   modFilterWindow.ModuleFilteredCount: " + modFilterWindow.ModuleFilteredCount +
                 "   modFilterWindow.ModuleInverseCount: " + modFilterWindow.ModuleInverseCount);
 #endif
-            if (modFilterWindow.ModFilteredCount > 0 || 
-                modFilterWindow.SizeFilteredCount > 0 || 
-                modFilterWindow.ResourceFilteredCount > 0 || 
+            if (modFilterWindow.ModFilteredCount > 0 ||
+                modFilterWindow.SizeFilteredCount > 0 ||
+                modFilterWindow.ResourceFilteredCount > 0 ||
                 modFilterWindow.ModInverseCount > 0 ||
                 modFilterWindow.ModuleFilteredCount > 0)
             {
@@ -444,8 +453,8 @@ namespace JanitorsCloset
                     modFilterWindow.ModInverseCount + ", " +
                     modFilterWindow.SizeFilteredCount + ", " +
                     modFilterWindow.ResourceFilteredCount + ", " +
-                    modFilterWindow.ModuleFilteredCount +  ", " +
-                    modFilterWindow.ModuleInverseCount +")";
+                    modFilterWindow.ModuleFilteredCount + ", " +
+                    modFilterWindow.ModuleInverseCount + ")";
             }
             else
             {
