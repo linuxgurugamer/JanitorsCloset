@@ -133,7 +133,7 @@ namespace JanitorsCloset
                 Log.Info("Part: " + pSearch.name);
                 if (pSearch.partConfig != null)
                 {
-                    #region MODELs
+                    #region MODELS
                     // Find models and dependent textures
                     pNodes = pSearch.partConfig.GetNodes("MODEL");
                     if (pNodes != null)
