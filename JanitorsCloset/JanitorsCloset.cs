@@ -213,14 +213,14 @@ namespace JanitorsCloset
             {
                 string mod = ModFilterWindow.FindPartMod(icon.partInfo);
              
-                drawTooltip = true;
-                if (hover)
-                    tooltip = mod;
-                else
-                    tooltip = "";
+                showPartModTooltip = hover;
+                partModTooltip = hover ? mod : "";
             }
             else
-                tooltip = "";
+            {
+                showPartModTooltip = false;
+                partModTooltip = "";
+            }
         }
 
 
@@ -253,6 +253,7 @@ namespace JanitorsCloset
 
         // enable/disable this to prevent the "No Target" from popping up by double-clicking on the window 
         private Mouse _mouseController;
+        private bool _mouseControllerDisabledByRaycast;
 
 #region PruneParts
         public void ShowPruneMenu()
@@ -295,13 +296,22 @@ namespace JanitorsCloset
         {
             if (HighLogic.CurrentGame == null)
                 return;
-            if (drawTooltip &&  HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip && tooltip != null && tooltip.Trim().Length > 0)
+            string tooltipText = null;
+            if (drawTooltip && tooltip != null && tooltip.Trim().Length > 0)
+                tooltipText = tooltip;
+            else if (showPartModTooltip && partModTooltip != null && partModTooltip.Trim().Length > 0)
+                tooltipText = partModTooltip;
+
+            if (tooltipText != null && HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip)
             {
-                SetupTooltip();
-                GUI.Window(1234, tooltipRect, TooltipWindow, "");
+                // Draw on Repaint only; GUI.Window would capture mouse events and cause
+                // part tooltips and editor UI buttons to flicker.
+                if (Event.current.type == EventType.Repaint)
+                {
+                    SetupTooltip(tooltipText);
+                    DrawTooltip(tooltipText);
+                }
             }
-                    
-                //DrawTooltip();
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
             if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
                 _pruneMenuRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
@@ -319,13 +329,6 @@ namespace JanitorsCloset
             else
                 _menuRect = new Rect();
 
-        }
-
-        void TooltipWindow(int id)
-        {
-            //DrawTooltip();
-            Log.Info("TooltipWindow, tooltip: " + tooltip);
-            GUI.Label(new Rect(2,0,tooltipRect.width-2, tooltipRect.height), tooltip, HighLogic.Skin.label);
         }
 
         void addToBlackList(string p, string title, blackListType type)
@@ -477,11 +480,19 @@ namespace JanitorsCloset
 
             if (!_pruneMenuRect.Contains(screenPos))
             {
-                _mouseController.enabled = true;
+                if (_mouseControllerDisabledByRaycast)
+                {
+                    _mouseController.enabled = true;
+                    _mouseControllerDisabledByRaycast = false;
+                }
                 return;
             }
 
-            _mouseController.enabled = false;
+            if (!_mouseControllerDisabledByRaycast)
+            {
+                _mouseController.enabled = false;
+                _mouseControllerDisabledByRaycast = true;
+            }
             Mouse.Left.ClearMouseState();
             Mouse.Middle.ClearMouseState();
             Mouse.Right.ClearMouseState();

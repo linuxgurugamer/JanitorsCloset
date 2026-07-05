@@ -301,34 +301,32 @@ namespace JanitorsCloset
         #endregion
         string tooltip = "";
         bool drawTooltip = false;
+        string partModTooltip = "";
+        bool showPartModTooltip = false;
         // Vector2 mousePosition;
         Vector2 tooltipSize;
         float tooltipX, tooltipY;
         Rect tooltipRect;
-        void SetupTooltip()
+        void SetupTooltip(string text)
         {
             Vector2 mousePosition;
             mousePosition.x = Input.mousePosition.x;
             mousePosition.y = Screen.height - Input.mousePosition.y;
-            Log.Info("SetupTooltip, tooltip: " + tooltip);
-            if (tooltip != null && tooltip.Trim().Length > 0)
+            if (text != null && text.Trim().Length > 0)
             {
-                tooltipSize = HighLogic.Skin.label.CalcSize(new GUIContent(tooltip));
+                tooltipSize = HighLogic.Skin.label.CalcSize(new GUIContent(text));
                 tooltipX = (mousePosition.x + tooltipSize.x > Screen.width) ? (Screen.width - tooltipSize.x) : mousePosition.x;
                 tooltipY = mousePosition.y;
                 if (tooltipX < 0) tooltipX = 0;
                 if (tooltipY < 0) tooltipY = 0;
                 tooltipRect = new Rect(tooltipX - 1, tooltipY - tooltipSize.y, tooltipSize.x + 4, tooltipSize.y);
-                Log.Info("display x: " + tooltipX.ToString() + ", y: " + tooltipY.ToString() + ",  size.x,y: " + tooltipSize.x.ToString() + ", " + tooltipSize.y.ToString() + ", tooltip: " + tooltip);
-
-                //  GUI.Label(new Rect(x, y, size.x, size.y), tooltip);
             }
         }
-        protected void DrawTooltip()
+        protected void DrawTooltip(string text)
         {
-            if (tooltip != null && tooltip.Trim().Length > 0)
+            if (text != null && text.Trim().Length > 0)
             {
-                GUI.Label(tooltipRect, tooltip, HighLogic.Skin.label);
+                GUI.Label(tooltipRect, text, HighLogic.Skin.label);
             }
         }
 
