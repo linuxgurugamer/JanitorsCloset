@@ -347,8 +347,9 @@ namespace JanitorsCloset
 
             if (this.primaryAppButton == null && HighLogic.CurrentGame != null && ApplicationLauncher.Instance!= null)
             {
+                var settings = HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>();
                 ApplicationLauncher.AppScenes validScenes = ApplicationLauncher.AppScenes.SPACECENTER | ApplicationLauncher.AppScenes.FLIGHT | ApplicationLauncher.AppScenes.MAPVIEW | ApplicationLauncher.AppScenes.VAB | ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.TRACKSTATION;
-                if (!NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
+                if (!NoIncompatabilities || !settings.toolbarEnabled || settings.toolbarEditorOnly)
                     validScenes = ApplicationLauncher.AppScenes.SPH | ApplicationLauncher.AppScenes.VAB;
                 if ((GameSceneToLoadedScene() & validScenes) == ApplicationLauncher.AppScenes.NEVER)
                     return;
