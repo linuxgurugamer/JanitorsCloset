@@ -54,7 +54,7 @@ namespace JanitorsCloset
         bool _showMenu = false;
         Rect _menuRect = new Rect();
         const float _menuWidth = 100.0f;
-        const float _menuHeight = 150.0f;
+        const float _menuHeight = 120.0f;
         //const float _menuHeight = 165.0f;
         const int _toolbarHeight = 42;
         //37
@@ -65,14 +65,15 @@ namespace JanitorsCloset
                 (helpPopup == null ||
                 (helpPopup != null && !helpPopup.showMenu)))
             { 
-                Vector3 position = Input.mousePosition;
-                int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
+                Vector2 position = UIScale.GuiMousePosition();
+                Vector2 screen = UIScale.GuiScreenSize();
+                int toolbarHeight = UIScale.Scale(_toolbarHeight);
                 _menuRect = new Rect()
                 {
                     xMin = position.x - _menuWidth / 2,
                     xMax = position.x + _menuWidth / 2,
-                    yMin = Screen.height - toolbarHeight - _menuHeight,
-                    yMax = Screen.height - toolbarHeight
+                    yMin = screen.y - toolbarHeight - _menuHeight,
+                    yMax = screen.y - toolbarHeight
                 };
 
                 _showMenu = true;
@@ -260,19 +261,19 @@ namespace JanitorsCloset
         {
             InputLockManager.SetControlLock(ControlTypes.EDITOR_ICON_PICK | ControlTypes.EDITOR_ICON_HOVER, "Pruner");
 
-            Vector3 position = Input.mousePosition;
-            //Log.Info("X, Y: " + position.x.ToString() + ", " + position.y.ToString());
+            Vector2 position = UIScale.GuiMousePosition();
+            Vector2 screen = UIScale.GuiScreenSize();
 
-            if (position.y + _pruneMenuHeight > Screen.height)
-                position.y = Screen.height - _pruneMenuHeight;
+            if (position.y + _pruneMenuHeight > screen.y)
+                position.y = screen.y - _pruneMenuHeight;
 
             position.y -= 10;
             _pruneMenuRect = new Rect()
             {
                 xMin = position.x - _pruneMenuWidth / 2,
                 xMax = position.x + _pruneMenuWidth / 2,
-                yMin = Screen.height - position.y - _pruneMenuHeight,
-                yMax = Screen.height - position.y
+                yMin = position.y,
+                yMax = position.y + _pruneMenuHeight
             };
             _showPruneMenu = ShowMenuState.starting;
             pruneMenuID = JanitorsCloset.getNextID();
@@ -296,6 +297,7 @@ namespace JanitorsCloset
         {
             if (HighLogic.CurrentGame == null)
                 return;
+            UIScale.BeginGUI();
             string tooltipText = null;
             if (drawTooltip && tooltip != null && tooltip.Trim().Length > 0)
                 tooltipText = tooltip;
@@ -313,15 +315,15 @@ namespace JanitorsCloset
                 }
             }
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
-            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
-                _pruneMenuRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
+            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(UIScale.GuiMousePosition())))
+                _pruneMenuRect = UIScale.ClampToGuiScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
             else
                 if (_showPruneMenu != ShowMenuState.hidden)
                 HidePruneMenu();
 
             OnGUIToolbar();
 
-            if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f)))
+            if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(UIScale.GuiMousePosition()) || (Time.fixedTime - lastTimeShown < 0.5f)))
             {
                 if (_menuRect.x > 0 && _menuRect.y > 0)
                     _menuRect = ClickThruBlocker.GUILayoutWindow(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
@@ -329,6 +331,7 @@ namespace JanitorsCloset
             else
                 _menuRect = new Rect();
 
+            UIScale.EndGUI();
         }
 
         void addToBlackList(string p, string title, blackListType type)
@@ -404,7 +407,7 @@ namespace JanitorsCloset
 
         void MenuContent(int WindowID)
         {
-            if (_showMenu || _menuRect.Contains(Event.current.mousePosition))
+            if (_showMenu || _menuRect.Contains(UIScale.GuiMousePosition()))
             {
                 Log.Info("lastTimeShown 1");
                 lastTimeShown = Time.fixedTime;
@@ -475,8 +478,7 @@ namespace JanitorsCloset
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            var mouse = Input.mousePosition;
-            var screenPos = new Vector2(mouse.x, Screen.height - mouse.y);
+            var screenPos = UIScale.GuiMousePosition();
 
             if (!_pruneMenuRect.Contains(screenPos))
             {

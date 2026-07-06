@@ -309,13 +309,12 @@ namespace JanitorsCloset
         Rect tooltipRect;
         void SetupTooltip(string text)
         {
-            Vector2 mousePosition;
-            mousePosition.x = Input.mousePosition.x;
-            mousePosition.y = Screen.height - Input.mousePosition.y;
+            Vector2 mousePosition = UIScale.GuiMousePosition();
+            Vector2 screen = UIScale.GuiScreenSize();
             if (text != null && text.Trim().Length > 0)
             {
                 tooltipSize = HighLogic.Skin.label.CalcSize(new GUIContent(text));
-                tooltipX = (mousePosition.x + tooltipSize.x > Screen.width) ? (Screen.width - tooltipSize.x) : mousePosition.x;
+                tooltipX = (mousePosition.x + tooltipSize.x > screen.x) ? (screen.x - tooltipSize.x) : mousePosition.x;
                 tooltipY = mousePosition.y;
                 if (tooltipX < 0) tooltipX = 0;
                 if (tooltipY < 0) tooltipY = 0;
@@ -635,7 +634,7 @@ namespace JanitorsCloset
             Vector3 screenPos = camera.WorldToScreenPoint(activeButton.transform.position);
             Log.Info("target location is " + screenPos.x.ToString() + ", " + screenPos.y.ToString());
 
-            screenPos.y = Screen.height - screenPos.y;
+            Vector2 guiPos = UIScale.ScreenToGuiPosition(new Vector2(screenPos.x, screenPos.y));
 
 
             showToolbar = ShowMenuState.starting;
@@ -651,10 +650,10 @@ namespace JanitorsCloset
                 // Assume vertical menu, therefor this needs to be horizontal
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x - btnCnt * (iconSize),
-                    xMax = screenPos.x + 5, // - offset,
-                    yMin = screenPos.y + 2,
-                    yMax = screenPos.y + iconSize 
+                    xMin = guiPos.x - btnCnt * (iconSize),
+                    xMax = guiPos.x + 5, // - offset,
+                    yMin = guiPos.y + 2,
+                    yMax = guiPos.y + iconSize 
                 };
             }
             else
@@ -662,10 +661,10 @@ namespace JanitorsCloset
                 // Assume horizontal menu, therefor this needs to be vertical
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x + 2,
-                    xMax = screenPos.x + iconSize,
-                    yMin = screenPos.y - btnCnt * iconSize,
-                    yMax = screenPos.y + 5
+                    xMin = guiPos.x + 2,
+                    xMax = guiPos.x + iconSize,
+                    yMin = guiPos.y - btnCnt * iconSize,
+                    yMax = guiPos.y + 5
                 };
             }
 
@@ -679,7 +678,7 @@ namespace JanitorsCloset
         {
             if (hover)
             {
-                if (toolbarRect.Contains(Event.current.mousePosition))
+                if (toolbarRect.Contains(UIScale.GuiMousePosition()))
                 {
                     lasttimeToolBarRectShown = Time.fixedTime;
                     return;
@@ -892,29 +891,29 @@ namespace JanitorsCloset
 
 
                 Log.Info("screenPos.x: " + screenPos.x.ToString() + "   toolbarMenuHeight: " + toolbarMenuHeight.ToString());
-                screenPos.y = Screen.height - screenPos.y;
+                Vector2 guiPos = UIScale.ScreenToGuiPosition(new Vector2(screenPos.x, screenPos.y));
                 toolbarMenuRect = new Rect()
                 {
-                    xMax = screenPos.x + 2,
-                    xMin = screenPos.x - toolbarMenuWidth, // _pruneMenuWidth, // - toolbarMenuHeight,
+                    xMax = guiPos.x + 2,
+                    xMin = guiPos.x - toolbarMenuWidth, // _pruneMenuWidth, // - toolbarMenuHeight,
 
-                    yMin = screenPos.y - toolbarMenuHeight / 3,
-                    yMax = screenPos.y + toolbarMenuHeight / 3 * 2
+                    yMin = guiPos.y - toolbarMenuHeight / 3,
+                    yMax = guiPos.y + toolbarMenuHeight / 3 * 2
                 };
 
             }
             else
             {
-                Vector3 position = Input.mousePosition;
+                Vector2 guiMouse = UIScale.GuiMousePosition();
                 screenPos = camera.WorldToScreenPoint(ClickedButton.transform.position);
-                screenPos.y = Screen.height - screenPos.y;
+                Vector2 guiPos = UIScale.ScreenToGuiPosition(new Vector2(screenPos.x, screenPos.y));
 
                 toolbarMenuRect = new Rect()
                 {
-                    xMin = position.x - _pruneMenuWidth / 2,
-                    xMax = position.x + _pruneMenuWidth / 2,
-                    yMin = screenPos.y - toolbarMenuHeight,
-                    yMax = screenPos.y + 2
+                    xMin = guiMouse.x - _pruneMenuWidth / 2,
+                    xMax = guiMouse.x + _pruneMenuWidth / 2,
+                    yMin = guiPos.y - toolbarMenuHeight,
+                    yMax = guiPos.y + 2
                 };
 
             }
@@ -1063,7 +1062,7 @@ namespace JanitorsCloset
         void HideToolbarButtonMenu(int WindowID)
         {
             showToolbarMenu = ShowMenuState.visible;
-            if (toolbarMenuRect.Contains(Event.current.mousePosition))
+            if (toolbarMenuRect.Contains(UIScale.GuiMousePosition()))
             {
                 lastTimeShown = Time.fixedTime;
                 Log.Info("lastTimeShown 1");
@@ -1292,9 +1291,9 @@ namespace JanitorsCloset
             }
             if (
                 (showToolbarMenu == ShowMenuState.starting) ||
-                (showToolbarMenu == ShowMenuState.visible && (Time.fixedTime - lastTimeShown < HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().hoverTimeout || toolbarMenuRect.Contains(Event.current.mousePosition)))
+                (showToolbarMenu == ShowMenuState.visible && (Time.fixedTime - lastTimeShown < HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().hoverTimeout || toolbarMenuRect.Contains(UIScale.GuiMousePosition())))
                 )
-                KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
+                UIScale.ClampToGuiScreen(ClickThruBlocker.GUILayoutWindow(toolbarMenuRectID, toolbarMenuRect, toolbarWindowFunction, "Blocker Menu"));
             else
                 if (showToolbarMenu != ShowMenuState.hidden)
                 HideToolbarMenu();
@@ -1321,7 +1320,7 @@ namespace JanitorsCloset
         bool IsMouseOver(Rect brect)
         {
             return Event.current.type == EventType.Repaint &&
-               brect.Contains(Event.current.mousePosition);
+               brect.Contains(UIScale.GuiMousePosition());
         }
 
 

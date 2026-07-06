@@ -14,13 +14,20 @@ namespace JanitorsCloset
 
         List<string> renamedList;
 
-        Rect renamedWindowRect = new Rect()
+        Rect renamedWindowRect;
+
+        void UpdateWindowRect()
         {
-            xMin = 0,
-            xMax = UnityEngine.Screen.width - 300,
-            yMin = 0,
-            yMax = HEIGHT
-        };
+            var size = UIScale.GuiScreenSize();
+            renamedWindowRect = new Rect()
+            {
+                xMin = 0,
+                xMax = size.x - 300,
+                yMin = 0,
+                yMax = HEIGHT
+            };
+            renamedWindowRect.center = size * 0.5f;
+        }
 
 
         public static ShowRenamed Instance { get; private set; }
@@ -30,11 +37,12 @@ namespace JanitorsCloset
             Log.Info("ShowRenamed Awake()");
             this.enabled = false;
             Instance = this;
-            renamedWindowRect.center = new Vector2(UnityEngine.Screen.width * 0.5f, UnityEngine.Screen.height * 0.5f);
+            UpdateWindowRect();
         }
 
         public void Show()
         {
+            UpdateWindowRect();
             enabled = true;
             renamedList = new List<string>();
         }
@@ -64,7 +72,9 @@ namespace JanitorsCloset
                 if (renamedWindowContentID == 0)
                     renamedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
+                UIScale.BeginGUI();
                 renamedWindowRect = ClickThruBlocker.GUILayoutWindow(renamedWindowContentID, renamedWindowRect, ShowRenamedWindowContent, "Show PermaPruned Parts", tstyle);
+                UIScale.EndGUI();
             }
         }
 
@@ -78,7 +88,7 @@ namespace JanitorsCloset
 
         void ShowRenamedWindowContent(int windowID)
         {
-            innerCoords = new Rect(0, LINEHEIGHT, UnityEngine.Screen.width - 300, HEIGHT - 2 * LINEHEIGHT);
+            innerCoords = new Rect(0, LINEHEIGHT, renamedWindowRect.width - 4, HEIGHT - 2 * LINEHEIGHT);
             
             GUILayout.BeginVertical();
 

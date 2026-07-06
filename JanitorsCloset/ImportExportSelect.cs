@@ -72,7 +72,10 @@ namespace JanitorsCloset
             browserWindowID = JanitorsCloset.getNextID();
 
             m_fileBrowser = new FileBrowser(
-                    new Rect(Screen.width / 2 - BR_WIDTH / 2, Screen.height / 2 - BR_HEIGHT / 2, BR_WIDTH, BR_HEIGHT),
+                    new Rect(
+                        UIScale.GuiScreenSize().x / 2 - BR_WIDTH / 2,
+                        UIScale.GuiScreenSize().y / 2 - BR_HEIGHT / 2,
+                        BR_WIDTH, BR_HEIGHT),
                     title,
                     FileSelectedCallback
             );
@@ -121,7 +124,7 @@ namespace JanitorsCloset
         private bool MouseIsOverWindow()
         {
             if (m_fileBrowser != null)               
-                return m_fileBrowser.m_screenRect.Contains(new Vector2(Input.mousePosition.x, Screen.height - Input.mousePosition.y));
+                return m_fileBrowser.m_screenRect.Contains(UIScale.GuiMousePosition());
             return false;
         }
 
@@ -173,9 +176,9 @@ namespace JanitorsCloset
                     GUI.skin = HighLogic.Skin;
                     GUI.skin.customStyles[0] = s;
 #endif
-                    //m_fileBrowser.m_screenRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(this.GetInstanceID(), m_fileBrowser.m_screenRect, _windowFunction, "Blocker Menu"));
-                    // m_fileBrowser.m_screenRect = ClickThruBlocker.GUILayoutWindow(GetInstanceID(), m_fileBrowser.m_screenRect, m_fileBrowser.Window, "");
+                    UIScale.BeginGUI();
                     m_fileBrowser.Window(browserWindowID);
+                    UIScale.EndGUI();
                     // If the mouse is over our window, then lock the rest of the UI
                     if (HighLogic.LoadedSceneIsEditor) PreventEditorClickthrough();
                     return;

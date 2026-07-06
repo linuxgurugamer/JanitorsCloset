@@ -38,7 +38,7 @@ namespace JanitorsCloset
             Log.Info("ShowBlocked Awake()");
             this.enabled = false;
             Instance = this;
-            _windowRect.center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            _windowRect.center = UIScale.GuiScreenSize() * 0.5f;
         }
 
         public void Show()
@@ -71,8 +71,10 @@ namespace JanitorsCloset
                 if (blockedWindowContentID == 0)
                     blockedWindowContentID = JanitorsCloset.getNextID();
                 var tstyle = new GUIStyle(GUI.skin.window);
-                
+
+                UIScale.BeginGUI();
                 _windowRect = ClickThruBlocker.GUILayoutWindow(blockedWindowContentID, _windowRect, BlockedWindowContent, "Show Blocked Parts", tstyle);
+                UIScale.EndGUI();
             }
         }
 
