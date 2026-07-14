@@ -28,6 +28,10 @@ namespace JanitorsCloset
             toolTip = "Enables/hides button in scenes other than the editor)")]
         public bool toolbarEnabled = true;
 
+        [GameParameters.CustomParameterUI("Toolbar editor only",
+            toolTip = "When enabled, toolbar hide/folder sync and the JC toolbar button only run in the VAB/SPH editor")]
+        public bool toolbarEditorOnly = false;
+
         [GameParameters.CustomParameterUI("Toolbar popups enabled")]
         public bool toolbarPopupsEnabled = true; 
 
@@ -60,7 +64,7 @@ namespace JanitorsCloset
 
         public override bool Enabled(MemberInfo member, GameParameters parameters)
         {
-            if (member.Name == "toolbarPopupsEnabled")
+            if (member.Name == "toolbarPopupsEnabled" || member.Name == "toolbarEditorOnly")
                 return toolbarEnabled;
 
             return true; //otherwise return true

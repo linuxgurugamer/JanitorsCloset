@@ -18,15 +18,19 @@ namespace JanitorsCloset
 {
     class PermaPruneWindow : MonoBehaviour
     {
-        Rect _windowRect = new Rect()
+        Rect _windowRect;
+
+        void UpdateWindowRect()
         {
-            //xMin = Screen.width - 325,
-            //xMax = Screen.width - 175,
-            xMin = Screen.width - 350,
-            xMax = Screen.width - 150,
-            yMin = Screen.height - 300,
-            yMax = 50 //0 height, GUILayout resizes it
-        };
+            var size = UIScale.GuiScreenSize();
+            _windowRect = new Rect()
+            {
+                xMin = size.x - 325,
+                xMax = size.x - 175,
+                yMin = size.y - 300,
+                yMax = size.y - 250
+            };
+        }
 
         public bool permapruneInProgress = false;
         string _windowTitle = string.Empty;
@@ -87,6 +91,7 @@ namespace JanitorsCloset
         {
             if (isEnabled())
             {
+                UIScale.BeginGUI();
                 switch (winState)
                 {
                     case winContent.menu:
@@ -134,6 +139,7 @@ namespace JanitorsCloset
                         CloseWindow();
                         break;
                 }
+                UIScale.EndGUI();
 
             }
         }
@@ -856,6 +862,7 @@ namespace JanitorsCloset
         public void Show()
         {
             Log.Info("PermaPrune Show()");
+            UpdateWindowRect();
             this.enabled = true;
         }
     }

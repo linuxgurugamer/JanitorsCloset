@@ -22,20 +22,23 @@ namespace JanitorsCloset
         private bool isVisible = false;
         public static ImportExport Instance;
 
-        Rect _windowRect = new Rect()
+        Rect _windowRect;
+
+        void UpdateWindowRect()
         {
-            xMin = Screen.width - 325,
-            xMax = Screen.width - 185,
-            yMin = Screen.height - 300,
-            yMax = 50 //0 height, GUILayout resizes it
-        };
-
-
+            var size = UIScale.GuiScreenSize();
+            _windowRect = new Rect()
+            {
+                xMin = size.x - 325,
+                xMax = size.x - 185,
+                yMin = size.y - 300,
+                yMax = size.y - 250
+            };
+        }
 
         void Awake()
         {
-            //configBounds = new Rect(0,0, WIDTH, HEIGHT);
-            //configBounds.center = new Vector2(Screen.width * 0.5f, Screen.height * 0.5f);
+            UpdateWindowRect();
             configBounds = _windowRect;
         }
         void Start()
@@ -49,7 +52,11 @@ namespace JanitorsCloset
         {
             isVisible = b;
             if (b)
+            {
+                UpdateWindowRect();
+                configBounds = _windowRect;
                 configWindowID = JanitorsCloset.getNextID();
+            }
         }
 
         void OnGUI()
@@ -61,7 +68,9 @@ namespace JanitorsCloset
                 var tstyle = new GUIStyle(GUI.skin.window);
 
                 configBounds.yMax = _windowRect.yMin;
+                UIScale.BeginGUI();
                 configBounds = ClickThruBlocker.GUILayoutWindow(configWindowID, configBounds, ConfigWindow, _windowTitle, tstyle);
+                UIScale.EndGUI();
             }
         }
 

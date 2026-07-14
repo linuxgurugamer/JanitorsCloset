@@ -64,6 +64,7 @@
     <Compile Include="ShowRenamed.cs" />
     <Compile Include="ToolbarIconEvents.cs" />
     <Compile Include="Utilities.cs" />
+    <Compile Include="UIScale.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="ReadMe.md" />

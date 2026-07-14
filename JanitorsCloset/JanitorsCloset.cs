@@ -64,15 +64,16 @@ namespace JanitorsCloset
             if (HighLogic.LoadedScene == GameScenes.EDITOR &&
                 (helpPopup == null ||
                 (helpPopup != null && !helpPopup.showMenu)))
-            {
-                Vector3 position = Input.mousePosition;
-                int toolbarHeight = (int)(_toolbarHeight * GameSettings.UI_SCALE);
+            { 
+                Vector2 position = UIScale.GuiMousePosition();
+                Vector2 screen = UIScale.GuiScreenSize();
+                int toolbarHeight = UIScale.Scale(_toolbarHeight);
                 _menuRect = new Rect()
                 {
                     xMin = position.x - _menuWidth / 2,
                     xMax = position.x + _menuWidth / 2,
-                    yMin = Screen.height - toolbarHeight - _menuHeight,
-                    yMax = Screen.height - toolbarHeight
+                    yMin = screen.y - toolbarHeight - _menuHeight,
+                    yMax = screen.y - toolbarHeight
                 };
 
                 _showMenu = true;
@@ -212,15 +213,15 @@ namespace JanitorsCloset
                 ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary) || ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.secondary))
             {
                 string mod = ModFilterWindow.FindPartMod(icon.partInfo);
-
-                drawTooltip = true;
-                if (hover)
-                    tooltip = mod;
-                else
-                    tooltip = "";
+             
+                showPartModTooltip = hover;
+                partModTooltip = hover ? mod : "";
             }
             else
-                tooltip = "";
+            {
+                showPartModTooltip = false;
+                partModTooltip = "";
+            }
         }
 
 
@@ -253,25 +254,26 @@ namespace JanitorsCloset
 
         // enable/disable this to prevent the "No Target" from popping up by double-clicking on the window 
         private Mouse _mouseController;
+        private bool _mouseControllerDisabledByRaycast;
 
         #region PruneParts
         public void ShowPruneMenu()
         {
             InputLockManager.SetControlLock(ControlTypes.EDITOR_ICON_PICK | ControlTypes.EDITOR_ICON_HOVER, "Pruner");
 
-            Vector3 position = Input.mousePosition;
-            //Log.Info("X, Y: " + position.x.ToString() + ", " + position.y.ToString());
+            Vector2 position = UIScale.GuiMousePosition();
+            Vector2 screen = UIScale.GuiScreenSize();
 
-            if (position.y + _pruneMenuHeight > Screen.height)
-                position.y = Screen.height - _pruneMenuHeight;
+            if (position.y + _pruneMenuHeight > screen.y)
+                position.y = screen.y - _pruneMenuHeight;
 
             position.y -= 10;
             _pruneMenuRect = new Rect()
             {
                 xMin = position.x - _pruneMenuWidth / 2,
                 xMax = position.x + _pruneMenuWidth / 2,
-                yMin = Screen.height - position.y - _pruneMenuHeight,
-                yMax = Screen.height - position.y
+                yMin = position.y,
+                yMax = position.y + _pruneMenuHeight
             };
             _showPruneMenu = ShowMenuState.starting;
             pruneMenuID = JanitorsCloset.getNextID();
@@ -295,23 +297,33 @@ namespace JanitorsCloset
         {
             if (HighLogic.CurrentGame == null)
                 return;
-            if (drawTooltip && HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip && tooltip != null && tooltip.Trim().Length > 0)
-            {
-                SetupTooltip();
-                GUI.Window(1234, tooltipRect, TooltipWindow, "");
-            }
+            UIScale.BeginGUI();
+            string tooltipText = null;
+            if (drawTooltip && tooltip != null && tooltip.Trim().Length > 0)
+                tooltipText = tooltip;
+            else if (showPartModTooltip && partModTooltip != null && partModTooltip.Trim().Length > 0)
+                tooltipText = partModTooltip;
 
-            //DrawTooltip();
+            if (tooltipText != null && HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().buttonTooltip)
+            {
+                // Draw on Repaint only; GUI.Window would capture mouse events and cause
+                // part tooltips and editor UI buttons to flicker.
+                if (Event.current.type == EventType.Repaint)
+                {
+                    SetupTooltip(tooltipText);
+                    DrawTooltip(tooltipText);
+                }
+            }
             //Log.Info("Scene: " + HighLogic.LoadedScene.ToString());
-            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(Event.current.mousePosition)))
-                _pruneMenuRect = KSPUtil.ClampRectToScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
+            if ((_showPruneMenu == ShowMenuState.starting) || (_showPruneMenu == ShowMenuState.visible && _pruneMenuRect.Contains(UIScale.GuiMousePosition())))
+                _pruneMenuRect = UIScale.ClampToGuiScreen(ClickThruBlocker.GUILayoutWindow(pruneMenuID, _pruneMenuRect, _windowFunction, "Blocker Menu"));
             else
                 if (_showPruneMenu != ShowMenuState.hidden)
                 HidePruneMenu();
 
             OnGUIToolbar();
 
-            if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(Event.current.mousePosition) || (Time.fixedTime - lastTimeShown < 0.5f)))
+            if (HighLogic.LoadedSceneIsEditor && (_showMenu || _menuRect.Contains(UIScale.GuiMousePosition()) || (Time.fixedTime - lastTimeShown < 0.5f)))
             {
                 if (_menuRect.x > 0 && _menuRect.y > 0)
                     _menuRect = ClickThruBlocker.GUILayoutWindow(menuContentID, _menuRect, MenuContent, "Janitor's Closet");
@@ -319,13 +331,7 @@ namespace JanitorsCloset
             else
                 _menuRect = new Rect();
 
-        }
-
-        void TooltipWindow(int id)
-        {
-            //DrawTooltip();
-            Log.Info("TooltipWindow, tooltip: " + tooltip);
-            GUI.Label(new Rect(2, 0, tooltipRect.width - 2, tooltipRect.height), tooltip, HighLogic.Skin.label);
+            UIScale.EndGUI();
         }
 
         void addToBlackList(string p, string title, blackListType type)
@@ -401,7 +407,7 @@ namespace JanitorsCloset
 
         void MenuContent(int WindowID)
         {
-            if (_showMenu || _menuRect.Contains(Event.current.mousePosition))
+            if (_showMenu || _menuRect.Contains(UIScale.GuiMousePosition()))
             {
                 Log.Info("lastTimeShown 1");
                 lastTimeShown = Time.fixedTime;
@@ -481,16 +487,23 @@ namespace JanitorsCloset
 
         public override void Raycast(PointerEventData eventData, List<RaycastResult> resultAppendList)
         {
-            var mouse = Input.mousePosition;
-            var screenPos = new Vector2(mouse.x, Screen.height - mouse.y);
+            var screenPos = UIScale.GuiMousePosition();
 
             if (!_pruneMenuRect.Contains(screenPos))
             {
-                _mouseController.enabled = true;
+                if (_mouseControllerDisabledByRaycast)
+                {
+                    _mouseController.enabled = true;
+                    _mouseControllerDisabledByRaycast = false;
+                }
                 return;
             }
 
-            _mouseController.enabled = false;
+            if (!_mouseControllerDisabledByRaycast)
+            {
+                _mouseController.enabled = false;
+                _mouseControllerDisabledByRaycast = true;
+            }
             Mouse.Left.ClearMouseState();
             Mouse.Middle.ClearMouseState();
             Mouse.Right.ClearMouseState();
