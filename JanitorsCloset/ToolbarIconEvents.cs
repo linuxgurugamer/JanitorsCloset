@@ -1,7 +1,7 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
-using System.Linq;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using KSP.UI.Screens;
@@ -22,31 +22,53 @@ namespace JanitorsCloset
         [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
         private class InstallToolIconEvents : MonoBehaviour
         {
-            GameScenes lastScene = GameScenes.MAINMENU;
-            double lastTime = 0;
-
-            //static List<ApplicationLauncherButton> appList;
-            //static List<ApplicationLauncherButton> appListHidden;
             static List<ApplicationLauncherButton> appListMod;
             static List<ApplicationLauncherButton> appListModHidden;
 
-            
+            Coroutine syncCoroutine;
+            const float SyncMaxWaitSeconds = 10f;
+            const float SyncIntervalSeconds = 1f;
 
+            static readonly List<ApplicationLauncherButton> scratchButtonList = new List<ApplicationLauncherButton>();
 
             private void Start()
             {
-                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
+                if (!ShouldRunToolbarEvents())
                     return;
-                // GameEvents.onLevelWasLoadedGUIReady.Add(OnSceneLoadedGUIReady);
-                // GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReady);
+
                 DontDestroyOnLoad(this);
 
-                //appList = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appList", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                //appListHidden = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListHidden", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                appListMod = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListMod", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                appListModHidden = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListModHidden", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                
-               RegisterSceneChanges(true);
+                RefreshAppLists();
+                RegisterSceneChanges(true);
+                GameEvents.onGUIApplicationLauncherReady.Add(OnGUIApplicationLauncherReadyEvent);
+
+                if (ApplicationLauncher.Instance != null)
+                    OnGUIApplicationLauncherReadyEvent();
+            }
+
+            void OnDestroy()
+            {
+                GameEvents.onGUIApplicationLauncherReady.Remove(OnGUIApplicationLauncherReadyEvent);
+                RegisterSceneChanges(false);
+            }
+
+            private bool ShouldRunToolbarEvents()
+            {
+                return HighLogic.CurrentGame != null
+                    && JanitorsCloset.NoIncompatabilities
+                    && HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled;
+            }
+
+            private bool ShouldRunToolbarSyncInCurrentScene()
+            {
+                if (!ShouldRunToolbarEvents())
+                    return false;
+
+                var settings = HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>();
+                if (settings.toolbarEditorOnly && HighLogic.LoadedScene != GameScenes.EDITOR)
+                    return false;
+
+                return true;
             }
 
             private void RegisterSceneChanges(bool enable)
@@ -55,27 +77,25 @@ namespace JanitorsCloset
                 if (enable)
                 {
                     GameEvents.onGameSceneLoadRequested.Add(this.CallbackGameSceneLoadRequested);
-                   // GameEvents.onLevelWasLoaded.Add(this.CallbackLevelWasLoaded);
                     GameEvents.onGameStatePostLoad.Add(this.CallbackOnGameStatePostLoad);
                 }
                 else
                 {
                     GameEvents.onGameSceneLoadRequested.Remove(this.CallbackGameSceneLoadRequested);
-                    //GameEvents.onLevelWasLoaded.Remove(this.CallbackLevelWasLoaded);
                     GameEvents.onGameStatePostLoad.Remove(this.CallbackOnGameStatePostLoad);
                 }
             }
+
             void OnEnable()
             {
-                //Tell our 'OnLevelFinishedLoading' function to start listening for a scene change as soon as this script is enabled.
                 SceneManager.sceneLoaded += CallbackLevelWasLoaded;
             }
 
             void OnDisable()
             {
-                //Tell our 'OnLevelFinishedLoading' function to stop listening for a scene change as soon as this script is disabled. Remember to always have an unsubscription for every delegate you subscribe to!
                 SceneManager.sceneLoaded -= CallbackLevelWasLoaded;
             }
+
             private void CallbackGameSceneLoadRequested(GameScenes scene)
             {
                 Log.Info("CallbackGameSceneLoadRequested");
@@ -89,7 +109,7 @@ namespace JanitorsCloset
                     Log.Error("JanitorsCloset.Instance.primaryAppButton is null");
                     return;
                 }
-               
+
                 JanitorsCloset.Instance.ToolbarHide(false);
                 JanitorsCloset.Instance.primaryAppButton.SetFalse();
                 if (JanitorsCloset.Instance.activeButtonBlockList != null)
@@ -99,70 +119,202 @@ namespace JanitorsCloset
                         if (b.Value.origButton != null)
                         {
                             Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
-                          //  b.Value.origButton.onFalse();
                             b.Value.active = false;
                         }
                     }
                 }
             }
+
             private void CallbackOnGameStatePostLoad(ConfigNode n)
             {
-                lasttimecheck = 0;
-                lastTime = Time.fixedTime;
                 Log.Info("CallbackOnGameStatePostLoad");
-
+                OnToolbarEnvironmentChanged();
             }
+
             private void CallbackLevelWasLoaded(Scene scene, LoadSceneMode mode)
             {
-                lasttimecheck = 0;
-                lastTime = Time.fixedTime;
                 Log.Info("CallbackLevelWasLoaded");
-               
+                OnToolbarEnvironmentChanged();
             }
 
-            bool mapIsEnabled = false;
-            double lasttimecheck = 0;
-            private void FixedUpdate()
+            private void OnGUIApplicationLauncherReadyEvent()
             {
-                if (HighLogic.CurrentGame == null)
+                OnToolbarEnvironmentChanged();
+            }
+
+            private void OnToolbarEnvironmentChanged()
+            {
+                if (!ShouldRunToolbarSyncInCurrentScene())
                     return;
-                if (!JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
+
+                RefreshAppLists();
+
+                if (HasToolbarCustomizationData())
+                    InstallMissingHandlers();
+
+                RequestToolbarSync();
+            }
+
+            private void RequestToolbarSync()
+            {
+                if (!ShouldRunToolbarSyncInCurrentScene())
                     return;
 
-                if (HighLogic.LoadedScene != lastScene)
-                {
-                    //Log.Info("InstallToolIconEvents.FixedUpdate, new scene: " + HighLogic.LoadedScene.ToString());
-                    lastScene = HighLogic.LoadedScene;
-                    lastTime = Time.fixedTime;
+                if (!HasToolbarCustomizationData())
+                    return;
 
-                    if (HighLogic.LoadedScene == GameScenes.FLIGHT)
-                        mapIsEnabled = MapView.MapIsEnabled;
-                }
-                
-                if (HighLogic.LoadedScene == GameScenes.FLIGHT)
+                if (syncCoroutine != null)
+                    StopCoroutine(syncCoroutine);
+
+                syncCoroutine = StartCoroutine(SyncToolbarAfterSceneChange());
+            }
+
+            private IEnumerator SyncToolbarAfterSceneChange()
+            {
+                float elapsed = 0f;
+
+                while (elapsed < SyncMaxWaitSeconds)
                 {
-                    if (mapIsEnabled != MapView.MapIsEnabled)
+                    if (!ShouldRunToolbarSyncInCurrentScene())
+                        yield break;
+
+                    RefreshAppLists();
+
+                    if (HasToolbarCustomizationData())
+                        InstallMissingHandlers();
+
+                    if (!HasPendingToolbarWork())
+                        yield break;
+
+                    UpdateButtonDictionary();
+                    CheckToolbarButtons();
+
+                    if (!HasPendingToolbarWork())
+                        yield break;
+
+                    yield return new WaitForSeconds(SyncIntervalSeconds);
+                    elapsed += SyncIntervalSeconds;
+                }
+
+                syncCoroutine = null;
+            }
+
+            static bool HasToolbarCustomizationData()
+            {
+                if (JanitorsCloset.loadedCfgs != null && JanitorsCloset.loadedCfgs.Count > 0)
+                    return true;
+                if (JanitorsCloset.loadedHiddenCfgs != null && JanitorsCloset.loadedHiddenCfgs.Count > 0)
+                    return true;
+                if (JanitorsCloset.primaryButtonBlockList != null && JanitorsCloset.primaryButtonBlockList.Count > 0)
+                    return true;
+
+                if (JanitorsCloset.buttonBarList != null)
+                {
+                    for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
                     {
-                        lastTime = Time.fixedTime;
-
-                        mapIsEnabled = MapView.MapIsEnabled;
+                        if (JanitorsCloset.buttonBarList[i].Count > 0)
+                            return true;
                     }
-
                 }
-                // Keep checking for 10 seconds to be sure all mods have finished installinng their buttons
-                // for performance, don't do it more than once a second
-                if (Time.fixedTime - lastTime < 10)
+
+                if (JanitorsCloset.hiddenButtonBlockList != null)
                 {
-                    if (Time.fixedTime - lasttimecheck > 1)
+                    for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
                     {
-                        lasttimecheck = Time.fixedTime;
-
-                        OnGUIApplicationLauncherReady();
-                        UpdateButtonDictionary();
-
-                        CheckToolbarButtons();
+                        if (JanitorsCloset.hiddenButtonBlockList[i].Count > 0)
+                            return true;
                     }
                 }
+
+                return false;
+            }
+
+            static bool HasPendingToolbarWork()
+            {
+                if (!HasToolbarCustomizationData())
+                    return false;
+
+                var scene = HighLogic.LoadedScene;
+                var sceneStr = scene.ToString();
+
+                if (JanitorsCloset.loadedCfgs != null)
+                {
+                    foreach (var key in JanitorsCloset.loadedCfgs.Keys)
+                    {
+                        if (key.StartsWith(sceneStr))
+                            return true;
+                    }
+                }
+
+                if (JanitorsCloset.loadedHiddenCfgs != null)
+                {
+                    foreach (var kvp in JanitorsCloset.loadedHiddenCfgs)
+                    {
+                        if (kvp.Value.blocktype == Blocktype.hideEverywhere)
+                            return true;
+                        if (kvp.Value.scene == scene)
+                            return true;
+                    }
+                }
+
+                return HasUnresolvedBlockListEntries();
+            }
+
+            static bool HasUnresolvedBlockListEntries()
+            {
+                if (JanitorsCloset.Instance == null)
+                    return false;
+
+                int sceneIdx = (int)HighLogic.LoadedScene;
+
+                if (JanitorsCloset.hiddenButtonBlockList != null)
+                {
+                    foreach (int i in new[] { 0, sceneIdx })
+                    {
+                        if (JanitorsCloset.hiddenButtonBlockList[i] == null)
+                            continue;
+
+                        foreach (var entry in JanitorsCloset.hiddenButtonBlockList[i])
+                        {
+                            if (entry.Value.origButton == null)
+                                return true;
+                        }
+                    }
+                }
+
+                if (JanitorsCloset.buttonBarList != null && JanitorsCloset.buttonBarList[sceneIdx] != null)
+                {
+                    foreach (var folder in JanitorsCloset.buttonBarList[sceneIdx])
+                    {
+                        foreach (var block in folder.Value.buttonBlockList)
+                        {
+                            if (block.Value.origButton == null)
+                                return true;
+                        }
+                    }
+                }
+
+                if (JanitorsCloset.primaryButtonBlockList != null)
+                {
+                    foreach (var block in JanitorsCloset.primaryButtonBlockList)
+                    {
+                        if (block.Value.origButton == null)
+                            return true;
+                    }
+                }
+
+                return false;
+            }
+
+            private void RefreshAppLists()
+            {
+                if (ApplicationLauncher.Instance == null)
+                    return;
+
+                var flags = BindingFlags.NonPublic | BindingFlags.Instance;
+                var launcherType = typeof(ApplicationLauncher);
+                appListMod = (List<ApplicationLauncherButton>)launcherType.GetField("appListMod", flags).GetValue(ApplicationLauncher.Instance);
+                appListModHidden = (List<ApplicationLauncherButton>)launcherType.GetField("appListModHidden", flags).GetValue(ApplicationLauncher.Instance);
             }
 
             /// <summary>
@@ -170,17 +322,16 @@ namespace JanitorsCloset
             /// for the button itself,  and then the hash.  If neither is found, then it is added here.  If the hash is found on a 
             /// different button, the old button is deleted and the new one is added
             /// </summary>
-            void updateButtonDictionary(List<ApplicationLauncherButton> appListMod)
+            void updateButtonDictionary(List<ApplicationLauncherButton> buttons)
             {
-                int cnt = 0;
-                if (appListMod == null)
+                if (buttons == null)
                 {
                     Log.Info("appListMod == null");
                     return;
                 }
-                foreach (var a1 in appListMod)
+
+                foreach (var a1 in buttons)
                 {
-                    cnt++;
                     if (a1 == null)
                     {
                         Log.Info("a1 == null");
@@ -191,14 +342,12 @@ namespace JanitorsCloset
                         Log.Info("gameObject == null");
                         continue;
                     }
-                    var o = a1.gameObject.GetComponent<ReplacementToolbarClickHandler>();
 
-                    if (o == null)
+                    if (a1.gameObject.GetComponent<ReplacementToolbarClickHandler>() == null)
                     {
                         Log.Info("button missing ReplacementToolbarClickHandler");
                         return;
                     }
-
 
                     if (!JanitorsCloset.buttonDictionary.ContainsKey(a1))
                     {
@@ -220,22 +369,27 @@ namespace JanitorsCloset
 
                         if (doThisOne)
                         {
-                          //  if (JanitorsCloset.buttonDictionary.Select(i => i.Value.buttonHash == hash).Count() > 0)
+                            Log.Info("hash found, deleting entry, hash: " + hash);
+                            foreach (var i in JanitorsCloset.buttonDictionary)
+                                Log.Info("buttonDictionaryHash: " + i.Value.buttonHash);
+
+                            ApplicationLauncherButton keyToRemove = null;
+                            foreach (var i in JanitorsCloset.buttonDictionary)
                             {
-                                Log.Info("hash found, deleting entry, hash: " + hash);
-                                foreach (var i in JanitorsCloset.buttonDictionary)
-                                    Log.Info("buttonDictionaryHash: " + i.Value.buttonHash);
-                                var key = JanitorsCloset.buttonDictionary.Where(m => m.Value.buttonHash == hash);
-                                
-                                if (key != null && key.Count() > 0)
+                                if (i.Value.buttonHash == hash)
                                 {
-                                    Log.Info("deleting key from buttonDictionary");
-                                    var k = key.First().Key;
-                                   // Log.Info("k: " + k.name);
-                                    bdi.identifier = JanitorsCloset.buttonDictionary[k].identifier;
-                                    JanitorsCloset.buttonDictionary.Remove(k);
+                                    keyToRemove = i.Key;
+                                    bdi.identifier = i.Value.identifier;
+                                    break;
                                 }
                             }
+
+                            if (keyToRemove != null)
+                            {
+                                Log.Info("deleting key from buttonDictionary");
+                                JanitorsCloset.buttonDictionary.Remove(keyToRemove);
+                            }
+
                             bdi.button = a1;
                             JanitorsCloset.buttonDictionary.Add(a1, bdi);
                         }
@@ -243,34 +397,41 @@ namespace JanitorsCloset
                 }
             }
 
-            // public static Dictionary<ApplicationLauncherButton, string> buttonDictionary = new Dictionary<ApplicationLauncherButton, string>();
             private void UpdateButtonDictionary()
             {
                 updateButtonDictionary(appListMod);
                 updateButtonDictionary(appListModHidden);
                 for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
-                    updateButtonDictionary(JanitorsCloset.hiddenButtonBlockList[i].Select(i1 => i1.Value.origButton).ToList());
+                    UpdateButtonDictionaryForHiddenList(i);
             }
 
-            void OnGUIApplicationLauncherReady()
+            private void UpdateButtonDictionaryForHiddenList(int listIndex)
             {
-                Log.Info("InstallToolIconEvents.OnSceneLoadedGUIReady,scene: " + HighLogic.LoadedScene.ToString());
+                scratchButtonList.Clear();
+                foreach (var entry in JanitorsCloset.hiddenButtonBlockList[listIndex])
+                {
+                    if (entry.Value.origButton != null)
+                        scratchButtonList.Add(entry.Value.origButton);
+                }
+                updateButtonDictionary(scratchButtonList);
+            }
 
-                //List<ApplicationLauncherButton> appListMod = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListMod", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
-                //List<ApplicationLauncherButton> appListModHidden = (List<ApplicationLauncherButton>)typeof(ApplicationLauncher).GetField("appListModHidden", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(ApplicationLauncher.Instance);
+            void InstallMissingHandlers()
+            {
+                Log.Info("InstallToolIconEvents.InstallMissingHandlers, scene: " + HighLogic.LoadedScene.ToString());
 
-                // some icons have already been instantiated, need to fix those too. Only needed this first time;
-                // after that, the prefab will already contain the changes we want to make
+                if (appListMod == null || appListModHidden == null)
+                    return;
+
                 try
                 {
                     foreach (var icon in appListMod)
                     {
                         if (JanitorsCloset.blacklistIcons != null)
                         {
-
                             if (JanitorsCloset.blacklistIcons.ContainsKey(icon.sprite.texture.name) || JanitorsCloset.blacklistIcons.ContainsKey(JanitorsCloset.Instance.Button32hash(icon.sprite)))
                             {
-                                Log.Info("Icon blacklisted in OnGUIApplicationLauncherReady: " + icon.sprite.texture.name);
+                                Log.Info("Icon blacklisted in InstallMissingHandlers: " + icon.sprite.texture.name);
                             }
                             else
                             {
@@ -279,9 +440,10 @@ namespace JanitorsCloset
                             }
                         }
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
-                    Log.Error("OnGUIApplicationLauncherReady, 1, exception: " + e.Message);
+                    Log.Error("InstallMissingHandlers, 1, exception: " + e.Message);
                 }
 
                 try
@@ -294,15 +456,13 @@ namespace JanitorsCloset
                             Log.Info("appListModHidden, icon.name: " + icon.sprite.texture.name + "     Hash: " + JanitorsCloset.Instance.Button32hash(icon.sprite));
                         }
                     }
-                } catch (Exception e)
+                }
+                catch (Exception e)
                 {
-                    Log.Error("OnGUIApplicationLauncherReady, 2, exception: " + e.Message);
+                    Log.Error("InstallMissingHandlers, 2, exception: " + e.Message);
                 }
             }
 
-            /// <summary>
-            /// 
-            /// </summary>
             void CheckToolbarButtons()
             {
                 // First look for buttons which are not visible and add them to the buttonsToModify list
@@ -314,10 +474,8 @@ namespace JanitorsCloset
                 Log.Info("CheckToolbarbuttons, LoadedScene: " + HighLogic.LoadedScene.ToString());
                 Log.Info("buttons in scene: " + JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene].Count.ToString());
 
-                // foreach (var bbl in JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene])
-                //     Log.Info("bbl hashkey: " + bbl.Key);
-
                 ButtonSceneBlock s;
+                string sceneStr = HighLogic.LoadedScene.ToString();
 
                 bool done = true;
                 do
@@ -325,70 +483,64 @@ namespace JanitorsCloset
                     done = true;
                     foreach (var a1 in appListMod)
                     {
-                        Log.Info("a1 hash: " + JanitorsCloset.Instance.Button32hash(a1.sprite));
+                        string spriteHash = JanitorsCloset.Instance.Button32hash(a1.sprite);
+                        Log.Info("a1 hash: " + spriteHash);
 
-                        // foreach (var lc in JanitorsCloset.loadedCfgs)
+                        Cfg cfg;
+                        if (JanitorsCloset.loadedCfgs.TryGetValue(sceneStr + spriteHash, out cfg))
                         {
-                            Cfg cfg;
-
-                            if (JanitorsCloset.loadedCfgs.TryGetValue(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite), out cfg))
+                            Log.Info("button to folder found in save file");
+                            ButtonBarItem bbi;
+                            if (!JanitorsCloset.buttonBarList[(int)cfg.scene].TryGetValue(cfg.toolbarButtonHash, out bbi))
                             {
-                                Log.Info("button to folder found in save file");
-                                ButtonBarItem bbi;
-                                if (!JanitorsCloset.buttonBarList[(int)cfg.scene].TryGetValue(cfg.toolbarButtonHash, out bbi))
-                                {
-                                    bbi = JanitorsCloset.Instance.AddAdditionalToolbarButton(cfg.toolbarButtonIndex, cfg.scene);
-                                    if (bbi == null)
-                                        return;
-                                }
-
-                                if (JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1))
-                                {
-
-
-                                    Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.Instance.buttonId(a1));
-
-                                    JanitorsCloset.loadedCfgs.Remove(HighLogic.LoadedScene.ToString() + JanitorsCloset.Instance.Button32hash(a1.sprite));
-                                    done = false;
-                                } else
-                                {
-                                    Log.Error("Error adding to button block list");
-                                }
-                                break;
+                                bbi = JanitorsCloset.Instance.AddAdditionalToolbarButton(cfg.toolbarButtonIndex, cfg.scene);
+                                if (bbi == null)
+                                    return;
                             }
-                            if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString(), out s))
-                            {
-                                Log.Info("Button hidden, scene found in save file: " + JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
-                                JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideHere);
 
-                                JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Instance.Button32hash(a1.sprite) + HighLogic.LoadedScene.ToString());
+                            if (JanitorsCloset.Instance.addToButtonBlockList(bbi.buttonBlockList, a1))
+                            {
+                                Log.Info("Added button to toolbar, buttonHash: " + bbi.buttonHash + "   a1.buttonId: " + JanitorsCloset.Instance.buttonId(a1));
+
+                                JanitorsCloset.loadedCfgs.Remove(sceneStr + spriteHash);
+                                done = false;
                             }
                             else
                             {
-                                if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(JanitorsCloset.Instance.Button32hash(a1.sprite), out s))
-                                {
-                                    Log.Info("Button hidden, everywhere found in save file: " + JanitorsCloset.Instance.Button32hash(a1.sprite));
-                                    JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideEverywhere);
-
-                                    JanitorsCloset.loadedHiddenCfgs.Remove(JanitorsCloset.Instance.Button32hash(a1.sprite));
-                                }
+                                Log.Error("Error adding to button block list");
                             }
+                            break;
+                        }
+
+                        if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(spriteHash + sceneStr, out s))
+                        {
+                            Log.Info("Button hidden, scene found in save file: " + spriteHash + sceneStr);
+                            JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideHere);
+
+                            JanitorsCloset.loadedHiddenCfgs.Remove(spriteHash + sceneStr);
+                        }
+                        else if (JanitorsCloset.loadedHiddenCfgs.TryGetValue(spriteHash, out s))
+                        {
+                            Log.Info("Button hidden, everywhere found in save file: " + spriteHash);
+                            JanitorsCloset.Instance.addToHiddenBlockList(a1, Blocktype.hideEverywhere);
+
+                            JanitorsCloset.loadedHiddenCfgs.Remove(spriteHash);
                         }
                     }
                 } while (!done);
 
-                //  for (int i = 0; i <= (int)GameScenes.PSYSTEM; i++)
-                //      updateButtonDictionary(JanitorsCloset.hiddenButtonBlockList[i].Select(i1 => i1.Value.origButton).ToList());
-
                 foreach (var a1 in appListMod)
                 {
+                    string buttonId = JanitorsCloset.Instance.buttonId(a1);
+                    string buttonIdWithScene = buttonId + sceneStr;
+
                     foreach (var bbl in JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene])
                     {
                         if (a1 != bbl.Value.button)
                         {
-                            if (bbl.Value.buttonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1), out s) ||
-                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1), out s) ||
-                                JanitorsCloset.primaryButtonBlockList.TryGetValue(JanitorsCloset.Instance.buttonId(a1) + HighLogic.LoadedScene.ToString(), out s)
+                            if (bbl.Value.buttonBlockList.TryGetValue(buttonId, out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(buttonId, out s) ||
+                                JanitorsCloset.primaryButtonBlockList.TryGetValue(buttonIdWithScene, out s)
                                 )
                             {
                                 s.origButton = a1;
@@ -396,7 +548,7 @@ namespace JanitorsCloset
                             }
                             else
                             {
-                                Log.Info("Button not found to remove from toolbar, hash: " + JanitorsCloset.Instance.buttonId(a1));
+                                Log.Info("Button not found to remove from toolbar, hash: " + buttonId);
                                 foreach (var v in bbl.Value.buttonBlockList)
                                 {
                                     Log.Info("buttonBlockList hash: " + v.Value.buttonHash);
@@ -413,27 +565,38 @@ namespace JanitorsCloset
                 int[] il = { 0, (int)JanitorsCloset.appScene };
                 foreach (int i in il)
                 {
-                    updateButtonDictionary(JanitorsCloset.hiddenButtonBlockList[i].Select(i1 => i1.Value.origButton).ToList());
+                    UpdateButtonDictionaryForHiddenList(i);
                     foreach (var bbl in JanitorsCloset.hiddenButtonBlockList[i])
                     {
-                        var sl = appListMod.Where(b => JanitorsCloset.Instance.buttonId(b) == bbl.Key).ToList();
-                        Log.Info("hiddenButtonBlockList[" + i.ToString() + ", sl count: " + sl.Count().ToString());
-
-                        if (sl.Count > 1)
+                        ApplicationLauncherButton matched = null;
+                        int matchCount = 0;
+                        foreach (var b in appListMod)
                         {
-                            Log.Error("Multiple identical buttons found in toolbar");
-                            foreach (var sli in sl)
+                            if (JanitorsCloset.Instance.buttonId(b) == bbl.Key)
                             {
-                                Log.Info("sli.buttonhash: " + JanitorsCloset.Instance.buttonId(sli));
+                                matched = b;
+                                matchCount++;
                             }
                         }
-                        if (sl.Count == 1)
+
+                        Log.Info("hiddenButtonBlockList[" + i.ToString() + ", sl count: " + matchCount.ToString());
+
+                        if (matchCount > 1)
+                        {
+                            Log.Error("Multiple identical buttons found in toolbar");
+                            foreach (var b in appListMod)
+                            {
+                                if (JanitorsCloset.Instance.buttonId(b) == bbl.Key)
+                                    Log.Info("sli.buttonhash: " + JanitorsCloset.Instance.buttonId(b));
+                            }
+                        }
+                        if (matchCount == 1)
                         {
                             s = bbl.Value;
-                            s.origButton = sl.First();
+                            s.origButton = matched;
                             buttonsToModify.Add(s);
                         }
-                        if (sl.Count == 0)
+                        if (matchCount == 0)
                         {
                             Log.Info("Hidden Button not found to remove from toolbar, hash: " + bbl.Key);
                             foreach (var v in JanitorsCloset.hiddenButtonBlockList[i])
@@ -443,19 +606,17 @@ namespace JanitorsCloset
                                 Log.Info("primaryButtonBlockList hash: " + v.Value.buttonHash);
                             foreach (var v in appListMod)
                                 Log.Info("appListMod hash: " + JanitorsCloset.Instance.buttonId(v));
-
                         }
                     }
                 }
 
                 foreach (var btm in buttonsToModify)
                 {
-
                     if (btm.origButton.gameObject.activeSelf)
                         btm.origButton.gameObject.SetActive(false);
                     if (btm.origButton.enabled)
                         btm.origButton.onDisable();
-                };
+                }
 
                 // following fixes a stock bug
                 foreach (var a1 in appListModHidden)
@@ -469,7 +630,6 @@ namespace JanitorsCloset
 
             private static void InstallReplacementToolbarHandler(ApplicationLauncherButton icon)
             {
-
                 if (icon.gameObject.GetComponent<ReplacementToolbarClickHandler>() == null)
                     icon.gameObject.AddComponent<ReplacementToolbarClickHandler>();
             }
@@ -500,7 +660,13 @@ namespace JanitorsCloset
 
             private void Start()
             {
-                if (HighLogic.CurrentGame == null || !JanitorsCloset.NoIncompatabilities || !HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().toolbarEnabled)
+                if (HighLogic.CurrentGame == null || !JanitorsCloset.NoIncompatabilities)
+                    return;
+
+                var settings = HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>();
+                if (!settings.toolbarEnabled)
+                    return;
+                if (settings.toolbarEditorOnly && HighLogic.LoadedScene != GameScenes.EDITOR)
                     return;
 
                 appButton = GetComponent<ApplicationLauncherButton>();

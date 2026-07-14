@@ -852,6 +852,7 @@ namespace JanitorsCloset
             _windowTitle = string.Format("Mod Filter");
             var tstyle = new GUIStyle(GUI.skin.window);
 
+            UIScale.BeginGUI();
             var newModWindowRect = ClickThruBlocker.GUILayoutWindow(modwindowRectID, modWindowRect, FilterChildWindowHandler, _windowTitle, tstyle);
 
             if (helpPopup != null)
@@ -862,6 +863,7 @@ namespace JanitorsCloset
                 modWindowRect = newModWindowRect;
                 JanitorsCloset.SetModFilterWin = modWindowRect;
             }
+            UIScale.EndGUI();
         }
 
         int CompareEntries(string lft, string rght)
@@ -1089,8 +1091,31 @@ namespace JanitorsCloset
                 SaveConfig(selectedFilterList);
             }
 
-            // This will hide the horizontal scrollbar
-            scrollPosition = GUILayout.BeginScrollView(scrollPosition, false, false, GUIStyle.none, GUI.skin.verticalScrollbar);
+            const float toggleColWidth = 10f;
+            const float colSpacing = 20f;
+            const float minNameWidth = 300f;
+            float maxNameWidth = minNameWidth;
+            if (selFilter == 2 || selFilter == 3)
+            {
+                foreach (string entryName in states.Keys)
+                {
+                    string label = GetReadableName(entryName);
+                    if (label != "" && label != "None")
+                    {
+                        maxNameWidth = Mathf.Max(
+                            maxNameWidth,
+                            styleButtonLeftAligned.CalcSize(new GUIContent(label)).x + 8);
+                    }
+                }
+            }
+            float rowMinWidth = 5 + toggleColWidth + colSpacing + toggleColWidth + colSpacing + maxNameWidth;
+
+            scrollPosition = GUILayout.BeginScrollView(
+                scrollPosition, false, false,
+                GUI.skin.horizontalScrollbar, GUI.skin.verticalScrollbar);
+
+            if (selFilter == 2 || selFilter == 3)
+                GUILayout.BeginVertical(GUILayout.MinWidth(rowMinWidth));
 
             foreach (string name in states.Keys)
             {
@@ -1103,34 +1128,37 @@ namespace JanitorsCloset
 
                 if (readableName != "" && readableName != "None")
                 {
-                    GUILayout.BeginHorizontal();
+                    if (selFilter == 2 || selFilter == 3)
+                        GUILayout.BeginHorizontal(GUILayout.MinWidth(rowMinWidth));
+                    else
+                        GUILayout.BeginHorizontal();
                     GUILayout.Space(5);
 
                     if (selFilter != 2 && selFilter != 3)
                     {
-                        state.enabledState = GUILayout.Toggle(state.enabledState, readableName);
+                        var nameWidth = GUI.skin.toggle.CalcSize(new GUIContent(readableName)).x;
+                        state.enabledState = GUILayout.Toggle(state.enabledState, readableName, GUILayout.MinWidth(nameWidth));
                         GUILayout.Space(20);
                         if (state.enabledState && state.enabledState != before)
                             state.inverse = false;
-                        GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();
                     }
                     else
                     {
                         //Log.Info("FilterChildWindowHandler 3");
-                        state.enabledState = GUILayout.Toggle(state.enabledState, "");
-                        GUILayout.Space(20);
+                        state.enabledState = GUILayout.Toggle(state.enabledState, "", GUILayout.Width(toggleColWidth));
+                        GUILayout.Space(colSpacing);
                         if (state.enabledState && state.enabledState != before)
                             state.inverse = false;
 
                         GUI.backgroundColor = Color.red;
-                        state.inverse = GUILayout.Toggle(state.inverse, "");
+                        state.inverse = GUILayout.Toggle(state.inverse, "", GUILayout.Width(toggleColWidth));
                         GUI.backgroundColor = origBackgroundColor; // reset to old value.
                         if (state.inverse && state.inverse != beforeInverse)
                             state.enabledState = false;
-                        GUILayout.Space(20);
+                        GUILayout.Space(colSpacing);
 
-                        if (GUILayout.Button(readableName, styleButtonLeftAligned, GUILayout.Width(300)))
+                        if (GUILayout.Button(readableName, styleButtonLeftAligned, GUILayout.Width(maxNameWidth)))
                         {
                             if (state.enabledState)
                             {
@@ -1150,7 +1178,6 @@ namespace JanitorsCloset
 
                         //Log.Info("FilterChildWindowHandler 4");
 
-                        GUILayout.FlexibleSpace();
                         GUILayout.EndHorizontal();
                         GUILayout.Space(5);
                         //Log.Info("FilterChildWindowHandler 5");
@@ -1171,6 +1198,8 @@ namespace JanitorsCloset
                     }
                 }
             }
+            if (selFilter == 2 || selFilter == 3)
+                GUILayout.EndVertical();
             GUILayout.EndScrollView();
             GUI.DragWindow();
             ModFilteredCount = modButtons.Where(p => p.Value.enabledState == false).Count();

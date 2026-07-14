@@ -42,7 +42,7 @@ namespace JanitorsCloset
                 //elementStyle.fontSize = 15;
 
                 Rect elementRect = GUILayoutUtility.GetRect(list[i], elementStyle);
-                bool hover = elementRect.Contains(Event.current.mousePosition);
+                bool hover = elementRect.Contains(UIScale.GuiMousePosition());
                 if (hover && Event.current.type == EventType.MouseDown && Event.current.clickCount == 1)
                 {
                     selected = i;
@@ -81,7 +81,7 @@ namespace JanitorsCloset
             for (int i = 0; i < list.Length; ++i)
             {
                 Rect elementRect = GUILayoutUtility.GetRect(new GUIContent(list[i]), elementStyle);
-                bool hover = elementRect.Contains(Event.current.mousePosition);
+                bool hover = elementRect.Contains(UIScale.GuiMousePosition());
                 if (hover && Event.current.type == EventType.MouseDown && Event.current.clickCount == 1)
                 {
                     selected = i;
