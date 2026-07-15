@@ -335,3 +335,8 @@ ChangeLog
 0.4.0
 	Thanks to github user @Aebestach for this:
 		Fix toolbar sync performance and add editor-only option
+	Thanks to @judicator and @Clayell for this:
+		When parts are PermaPruned, texture files are now also renamed (the game will not load them the next time it's launched, saving memory). In addition to textures directly linked to part models, textures specified in the part's config are also renamed
+		Displays the number of parts in the game's database, as well as the number and total size of their models and textures;
+		Displays the number and total size of renamed files.
+
