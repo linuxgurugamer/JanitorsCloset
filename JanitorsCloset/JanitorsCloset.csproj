@@ -38,6 +38,7 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>AssemblyVersion.tt</DependentUpon>
     </Compile>
+    <Compile Include="AssetsDatabase.cs" />
     <Compile Include="Config.cs" />
     <Compile Include="Crc32.cs" />
     <Compile Include="EditorIconEvents.cs" />
@@ -62,6 +63,7 @@
     <Compile Include="ShowBlocked.cs" />
     <Compile Include="ShowRenamed.cs" />
     <Compile Include="ToolbarIconEvents.cs" />
+    <Compile Include="Utilities.cs" />
     <Compile Include="UIScale.cs" />
   </ItemGroup>
   <ItemGroup>

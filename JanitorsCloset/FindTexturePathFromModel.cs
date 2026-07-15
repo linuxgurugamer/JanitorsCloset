@@ -1,4 +1,7 @@
 ﻿using UnityEngine;
+using System;
+using System.Linq;
+using System.Collections.Generic;
 
 using static JanitorsCloset.JanitorsClosetLoader;
 
@@ -6,7 +9,7 @@ using static JanitorsCloset.JanitorsClosetLoader;
 namespace JanitorsCloset
 {
     [KSPAddon(KSPAddon.Startup.MainMenu, false)]
-    class FindTexturePathFromModel  : MonoBehaviour
+    class FindTexturePathFromModel : MonoBehaviour
     {
 
 #if false
@@ -16,7 +19,7 @@ namespace JanitorsCloset
             Log.Info("FindTexturePathFromModel");
             GameDatabase.Instance.databaseModel.ForEach(m => Log.Info("URL: " + m.name));
 
-            PrintTextureDependenciesOf("Squad/Parts/Command/mk1pod/model");
+            PrintTextureDependenciesOf("Squad/Parts/Command/mk1pod_v2/Mk1Pod_v2");
             PrintTextureDependenciesOf("Squad/Spaces/mk1PodCockpit/model");
         }
 #endif
@@ -25,7 +28,7 @@ namespace JanitorsCloset
         {
             foreach (GameObject go in GameDatabase.Instance.databaseModel)
             {
-               
+
                 if (go.name.Contains("/" + name + "/"))
                 {
                     Log.Info("Found URL: " + go.name);
@@ -35,8 +38,8 @@ namespace JanitorsCloset
             return "";
         }
 
-#if false
-        private static void PrintTextureDependenciesOf(string modelUrl)
+#if true
+        public static void PrintTextureDependenciesOf(string modelUrl)
         {
             var model = GameDatabase.Instance.GetModel(modelUrl);
 
@@ -52,7 +55,7 @@ namespace JanitorsCloset
 
 
         // returns URLs of all textures (that exist in GameDatabase) that the GO depends on
-        private static IEnumerable<string> GetUrlsOfTextureDependencies(GameObject go)
+        public static IEnumerable<string> GetUrlsOfTextureDependencies(GameObject go)
         {
             var dependencies = new HashSet<string>();
             var texturesWithUrls = MatchTexturesToUrls(GetTexturesFromGameObject(go));
@@ -71,10 +74,8 @@ namespace JanitorsCloset
             return dependencies;
         }
 
-
-
         // (Texture, url in GameDatabase). If the texture wasn't found in GD, url will be empty
-        private static IEnumerable<KeyValuePair<Texture, string>> MatchTexturesToUrls(IEnumerable<Texture> textures)
+        public static IEnumerable<KeyValuePair<Texture, string>> MatchTexturesToUrls(IEnumerable<Texture> textures)
         {
             var matchedTextures = new List<KeyValuePair<Texture, string>>();
 
@@ -95,9 +96,8 @@ namespace JanitorsCloset
             return matchedTextures;
         }
 
-
         // Searches for given texture. Returns true + its url if found in GameDatabase
-        private static bool FindTextureInGameDatabase(Texture texture, out string textureUrl)
+        public static bool FindTextureInGameDatabase(Texture texture, out string textureUrl)
         {
             textureUrl = string.Empty;
 
@@ -111,8 +111,7 @@ namespace JanitorsCloset
             return false;
         }
 
-
-        private static IEnumerable<Texture> GetTexturesFromGameObject(GameObject go)
+        public static IEnumerable<Texture> GetTexturesFromGameObject(GameObject go)
         {
             return go.GetComponentsInChildren<Renderer>(true)
                 .Where(r => r.sharedMaterial != null)
@@ -121,9 +120,8 @@ namespace JanitorsCloset
                 .Distinct();
         }
 
-
         // Material might have several different textures associated with it
-        private static IEnumerable<Texture> GetTexturesFromMaterial(Material mat)
+        public static IEnumerable<Texture> GetTexturesFromMaterial(Material mat)
         {
             var texturePropertyNames = new[] { "_MainTex", "_BumpMap", "_SpecMap", "_Normal" };
             var textures = new List<Texture>();
@@ -143,7 +141,7 @@ namespace JanitorsCloset
 
         // Try to get a texture. The passed in material might not have such a property or it might not be set in
         // which case return false
-        private static bool GetTextureFromMaterial(Material material, string propertyName, out Texture retTexture)
+        public static bool GetTextureFromMaterial(Material material, string propertyName, out Texture retTexture)
         {
             retTexture = null;
 

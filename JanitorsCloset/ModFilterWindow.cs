@@ -800,7 +800,7 @@ namespace JanitorsCloset
         }
 
         bool filtersDefined = false;
-        public void Update()
+        public void FixedUpdate()
         {
             if (filtersDefined)
                 return;
