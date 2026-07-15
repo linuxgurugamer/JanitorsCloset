@@ -37,6 +37,8 @@ namespace JanitorsCloset
 
         public static PermaPruneWindow Instance { get; private set; }
 
+        long RenamedFilesSize = 0;
+
         void Awake()
         {
             Log.Info("PermaPruneWindow Awake()");
@@ -46,7 +48,6 @@ namespace JanitorsCloset
 
         void Start()
         {
-
         }
 
         void OnEnable()
@@ -88,7 +89,6 @@ namespace JanitorsCloset
         MultiOptionDialog dialog;
         void OnGUI()
         {
-
             if (isEnabled())
             {
                 UIScale.BeginGUI();
@@ -120,7 +120,6 @@ namespace JanitorsCloset
                         PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f), dialog, false, HighLogic.UISkin, true);
                         winState = winContent.dialog;
                         break;
-
                     case winContent.undo:
                         dialog = new MultiOptionDialog("janitorsToolbar4",
                                                         "This will permanently rename pruned files to allow them to be loaded", "Unprune (restore)", HighLogic.UISkin, new DialogGUIBase[] {
@@ -172,62 +171,76 @@ namespace JanitorsCloset
                 renamedFilesList.Add(pp);
         }
 
-        
+        HashSet<string> prunedPartsHashSet = new HashSet<string>();
+
+        bool CheckIfModelIsBeingUsed(string modelURL)
+        {
+            if (String.IsNullOrEmpty(modelURL))
+            {
+                return false;
+            }
+            HashSet<string> partsUsingModel = AssetsDatabase.Instance.models.PartsUsingAsset(modelURL);
+            if (partsUsingModel != null && prunedPartsHashSet != null)
+            {
+                partsUsingModel.ExceptWith(prunedPartsHashSet);
+            }
+            if (partsUsingModel.Count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool CheckIfTextureIsBeingUsed(string textureURL)
+        {
+            if (String.IsNullOrEmpty(textureURL))
+            {
+                return false;
+            }
+            HashSet<string> partsUsingTexture = AssetsDatabase.Instance.textures.PartsUsingAsset(textureURL);
+            if (partsUsingTexture != null && prunedPartsHashSet != null)
+            {
+                partsUsingTexture.ExceptWith(prunedPartsHashSet);
+            }
+            if (partsUsingTexture.Count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        bool CheckIfInternalIsBeingUsed(string internalName)
+        {
+            if (String.IsNullOrEmpty(internalName))
+            {
+                return false;
+            }
+            HashSet<string> partsUsingInternal = AssetsDatabase.Instance.internals.PartsUsingAsset(internalName);
+            if (partsUsingInternal != null && prunedPartsHashSet != null)
+            {
+                partsUsingInternal.ExceptWith(prunedPartsHashSet);
+            }
+            if (partsUsingInternal.Count > 0)
+            {
+                return true;
+            }
+            return false;
+        }
+
         public void stopPruner()
         {
             permapruneInProgress = false;
             //StopCoroutine(pruning());
         }
-       
+
         private void startPruner()
         {
             Log.Info("startPruner");
-
             StartCoroutine(pruning());
         }
 
-        /// <summary>
-        /// Get the partURL for the mesh
-        /// </summary>
-        /// <param name="pSearch"></param>
-        /// <returns>string</returns>
-        string GetMeshURL(AvailablePart pSearch)
-        {
-            if (pSearch == null)
-            {
-                Log.Info("GetMeshURL, pSearch is null");
-                return "";
-            }
-            if (pSearch.partConfig == null)
-            {
-                Log.Info("GetMeshURL, pSearch.partConfig is null");
-                return "";
-            }
-            string s = pSearch.partConfig.GetValue("mesh");
-
-            if (s != null && s != "")
-            {
-                string partUrl = pSearch.partUrlConfig.parent.url.Substring(0, pSearch.partUrlConfig.parent.url.LastIndexOf('/'));
-                s = partUrl + "/" + s.Substring(0, s.Length - 3);
-            }
-            return s;
-        }
-        
-        /// <summary>
-        /// Get the partURL for the part
-        /// </summary>
-        /// <param name="part"></param>
-        /// <param name="modelNode"></param>
-        /// <returns>string</returns>
-        string GetModelURL(AvailablePart part, ConfigNode modelNode)
-        { 
-            string model = modelNode.GetValue("model");
-
-            return model;
-        }
-
         private const string PRUNED = ".prune";
-        public  IEnumerator pruning()
+        public IEnumerator pruning()
         {
             permapruneInProgress = true;
 
@@ -236,12 +249,12 @@ namespace JanitorsCloset
             Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
             Log.Info("pruner, sizeof blacklist:" + JanitorsCloset.blackList.Count.ToString());
             ShowRenamed.Instance.Show();
-            
+
             List<string> prunedParts = new List<string>();
+            prunedPartsHashSet.Clear();
             foreach (blackListPart blp in JanitorsCloset.blackList.Values)
             {
-
-                yield return 0;
+                //                yield return 0;
                 Log.Info("permapruneInProgress: " + permapruneInProgress.ToString());
                 if (!permapruneInProgress)
                     break;
@@ -254,9 +267,13 @@ namespace JanitorsCloset
                 if (part == null)
                     continue;
                 prunedParts.Add(blp.modName);
+                prunedPartsHashSet.Add(blp.modName);
+            }
+            foreach (string partName in prunedParts)
+            {
+                AvailablePart part = PartLoader.getPartInfoByName(partName);
 
-                // Rename cfg file
-
+                #region Rename CFG file
                 string s1 = part.configFileFullName.Substring(part.configFileFullName.IndexOf("GameData") + 9);
 
                 RenameFile(s1, part.name);
@@ -271,214 +288,432 @@ namespace JanitorsCloset
                     partPath = partPath.Substring(0, i);
                 }
                 partPath += "/";
+                #endregion Rename CFG File
 
-                // rename resource file
-                // Look for model =
-                //  model has complete path
-                // Look for mesh =
-                //      with mesh, get patch from cfg file path
-
-                Log.Info("searching for model");
+                #region Rename models and textures
                 Log.Info("Part: " + part.name);
-
-                ConfigNode[] nodes = part.partConfig.GetNodes("MODEL");
-                ConfigNode[] nodes2;
-                bool b;
-#if true
-                if (nodes != null)
+                Log.Info("Searching for models and textures");
+                // Find models and dependent textures
+                ConfigNode[] pNodes;
+                pNodes = part.partConfig.GetNodes("MODEL");
+                if (pNodes != null)
                 {
-                    Log.Info("Nodes count: " + nodes.Length.ToString());
-                    foreach (ConfigNode modelNode in nodes)
+                    foreach (ConfigNode modelNode in pNodes)
                     {
-                        
-                        b = false;
                         if (modelNode != null)
                         {
-                            Log.Info("modelNode: " + modelNode.name);
-                            string model = GetModelURL(part, modelNode);
-                            Log.Info("ModelUrl: " + GetModelURL(part, modelNode));
+                            string model = Utilities.GetModelURL(modelNode);
                             if (model != null)
                             {
-                                Log.Info("model: " + model);
-                                // Make sure it isn't being used in another part
-                                b = false;
-                                Log.Info("Part count: " + PartLoader.LoadedPartsList.Count.ToString());
-                                
-                                string s;
-                                foreach (AvailablePart pSearch in PartLoader.LoadedPartsList)
+                                Log.Info("Model: " + model);
+                                if (!CheckIfModelIsBeingUsed(model))
                                 {
-                                    Log.Info("pSearch: " + pSearch.name);
-                                    if (part != pSearch && pSearch.partConfig != null)
+                                    RenameFile(model + ".mu", part.name);
+                                }
+                                var go = GameDatabase.Instance.GetModel(model);
+                                if (go == null)
+                                {
+                                    Log.Error("Could not find game object for model " + model);
+                                }
+                                else
+                                {
+                                    foreach (string texture in FindTexturePathFromModel.GetUrlsOfTextureDependencies(go))
                                     {
-                                        nodes2 = pSearch.partConfig.GetNodes("MODEL");
-                                        if (nodes2 != null)
+                                        if (texture != null)
                                         {
-                                            Log.Info("nodes2");
-                                            foreach (ConfigNode searchNode in nodes2)
+                                            Log.Info("Texture: " + texture);
+                                            if (!CheckIfTextureIsBeingUsed(texture))
                                             {
-                                                if (searchNode != null)
-                                                {
-                                                    Log.Info("searchNode");
-                                                    if (model == GetModelURL(pSearch, searchNode))
-                                                    {
-                                                        b = true;
-                                                        break;
-                                                    }
-                                                }
+                                                RenameFile(texture + ".dds", part.name);
                                             }
                                         }
-                                        
-                                        s = GetMeshURL(pSearch);
-                                        Log.Info("Mesh URL: " + GetMeshURL(pSearch) + "   ModelUrl: " + GetModelURL(part, modelNode));
-                                       
-                                        if (GetMeshURL(pSearch) == model)
-                                        {
-                                            b = true;
-                                            break;
-                                        }
                                     }
-                                    if (b)
-                                        break;
                                 }
-                            }
-
-                            if (!b)
-                            {
-                                Log.Info("MODEL: " + model);
-                                string mURL = FindTexturePathFromModel.getModelURL(model);
-                                Log.Info("MODEL URL: " + mURL);
-                                model = model + ".mu";
-
-                                RenameFile(model, part.name);
                             }
                         }
                     }
                 }
-#endif
-                yield return 0;
-                if (!permapruneInProgress)
-                    break;
-                Log.Info("searching for meshes");
-                string mesh = GetMeshURL(part); 
-                if (mesh != null && mesh != "")
+                #endregion Rename models and textures
+
+                #region Rename mesh and textures
+                // Find mesh and dependent textures
+                Log.Info("Searching for mesh and dependent textures");
+                string mesh = Utilities.GetMeshURL(part);
+                if (mesh != null)
                 {
-                    // Make sure it isn't being used in another part
-                    b = false;
-                    foreach (AvailablePart pSearch in PartLoader.LoadedPartsList)
+                    Log.Info("Mesh: " + mesh);
+                    if (!CheckIfModelIsBeingUsed(mesh))
                     {
-                        if (part != pSearch)
+                        RenameFile(mesh + ".mu", part.name);
+                    }
+                    var go = GameDatabase.Instance.GetModel(mesh);
+                    if (go == null)
+                    {
+                        Log.Error("Could not find game object for model " + mesh);
+                    }
+                    else
+                    {
+                        foreach (string texture in FindTexturePathFromModel.GetUrlsOfTextureDependencies(go))
                         {
-                            string searchMesh = GetMeshURL(pSearch); 
-
-                            if (searchMesh == mesh)
+                            if (texture != null)
                             {
-                                b = true;
-                                break;
-                            }
-
-
-                            if (pSearch.partConfig != null)
-                            {
-                                nodes2 = pSearch.partConfig.GetNodes("MODEL");
-                                if (nodes2 != null)
+                                Log.Info("Texture: " + texture);
+                                if (!CheckIfTextureIsBeingUsed(texture))
                                 {
-                                    foreach (ConfigNode searchNode in nodes2)
-                                    {
-                                        if (searchNode != null)
-                                        {
-                                            string model = GetModelURL(pSearch, searchNode);
-                                            
-                                            if (mesh ==  model)
-                                            {
-                                                b = true;
-                                                break;
-                                            }
-                                            
-                                        }
-                                    }
+                                    RenameFile(texture + ".dds", part.name);
                                 }
                             }
                         }
                     }
-                    if (!b)
-                    {
-                        Log.Info("Renaming mesh: " + mesh + "    partPath: " + partPath);
-
-                        string mURL = FindTexturePathFromModel.getModelURL(mesh);
-                        partPath = partPath.Substring(0, partPath.LastIndexOf("/")) + "/";
-                        if (!(mesh.Contains("/") || mesh.Contains("\\")))
-                            mesh = partPath + mesh;
-
-                        RenameFile(mesh, part.name);
-                    }
                 }
+                #endregion Rename mesh and textures
 
+                #region Rename Internal
                 // this gets the model
-                Log.Info("searching for model (INTERNAL)");
-                nodes = part.partConfig.GetNodes("INTERNAL");
-                if (nodes != null)
-                    foreach (ConfigNode internalNode in nodes)
+                Log.Info("searching for (INTERNAL) node");
+                pNodes = part.partConfig.GetNodes("INTERNAL");
+                if (pNodes != null)
+                {
+                    foreach (ConfigNode internalNode in pNodes)
                     {
                         if (internalNode != null)
                         {
-                            UrlDir.UrlConfig config;
-                            if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out config))
+                            string internalName = internalNode.GetValue("name");
+                            UrlDir.UrlConfig internalConfig;
+                            if (!CheckIfInternalIsBeingUsed(internalName) && GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalName, out internalConfig))
                             {
-                                // Make sure it isn't being used in another part
-                                b = false;
-                                foreach (AvailablePart pSearch in PartLoader.Instance.parts)
+                                if (internalConfig != null)
                                 {
-                                    if (part != pSearch)
+                                    string internalCFGFileName = internalConfig.url.Substring(0, internalConfig.url.LastIndexOf("/")) + ".cfg";
+                                    RenameFile(internalCFGFileName, part.name);
+                                    ConfigNode internalCFGNode;
+                                    GetInternalSpaceConfigUrl.FindInternalSpaceConfigNode(internalName, out internalCFGNode);
+                                    if (internalCFGNode != null)
                                     {
-                                        nodes2 = part.partConfig.GetNodes("INTERNAL");
-                                        if (nodes2 != null)
-                                            foreach (ConfigNode internalNodeSearch in nodes2)
+                                        ConfigNode[] modelNodes;
+                                        modelNodes = internalNode.GetNodes("MODEL");
+                                        if (modelNodes != null)
+                                        {
+                                            foreach (ConfigNode modelNode in modelNodes)
                                             {
-                                                UrlDir.UrlConfig configSearch;
-                                                if (GetInternalSpaceConfigUrl.FindInternalSpaceConfigByName(internalNode.GetValue("name"), out configSearch))
+                                                if (modelNode != null)
                                                 {
-                                                    if (configSearch.url == config.url)
+                                                    string model = Utilities.GetModelURL(modelNode);
+                                                    if (model != null)
                                                     {
-                                                        b = true;
-                                                        break;
+                                                        Log.Info("Model (Internal): " + model);
+                                                        if (!CheckIfModelIsBeingUsed(model))
+                                                        {
+                                                            RenameFile(model + ".mu", part.name);
+                                                        }
+                                                        var go = GameDatabase.Instance.GetModel(model);
+                                                        if (go == null)
+                                                        {
+                                                            Log.Error("Could not find game object for model " + model);
+                                                        }
+                                                        else
+                                                        {
+                                                            foreach (string texture in FindTexturePathFromModel.GetUrlsOfTextureDependencies(go))
+                                                            {
+                                                                if (texture != null)
+                                                                {
+                                                                    Log.Info("Texture (Internal): " + texture);
+                                                                    if (!CheckIfTextureIsBeingUsed(texture))
+                                                                    {
+                                                                        RenameFile(texture + ".dds", part.name);
+                                                                    }
+                                                                }
+                                                            }
+                                                        }
                                                     }
                                                 }
-                                                if (b) break;
                                             }
+                                        }
                                     }
-                                    if (b) break;
                                 }
-                                if (!b)
-                                {
-                                    string s = config.url.Substring(0, config.url.LastIndexOf("/")) + ".cfg";
-                                    RenameFile(s, part.name);
-                                }
-                            }
-
-                            //
-                            // We aren't going to check to see if the different models inside the space are
-                            // used elsewhere.  An assumption that the same model won't be used by multiple spaces
-                            //
-                            Log.Info("searching for internal space nodes");
-                            ConfigNode cfgNode;
-                            bool b1 = GetInternalSpaceConfigUrl.FindInternalSpaceConfigNode(config.name, out cfgNode);
-                            if (b1)
-                            {
-                                nodes = cfgNode.GetNodes("MODEL");
-                                if (nodes != null)
-                                    foreach (ConfigNode modelNode in nodes)
-                                    {
-                                        string model = modelNode.GetValue("model");
-                                        //Log.Info("MODEL: " + model);
-                                        string mURL = FindTexturePathFromModel.getModelURL(model);
-                                        // Log.Info("MODEL URL: " + mURL);
-                                        model = model + ".mu";
-                                        RenameFile(model, part.name);
-                                    }
-
                             }
                         }
                     }
+                }
+                #endregion Rename Internal
+
+                #region Rename textures from modules with texture variants
+                List<ConfigNode> mNodes;
+
+                #region Rename textures from ModulePartVariants
+                mNodes = Utilities.GetModuleConfigNodes(part.partConfig, "ModulePartVariants");
+                if (mNodes != null && mNodes.Count > 0)
+                {
+                    foreach (ConfigNode moduleNode in mNodes)
+                    {
+                        if (moduleNode != null)
+                        {
+                            // Nodes/values of interest:
+                            // VARIANT / TEXTURE / mainTextureURL
+                            // VARIANT / TEXTURE / backTextureURL
+                            // VARIANT / TEXTURE / _MainTex
+                            // VARIANT / TEXTURE / _BumpMap
+                            // VARIANT / TEXTURE / _SpecMap
+                            // VARIANT / TEXTURE / _Emissive 
+                            // VARIANT / EXTRA_INFO / FairingsTextureURL
+                            // VARIANT / EXTRA_INFO / FairingsNormalURL
+                            // VARIANT / EXTRA_INFO / BaseTextureName
+                            // VARIANT / EXTRA_INFO / BaseNormalsName
+                            // VARIANT / EXTRA_INFO / CapTextureURL
+                            ConfigNode[] variantNodes = moduleNode.GetNodes("VARIANT");
+                            if (variantNodes != null)
+                            {
+                                foreach (ConfigNode variantNode in variantNodes)
+                                {
+                                    if (variantNode != null)
+                                    {
+                                        ConfigNode[] pTNodes;
+                                        pTNodes = variantNode.GetNodes("TEXTURE");
+                                        if (pTNodes != null)
+                                        {
+                                            foreach (ConfigNode tNode in pTNodes)
+                                            {
+                                                string texture = null;
+                                                if (tNode.TryGetValue("mainTextureURL", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("backTextureURL", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("_MainTex", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("_BumpMap", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("_SpecMap", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("_Emissive", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        ConfigNode[] pEINodes;
+                                        pEINodes = variantNode.GetNodes("EXTRA_INFO");
+                                        if (pEINodes != null)
+                                        {
+                                            foreach (ConfigNode tNode in pEINodes)
+                                            {
+                                                string texture = null;
+                                                if (tNode.TryGetValue("FairingsTextureURL", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("FairingsNormalURL", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("BaseTextureName", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("BaseNormalsName", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                                if (tNode.TryGetValue("CapTextureURL", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (PartVariant): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #endregion Rename textures from modules with texture variants
+
+                #region Rename textures from B9PartSwitch variants
+                mNodes = Utilities.GetModuleConfigNodes(part.partConfig, "ModuleB9PartSwitch");
+                if (mNodes != null && mNodes.Count > 0)
+                {
+                    foreach (ConfigNode moduleNode in mNodes)
+                    {
+                        if (moduleNode != null)
+                        {
+                            // Nodes/values of interest:
+                            // SUBTYPE / TEXTURE / texture
+                            ConfigNode[] subtypeNodes = moduleNode.GetNodes("SUBTYPE");
+                            if (subtypeNodes != null)
+                            {
+                                foreach (ConfigNode subtypeNode in subtypeNodes)
+                                {
+                                    if (subtypeNode != null)
+                                    {
+                                        ConfigNode[] pTNodes;
+                                        pTNodes = subtypeNode.GetNodes("TEXTURE");
+                                        if (pTNodes != null)
+                                        {
+                                            foreach (ConfigNode tNode in pTNodes)
+                                            {
+                                                string texture = null;
+                                                if (tNode.TryGetValue("texture", ref texture))
+                                                {
+                                                    if (texture != null)
+                                                    {
+                                                        Log.Info("Texture (B9PartSwitch subtype): " + texture);
+                                                        if (!CheckIfTextureIsBeingUsed(texture))
+                                                        {
+                                                            RenameFile(texture + ".dds", part.name);
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #endregion Rename textures from B9PartSwitch variants
+
+                #region Rename textures from FStextureSwitch2
+                mNodes = Utilities.GetModuleConfigNodes(part.partConfig, "FStextureSwitch2");
+                if (mNodes != null && mNodes.Count > 0)
+                {
+                    foreach (ConfigNode moduleNode in mNodes)
+                    {
+                        if (moduleNode != null)
+                        {
+                            // Values of interest:
+                            // textureNames
+                            // mapNames
+                            string tValue = null;
+                            if (moduleNode.TryGetValue("textureNames", ref tValue))
+                            {
+                                if (tValue != null)
+                                {
+                                    string[] pTextures = tValue.Split(';');
+                                    foreach (string texture in pTextures)
+                                    {
+                                        string tex = texture.Trim();
+                                        Log.Info("Texture (FireSpitter Switch): " + tex);
+                                        if (!CheckIfTextureIsBeingUsed(tex))
+                                        {
+                                            RenameFile(tex + ".dds", part.name);
+                                        }
+                                    }
+                                }
+                            }
+                            if (moduleNode.TryGetValue("mapNames", ref tValue))
+                            {
+                                if (tValue != null)
+                                {
+                                    string[] pTextures = tValue.Split(';');
+                                    foreach (string texture in pTextures)
+                                    {
+                                        string tex = texture.Trim();
+                                        Log.Info("Texture (FireSpitter Switch): " + tex);
+                                        if (!CheckIfTextureIsBeingUsed(tex))
+                                        {
+                                            RenameFile(tex + ".dds", part.name);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                #endregion Rename textures from FStextureSwitch2
+
+                #endregion Rename textures from modules with texture variants
+
+                yield return 0;
+                if (!permapruneInProgress)
+                    break;
+
             }
             foreach (var s in prunedParts)
             {
@@ -489,6 +724,7 @@ namespace JanitorsCloset
 
             Log.Info("before saveRenamedFiles");
             FileOperations.Instance.saveRenamedFiles(renamedFilesList);
+            UpdateRenamedFilesSize();
             permapruneInProgress = false;
 
             UpdateCKANFilters(Path.Combine(KSPUtil.ApplicationRootPath,
@@ -500,7 +736,7 @@ namespace JanitorsCloset
             //JanitorsCloset.Instance.clearBlackList();
         }
 
-        private void UpdateCKANFilters(string                  filterPath,
+        private void UpdateCKANFilters(string filterPath,
                                        IEnumerable<prunedPart> pruned)
         {
             try
@@ -554,16 +790,48 @@ namespace JanitorsCloset
                     blackListPart blp;
                     JanitorsCloset.blackList.TryGetValue(l.partName, out blp);
                     blp.permapruned = false;
-                    
+
                 }
             }
             FileOperations.Instance.delRenamedFilesList();
+            renamedFilesList.Clear();
+            UpdateRenamedFilesSize();
         }
 
+        void UpdateRenamedFilesSize()
+        {
+            RenamedFilesSize = 0;
+            foreach (prunedPart pp in renamedFilesList)
+            {
+                try
+                {
+                    FileInfo fi = new FileInfo(FileOperations.CONFIG_BASE_FOLDER + pp.path);
+                    if (fi.Exists)
+                    {
+                        RenamedFilesSize += fi.Length;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error("Failed to determine file size " + FileOperations.CONFIG_BASE_FOLDER + pp.path + " Error: " + ex.Message);
+                }
+            }
+        }
 
         void WindowContent(int windowID)
         {
             GUILayout.BeginVertical();
+            GUILayout.BeginHorizontal();
+            if (renamedFilesList == null)
+            {
+                renamedFilesList = FileOperations.Instance.loadRenamedFiles();
+            }
+            if (RenamedFilesSize <= 0)
+            {
+                UpdateRenamedFilesSize();
+            }
+            GUILayout.Label("Renamed files: " + renamedFilesList.Count.ToString() + " (" + Utilities.FormatFileSize(RenamedFilesSize) + ")");
+            GUILayout.EndHorizontal();
             GUILayout.BeginHorizontal();
             if (GUILayout.Button("Permanent Prune"))
             {

@@ -32,11 +32,12 @@ namespace JanitorsCloset
 #endif
 
             FileOperations f = new FileOperations();
+            AssetsDatabase ad = new AssetsDatabase();
             // Allow loading the background in the loading screen
             //Application.runInBackground = true;
-           // Log.Info("JanitorsClosetLoader.Awake");
+            // Log.Info("JanitorsClosetLoader.Awake");
             List<prunedPart> renamedFilesList = FileOperations.Instance.loadRenamedFiles();
-           // Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
+            // Log.Info("sizeof renamedFilesList: " + renamedFilesList.Count.ToString());
             foreach (prunedPart pp in renamedFilesList)
             {
                 if (pp != null)
