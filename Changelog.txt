@@ -340,3 +340,6 @@ ChangeLog
 		Displays the number of parts in the game's database, as well as the number and total size of their models and textures;
 		Displays the number and total size of renamed files.
 
+0.4.1
+	Thanks to github user @KerbalOne for this:
+		The icons for the Application toolbar buttons can now scale with GameSettings.UI_Scale
