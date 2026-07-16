@@ -343,3 +343,6 @@ ChangeLog
 0.4.1
 	Thanks to github user @KerbalOne for this:
 		The icons for the Application toolbar buttons can now scale with GameSettings.UI_Scale
+
+0.4.1.1
+	Added support for Kerbal Changelog

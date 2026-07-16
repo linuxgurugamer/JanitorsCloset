@@ -1,13 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30907.101
+# Visual Studio Version 17
+VisualStudioVersion = 17.14.37301.10 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "JanitorsCloset", "JanitorsCloset\JanitorsCloset.csproj", "{E46D419E-3857-4A29-B319-6C14E5093E04}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7F692D76-80B4-4B37-BBEF-26A00C5B9BE6}"
 	ProjectSection(SolutionItems) = preProject
 		buildRelease.bat = buildRelease.bat
+		Changelog.cfg = Changelog.cfg
 		Changelog.txt = Changelog.txt
 		deploy.bat = deploy.bat
 		JanitorsCloset.version = JanitorsCloset.version
