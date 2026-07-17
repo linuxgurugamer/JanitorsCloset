@@ -655,7 +655,7 @@ namespace JanitorsCloset
             Vector3 screenPos = camera.WorldToScreenPoint(activeButton.transform.position);
             Log.Info("target location is " + screenPos.x.ToString() + ", " + screenPos.y.ToString());
 
-            screenPos.y = Screen.height - screenPos.y;
+            Vector2 guiPos = UIScale.ScreenToGuiPosition(new Vector2(screenPos.x, screenPos.y));
             float iconSizeScaled = iconSize * GameSettings.UI_SCALE;
 
             showToolbar = ShowMenuState.starting;
@@ -671,10 +671,10 @@ namespace JanitorsCloset
                 // Assume vertical menu, therefor this needs to be horizontal
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x - btnCnt * iconSizeScaled,
-                    xMax = screenPos.x + 5, // - offset,
-                    yMin = screenPos.y + 2,
-                    yMax = screenPos.y + iconSizeScaled
+                    xMin = guiPos.x - btnCnt * (iconSizeScaled),
+                    xMax = guiPos.x + 5, // - offset,
+                    yMin = guiPos.y + 2,
+                    yMax = guiPos.y + iconSizeScaled
                 };
             }
             else
@@ -682,10 +682,10 @@ namespace JanitorsCloset
                 // Assume horizontal menu, therefor this needs to be vertical
                 toolbarRect = new Rect()
                 {
-                    xMin = screenPos.x + 2,
-                    xMax = screenPos.x + iconSizeScaled,
-                    yMin = screenPos.y - btnCnt * iconSizeScaled,
-                    yMax = screenPos.y + 5
+                    xMin = guiPos.x + 2,
+                    xMax = guiPos.x + iconSizeScaled,
+                    yMin = guiPos.y - btnCnt * iconSizeScaled,
+                    yMax = guiPos.y + 5
                 };
             }
 
