@@ -25,7 +25,7 @@ namespace JanitorsCloset
 
 
         [GameParameters.CustomParameterUI("Toolbar Enabled",
-            toolTip = "Enables/hides button in scenes other than the editor)")]
+            toolTip = "Enables/hides button in scenes other than the editor (requires restart)")]
         public bool toolbarEnabled = true;
 
         [GameParameters.CustomParameterUI("Toolbar editor only",

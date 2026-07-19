@@ -349,3 +349,6 @@ ChangeLog
 
 0.4.1.2
 	Fixed bug with folders not showing contents introduced by previous patch
+
+0.4.1.3
+	Fixed issue with recent optiminzation patch where the right-click menu wasn't working on all buttons if no buttons have been hidden

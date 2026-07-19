@@ -33,8 +33,8 @@ namespace JanitorsCloset
 
             private void Start()
             {
-                if (!ShouldRunToolbarEvents())
-                    return;
+                //if (!ShouldRunToolbarEvents())
+                //    return;
 
                 DontDestroyOnLoad(this);
 
@@ -66,14 +66,14 @@ namespace JanitorsCloset
 
                 var settings = HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>();
                 if (settings.toolbarEditorOnly && HighLogic.LoadedScene != GameScenes.EDITOR)
+                {
                     return false;
-
+                }
                 return true;
             }
 
             private void RegisterSceneChanges(bool enable)
             {
-                Log.Info("RegisterSceneChanges: " + enable.ToString());
                 if (enable)
                 {
                     GameEvents.onGameSceneLoadRequested.Add(this.CallbackGameSceneLoadRequested);
@@ -98,7 +98,6 @@ namespace JanitorsCloset
 
             private void CallbackGameSceneLoadRequested(GameScenes scene)
             {
-                Log.Info("CallbackGameSceneLoadRequested");
                 if (JanitorsCloset.Instance == null)
                 {
                     Log.Error("JanitorsCloset.Instance is null");
@@ -118,7 +117,6 @@ namespace JanitorsCloset
                     {
                         if (b.Value.origButton != null)
                         {
-                            Log.Info("origbutton: " + b.Value.origButton.enabled.ToString());
                             b.Value.active = false;
                         }
                     }
@@ -127,13 +125,11 @@ namespace JanitorsCloset
 
             private void CallbackOnGameStatePostLoad(ConfigNode n)
             {
-                Log.Info("CallbackOnGameStatePostLoad");
                 OnToolbarEnvironmentChanged();
             }
 
             private void CallbackLevelWasLoaded(Scene scene, LoadSceneMode mode)
             {
-                Log.Info("CallbackLevelWasLoaded");
                 OnToolbarEnvironmentChanged();
             }
 
@@ -201,6 +197,10 @@ namespace JanitorsCloset
 
             static bool HasToolbarCustomizationData()
             {
+                // needs to always return true, to be able to install handlers for current buttons so that the
+                // right-click will work on then
+                return true;
+#if false
                 if (JanitorsCloset.loadedCfgs != null && JanitorsCloset.loadedCfgs.Count > 0)
                     return true;
                 if (JanitorsCloset.loadedHiddenCfgs != null && JanitorsCloset.loadedHiddenCfgs.Count > 0)
@@ -225,7 +225,7 @@ namespace JanitorsCloset
                             return true;
                     }
                 }
-
+#endif
                 return false;
             }
 
@@ -326,7 +326,6 @@ namespace JanitorsCloset
             {
                 if (buttons == null)
                 {
-                    Log.Info("appListMod == null");
                     return;
                 }
 
@@ -334,30 +333,25 @@ namespace JanitorsCloset
                 {
                     if (a1 == null)
                     {
-                        Log.Info("a1 == null");
                         continue;
                     }
                     if (a1.gameObject == null)
                     {
-                        Log.Info("gameObject == null");
                         continue;
                     }
 
                     if (a1.gameObject.GetComponent<ReplacementToolbarClickHandler>() == null)
                     {
-                        Log.Info("button missing ReplacementToolbarClickHandler");
                         return;
                     }
 
                     if (!JanitorsCloset.buttonDictionary.ContainsKey(a1))
                     {
-                        Log.Info("Not in buttonDictionary");
                         string hash = JanitorsCloset.Instance.buttonId(a1);
                         ButtonDictionaryItem bdi = new ButtonDictionaryItem();
                         bdi.buttonHash = hash;
 
                         bool doThisOne = true;
-                        Log.Info("Checking buttonBarList");
                         foreach (var z in JanitorsCloset.buttonBarList)
                         {
                             if (z.ContainsKey(hash))
@@ -418,7 +412,6 @@ namespace JanitorsCloset
 
             void InstallMissingHandlers()
             {
-                Log.Info("InstallToolIconEvents.InstallMissingHandlers, scene: " + HighLogic.LoadedScene.ToString());
 
                 if (appListMod == null || appListModHidden == null)
                     return;
@@ -470,9 +463,6 @@ namespace JanitorsCloset
                 // This is needed in case the same button is hidden on multiple screens, otherwise we
                 // get an exception error
                 List<ButtonSceneBlock> buttonsToModify = new List<ButtonSceneBlock>();
-
-                Log.Info("CheckToolbarbuttons, LoadedScene: " + HighLogic.LoadedScene.ToString());
-                Log.Info("buttons in scene: " + JanitorsCloset.buttonBarList[(int)HighLogic.LoadedScene].Count.ToString());
 
                 ButtonSceneBlock s;
                 string sceneStr = HighLogic.LoadedScene.ToString();
@@ -548,6 +538,7 @@ namespace JanitorsCloset
                             }
                             else
                             {
+#if DEBUG
                                 Log.Info("Button not found to remove from toolbar, hash: " + buttonId);
                                 foreach (var v in bbl.Value.buttonBlockList)
                                 {
@@ -557,6 +548,7 @@ namespace JanitorsCloset
                                 {
                                     Log.Info("primaryButtonBlockList hash: " + v.Value.buttonHash);
                                 }
+#endif
                             }
                         }
                     }
@@ -598,6 +590,7 @@ namespace JanitorsCloset
                         }
                         if (matchCount == 0)
                         {
+#if DEBUG
                             Log.Info("Hidden Button not found to remove from toolbar, hash: " + bbl.Key);
                             foreach (var v in JanitorsCloset.hiddenButtonBlockList[i])
                                 Log.Info("hiddenButtonBlockList hash: " + v.Value.buttonHash);
@@ -606,6 +599,7 @@ namespace JanitorsCloset
                                 Log.Info("primaryButtonBlockList hash: " + v.Value.buttonHash);
                             foreach (var v in appListMod)
                                 Log.Info("appListMod hash: " + JanitorsCloset.Instance.buttonId(v));
+#endif
                         }
                     }
                 }
@@ -644,7 +638,6 @@ namespace JanitorsCloset
 
             void onRightClick()
             {
-                Log.Info("ToolbarIconEvents.OnRightClick");
                 if (!ExtendedInput.GetKey(GameSettings.MODIFIER_KEY.primary))
                 {
                     Log.Info("Calling savedHandler");
