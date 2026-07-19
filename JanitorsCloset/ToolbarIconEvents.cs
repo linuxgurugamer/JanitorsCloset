@@ -148,19 +148,15 @@ namespace JanitorsCloset
                     return;
 
                 RefreshAppLists();
-
-                if (HasToolbarCustomizationData())
-                    InstallMissingHandlers();
-
+                // Always install click handlers so Alt+RightClick hide menu works
+                // even when no buttons have been hidden/folded yet.
+                InstallMissingHandlers();
                 RequestToolbarSync();
             }
 
             private void RequestToolbarSync()
             {
                 if (!ShouldRunToolbarSyncInCurrentScene())
-                    return;
-
-                if (!HasToolbarCustomizationData())
                     return;
 
                 if (syncCoroutine != null)
@@ -179,18 +175,15 @@ namespace JanitorsCloset
                         yield break;
 
                     RefreshAppLists();
+                    // Keep installing handlers for late-appearing toolbar buttons.
+                    InstallMissingHandlers();
 
-                    if (HasToolbarCustomizationData())
-                        InstallMissingHandlers();
-
-                    if (!HasPendingToolbarWork())
-                        yield break;
-
-                    UpdateButtonDictionary();
-                    CheckToolbarButtons();
-
-                    if (!HasPendingToolbarWork())
-                        yield break;
+                    // Heavy hide/folder sync only when there is saved customization work.
+                    if (HasToolbarCustomizationData() && HasPendingToolbarWork())
+                    {
+                        UpdateButtonDictionary();
+                        CheckToolbarButtons();
+                    }
 
                     yield return new WaitForSeconds(SyncIntervalSeconds);
                     elapsed += SyncIntervalSeconds;
