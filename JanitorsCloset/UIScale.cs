@@ -4,7 +4,7 @@ namespace JanitorsCloset
 {
     /// <summary>
     /// UI scaling for IMGUI mod windows.
-    /// Uses KSP's UI scale settings; when those are at default, compensates for resolutions above 1080p.
+    /// Final scale = KSP UI Scale × mod percent (50%–150%), matching OrbitalPayloadCalculator.
     /// </summary>
     public static class UIScale
     {
@@ -12,16 +12,45 @@ namespace JanitorsCloset
 
         public static bool IsActive { get; private set; }
 
+        public static float DefaultUiScalePercent
+        {
+            get
+            {
+                if (Screen.height >= 2160)
+                    return 75f;
+                if (Screen.height >= 1440)
+                    return 85f;
+                return 100f;
+            }
+        }
+
+        public static float ModUiScalePercent
+        {
+            get
+            {
+                if (HighLogic.CurrentGame == null)
+                    return DefaultUiScalePercent;
+                var settings = HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>();
+                if (settings == null)
+                    return DefaultUiScalePercent;
+                if (settings.uiScaleAuto)
+                    return DefaultUiScalePercent;
+                return settings.uiScalePercent;
+            }
+        }
+
         public static float Factor
         {
             get
             {
-                var ksp = GameSettings.UI_SCALE * GameSettings.UI_SCALE_APPS;
-                if (ksp > 1.01f)
-                    return ksp;
-                if (Screen.height <= 1080)
-                    return ksp;
-                return Mathf.Max(ksp, (float)Screen.height / 1080f);
+                float ksp = GameSettings.UI_SCALE;
+                if (GameSettings.UI_SCALE_APPS > 1f)
+                    ksp *= GameSettings.UI_SCALE_APPS;
+                if (ksp <= 1.01f && Screen.height > 1080)
+                    ksp = Mathf.Max(ksp, Mathf.Min(1.5f, Mathf.Sqrt((float)Screen.height / 1080f)));
+
+                float mod = Mathf.Clamp(ModUiScalePercent / 100f, 0.5f, 1.5f);
+                return ksp * mod;
             }
         }
 
