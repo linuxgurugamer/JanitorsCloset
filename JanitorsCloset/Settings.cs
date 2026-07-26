@@ -42,6 +42,14 @@ namespace JanitorsCloset
                    toolTip = "Time popup menu/toolbar stays around after mouse is moved away")]
         public float hoverTimeout = 0.5f;
 
+        [GameParameters.CustomParameterUI("Auto UI scale by resolution",
+            toolTip = "When enabled, UI scale follows screen height: 75% at 4K, 85% at 1440p, 100% at 1080p. Disable to use the slider below manually.")]
+        public bool uiScaleAuto = true;
+
+        [GameParameters.CustomFloatParameterUI("UI scale (%)", minValue = 50f, maxValue = 150f, stepCount = 100, displayFormat = "N0",
+                   toolTip = "Extra multiplier for JC windows on top of KSP UI scale. 100 matches KSP; 50 is half size; 150 is 1.5x. Read-only while auto mode is enabled.")]
+        public float uiScalePercent = 100f;
+
         [GameParameters.CustomParameterUI("Enable hover on icons in the JC toolbar")]
         public bool enabeHoverOnToolbarIcons = true;
 
@@ -62,19 +70,29 @@ namespace JanitorsCloset
         [GameParameters.CustomParameterUI("Debug mode (spams the log file")]
         public bool debug = false;
 
+        public void ApplyAutoUiScale()
+        {
+            if (!uiScaleAuto)
+                return;
+            uiScalePercent = UIScale.DefaultUiScalePercent;
+        }
+
         public override bool Enabled(MemberInfo member, GameParameters parameters)
         {
+            if (uiScaleAuto)
+                ApplyAutoUiScale();
+
             if (member.Name == "toolbarPopupsEnabled" || member.Name == "toolbarEditorOnly")
                 return toolbarEnabled;
 
-            return true; //otherwise return true
+            return true;
         }
 
         public override bool Interactible(MemberInfo member, GameParameters parameters)
         {
-
+            if (member.Name == "uiScalePercent" && uiScaleAuto)
+                return false;
             return true;
-            //            return true; //otherwise return true
         }
 
         public override IList ValidValues(MemberInfo member)
