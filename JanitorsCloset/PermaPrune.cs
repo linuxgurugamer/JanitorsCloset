@@ -722,7 +722,6 @@ namespace JanitorsCloset
                 JanitorsCloset.blackList[s] = blp;
             }
 
-            Log.Info("before saveRenamedFiles");
             FileOperations.Instance.saveRenamedFiles(renamedFilesList);
             UpdateRenamedFilesSize();
             permapruneInProgress = false;
@@ -744,10 +743,17 @@ namespace JanitorsCloset
                 // Create or overwrite if parent directory exists
                 if (Directory.Exists(Path.GetDirectoryName(filterPath)))
                 {
+                    // Filter out all pruned stock files, since CKAN doesn't deal with that
+                    List<prunedPart> filteredPruned = new List<prunedPart>();
+                    foreach (prunedPart p in pruned)
+                    {
+                        if (!p.path.StartsWith("Squad"))
+                            filteredPruned.Add(p);
+                    }
                     File.WriteAllText(filterPath,
                                       MiniJSON.jsonEncode(
                                           GetCKANFilters(filterPath)
-                                              .Concat(pruned.Select(OriginalGameDataRelativePath))
+                                              .Concat(filteredPruned.Select(OriginalGameDataRelativePath))
                                               .Distinct()
                                               .ToArray()));
                 }
@@ -795,7 +801,12 @@ namespace JanitorsCloset
             }
             FileOperations.Instance.delRenamedFilesList();
             renamedFilesList.Clear();
+
             UpdateRenamedFilesSize();
+            string ckanFilterfile = Path.Combine(KSPUtil.ApplicationRootPath,
+                                                   "CKAN",
+                                                   "install_filters.json");
+            File.Delete(ckanFilterfile);
         }
 
         void UpdateRenamedFilesSize()

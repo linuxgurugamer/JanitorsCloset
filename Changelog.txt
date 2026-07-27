@@ -356,3 +356,7 @@ ChangeLog
 0.4.1.4
 	Thanks to github user @Aebestach for this:
 		Make the UI automatically adjust to KSP's UI Scale, controllable bo settings page
+
+0.4.1.5
+	Added code to clean out the CKAN installation filters when undoing a PermaPrune
+	Added code to NOT add Permapruned stock files to the CKAN filters 
