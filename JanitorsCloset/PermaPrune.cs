@@ -1,16 +1,11 @@
-using System;
-using System.IO;
-using System.Collections.Generic;
-using System.Collections;
-using System.Linq;
-using System.Text;
-
-using UnityEngine;
-using EdyCommonTools;
-using KSP.UI;
-using KSP.UI.Screens;
 using ClickThroughFix;
-
+using EdyCommonTools;
+using System;
+using System.Collections;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEngine;
 using static JanitorsCloset.JanitorsClosetLoader;
 
 
@@ -726,7 +721,7 @@ namespace JanitorsCloset
             UpdateRenamedFilesSize();
             permapruneInProgress = false;
 
-            UpdateCKANFilters(Path.Combine(KSPUtil.ApplicationRootPath,
+            UpdateAddCKANFilters(Path.Combine(KSPUtil.ApplicationRootPath,
                                            "CKAN",
                                            "install_filters.json"),
                               renamedFilesList);
@@ -735,7 +730,7 @@ namespace JanitorsCloset
             //JanitorsCloset.Instance.clearBlackList();
         }
 
-        private void UpdateCKANFilters(string filterPath,
+        private void UpdateAddCKANFilters(string filterPath,
                                        IEnumerable<prunedPart> pruned)
         {
             try
@@ -763,6 +758,67 @@ namespace JanitorsCloset
                 // Never disrupt the outer program with exceptions
             }
         }
+
+        private void UpdateRemoveCKANFilters(string filterPath,
+                                          IEnumerable<prunedPart> pruned)
+        {
+            try
+            {
+                // Create or overwrite if parent directory exists
+                if (Directory.Exists(Path.GetDirectoryName(filterPath)))
+                {
+                    var ckanFilters = GetCKANFilters(filterPath);
+
+                    var prunedPaths = new HashSet<string>(
+                        pruned
+                            .Where(p => !string.IsNullOrEmpty(p.path))
+                            .Select(p =>
+                            {
+                                string normalizedPath = p.path.Replace('\\', '/');
+
+                                int index = normalizedPath.IndexOf(
+                                    "GameData",
+                                    StringComparison.OrdinalIgnoreCase);
+
+                                if (index < 0)
+                                    return null;
+
+                                string path = normalizedPath.Substring(index);
+
+                                if (path.EndsWith(".prune", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    path = path.Substring(0, path.Length - ".prune".Length);
+                                }
+
+                                return path;
+                            })
+                            .Where(path => path != null),
+                        StringComparer.OrdinalIgnoreCase);
+
+                    var ckanFilters2 = ckanFilters
+                        .Where(filter =>
+                        {
+                            if (string.IsNullOrEmpty(filter))
+                                return true;
+
+                            string normalizedFilter = filter.Replace('\\', '/');
+
+                            return !prunedPaths.Contains(normalizedFilter);
+                        })
+                        .ToList();
+
+
+                    File.WriteAllText(filterPath,
+                                      MiniJSON.jsonEncode(ckanFilters2.ToArray()));
+                }
+            }
+            catch
+            {
+                // Never disrupt the outer program with exceptions
+            }
+        }
+
+
 
         private IEnumerable<string> GetCKANFilters(string path)
             => File.Exists(path)
@@ -799,14 +855,25 @@ namespace JanitorsCloset
 
                 }
             }
+
+            UpdateRemoveCKANFilters(Path.Combine(KSPUtil.ApplicationRootPath,
+                               "CKAN",
+                               "install_filters.json"),
+                  renamedFilesList);
+
+
             FileOperations.Instance.delRenamedFilesList();
             renamedFilesList.Clear();
 
             UpdateRenamedFilesSize();
+
+
+#if false
             string ckanFilterfile = Path.Combine(KSPUtil.ApplicationRootPath,
                                                    "CKAN",
                                                    "install_filters.json");
             File.Delete(ckanFilterfile);
+#endif
         }
 
         void UpdateRenamedFilesSize()

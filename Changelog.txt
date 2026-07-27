@@ -360,3 +360,6 @@ ChangeLog
 0.4.1.5
 	Added code to clean out the CKAN installation filters when undoing a PermaPrune
 	Added code to NOT add Permapruned stock files to the CKAN filters 
+
+0.4.1.6
+	Replaced deleting the CKAN installation filter file with just removing entries added by JC
