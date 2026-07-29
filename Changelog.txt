@@ -363,3 +363,6 @@ ChangeLog
 
 0.4.1.6
 	Replaced deleting the CKAN installation filter file with just removing entries added by JC
+
+0.4.1.7
+	Fixed button in folder showing up again on toolbar after scene change

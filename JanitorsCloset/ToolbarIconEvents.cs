@@ -179,9 +179,6 @@ namespace JanitorsCloset
                     if (HasToolbarCustomizationData())
                         InstallMissingHandlers();
 
-                    if (!HasPendingToolbarWork())
-                        yield break;
-
                     UpdateButtonDictionary();
                     CheckToolbarButtons();
 
@@ -231,6 +228,7 @@ namespace JanitorsCloset
 
             static bool HasPendingToolbarWork()
             {
+
                 if (!HasToolbarCustomizationData())
                     return false;
 
