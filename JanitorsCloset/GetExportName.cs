@@ -38,6 +38,8 @@ namespace JanitorsCloset
         void Start()
         {
             Instance = this;
+
+            // may not be the best place, but the filters need to be defined when entering the editor
             if (ModFilterWindow.instance != null)
                 ModFilterWindow.instance.DefineFilters();
 
