@@ -759,10 +759,9 @@ namespace JanitorsCloset
         static GUIStyle styleButtonLeftAligned;
 
         static bool initted = false;
-        void InitData()
+
+        static internal void InitStatics()
         {
-            if (!initted)
-            {
                 CONFIG_BASE_FOLDER = KSPUtil.ApplicationRootPath + "GameData/";
                 JC_BASE_FOLDER = CONFIG_BASE_FOLDER + "JanitorsCloset/";
                 JC_NODE = "JANITORSCLOSET";
@@ -775,6 +774,14 @@ namespace JanitorsCloset
 #if false
             JC_MERGELIST_NODE = "MERGELIST";
 #endif
+
+        }
+        internal void InitData()
+        {
+            if (!initted)
+            {
+                InitStatics();
+
 
                 initted = true;
                 if (configs == null)
@@ -1258,6 +1265,20 @@ namespace JanitorsCloset
             configFile.SetNode(JC_NODE, configFileNode, true);
             //configFile.AddNode (KRASH_CUSTOM_NODE, configFileNode);
             configFile.Save(JC_CFG_FILE + selectedCfg.ToString() + ".cfg");
+        }
+
+        internal static void DeleteConfigs()
+        {
+            InitStatics();
+            if (!HighLogic.CurrentGame.Parameters.CustomParams<JanitorsClosetSettings>().deleteJCModfilterFiles)
+                return;
+            for (int cnt = 1; cnt <= 10; cnt++)
+            {
+                if (System.IO.File.Exists(JC_CFG_FILE + cnt.ToString() + ".cfg"))
+                {
+                    System.IO.File.Delete(JC_CFG_FILE + cnt.ToString() + ".cfg");
+                }
+            }
         }
         //-------------------------------------------------------------------------------------------------------------------------------------------
 

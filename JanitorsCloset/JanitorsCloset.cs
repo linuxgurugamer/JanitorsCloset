@@ -31,6 +31,16 @@ namespace JanitorsCloset
     #endregion
 
     [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
+    class CleanUp : MonoBehaviour
+    {
+        void Start()
+        {
+            Log.Info("CleanUp.Start");
+            ModFilterWindow.DeleteConfigs();
+        }
+    }
+
+    [KSPAddon(KSPAddon.Startup.SpaceCentre, true)]
     partial class JanitorsCloset : BaseRaycaster
     {
         private static JanitorsCloset instance;

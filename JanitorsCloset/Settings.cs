@@ -66,6 +66,8 @@ namespace JanitorsCloset
             toolTip = "If disabled, then the tooltip will be show when the modifier key is held down")]
         public bool showMod = true;
 
+        [GameParameters.CustomParameterUI("Delete JCModfilter files on startup")]
+        public bool deleteJCModfilterFiles = true;
 
         [GameParameters.CustomParameterUI("Debug mode (spams the log file")]
         public bool debug = false;
