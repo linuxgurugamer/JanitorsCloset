@@ -38,6 +38,9 @@ namespace JanitorsCloset
         void Start()
         {
             Instance = this;
+            if (ModFilterWindow.instance != null)
+                ModFilterWindow.instance.DefineFilters();
+
         }
 
         void Awake()

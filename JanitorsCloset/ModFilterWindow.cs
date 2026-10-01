@@ -729,7 +729,7 @@ namespace JanitorsCloset
             return true;
         }
 
-        void DefineFilters()
+        internal void DefineFilters()
         {
             Log.Info("DefineFilters");
             if (configs == null)
@@ -1209,6 +1209,7 @@ namespace JanitorsCloset
                 GUILayout.EndVertical();
             GUILayout.EndScrollView();
             GUI.DragWindow();
+
             ModFilteredCount = modButtons.Where(p => p.Value.enabledState == false).Count();
             ModInverseCount = modButtons.Where(p => p.Value.inverse == true).Count();
             SizeFilteredCount = sizeButtons.Where(p => p.Value.enabledState == false).Count();

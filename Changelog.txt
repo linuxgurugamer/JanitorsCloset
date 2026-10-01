@@ -367,6 +367,7 @@ ChangeLog
 0.4.1.7
 	Fixed button in folder showing up again on toolbar after scene change
 
-0.4.1.8 (unreleased)
+0.4.1.8
 	Added code to delete all JCModifilter files when first starting
 	Added option to enable/disable the deletion of JCModifilter files on startup
+	Fixed issue of filters not being remembered when returning to the editor after a scene change
