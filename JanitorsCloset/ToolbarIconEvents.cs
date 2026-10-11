@@ -78,11 +78,15 @@ namespace JanitorsCloset
                 {
                     GameEvents.onGameSceneLoadRequested.Add(this.CallbackGameSceneLoadRequested);
                     GameEvents.onGameStatePostLoad.Add(this.CallbackOnGameStatePostLoad);
+                    GameEvents.OnMapEntered.Add(this.CallbackMapViewChanged);
+                    GameEvents.OnMapExited.Add(this.CallbackMapViewChanged);
                 }
                 else
                 {
                     GameEvents.onGameSceneLoadRequested.Remove(this.CallbackGameSceneLoadRequested);
                     GameEvents.onGameStatePostLoad.Remove(this.CallbackOnGameStatePostLoad);
+                    GameEvents.OnMapEntered.Remove(this.CallbackMapViewChanged);
+                    GameEvents.OnMapExited.Remove(this.CallbackMapViewChanged);
                 }
             }
 
@@ -128,6 +132,11 @@ namespace JanitorsCloset
                 OnToolbarEnvironmentChanged();
             }
 
+            private void CallbackMapViewChanged()
+            {
+                OnToolbarEnvironmentChanged(true);
+            }
+
             private void CallbackLevelWasLoaded(Scene scene, LoadSceneMode mode)
             {
                 OnToolbarEnvironmentChanged();
@@ -138,7 +147,7 @@ namespace JanitorsCloset
                 OnToolbarEnvironmentChanged();
             }
 
-            private void OnToolbarEnvironmentChanged()
+            private void OnToolbarEnvironmentChanged(bool forceEnforcement = false)
             {
                 if (!ShouldRunToolbarSyncInCurrentScene())
                     return;
@@ -148,10 +157,10 @@ namespace JanitorsCloset
                 if (HasToolbarCustomizationData())
                     InstallMissingHandlers();
 
-                RequestToolbarSync();
+                RequestToolbarSync(forceEnforcement);
             }
 
-            private void RequestToolbarSync()
+            private void RequestToolbarSync(bool forceEnforcement = false)
             {
                 if (!ShouldRunToolbarSyncInCurrentScene())
                     return;
@@ -162,12 +171,15 @@ namespace JanitorsCloset
                 if (syncCoroutine != null)
                     StopCoroutine(syncCoroutine);
 
-                syncCoroutine = StartCoroutine(SyncToolbarAfterSceneChange());
+                syncCoroutine = StartCoroutine(SyncToolbarAfterSceneChange(forceEnforcement));
             }
 
-            private IEnumerator SyncToolbarAfterSceneChange()
+            private IEnumerator SyncToolbarAfterSceneChange(bool forceEnforcement)
             {
                 float elapsed = 0f;
+
+                if (forceEnforcement)
+                    yield return new WaitForEndOfFrame();
 
                 while (elapsed < SyncMaxWaitSeconds)
                 {
@@ -182,7 +194,7 @@ namespace JanitorsCloset
                     UpdateButtonDictionary();
                     CheckToolbarButtons();
 
-                    if (!HasPendingToolbarWork())
+                    if (!forceEnforcement && !HasPendingToolbarWork())
                         yield break;
 
                     yield return new WaitForSeconds(SyncIntervalSeconds);
