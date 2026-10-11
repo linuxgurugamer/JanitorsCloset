@@ -371,3 +371,7 @@ ChangeLog
 	Added code to delete all JCModifilter files when first starting
 	Added option to enable/disable the deletion of JCModifilter files on startup
 	Fixed issue of filters not being remembered when returning to the editor after a scene change
+
+0.4.1.9
+	Thanks to github user @Ricki0D for this:
+		Fix button duplication when switching from map view to flight

@@ -6,6 +6,6 @@
   
  using System.Reflection;
 
- [assembly: AssemblyVersion("0.4.1.8")]
- [assembly: AssemblyFileVersion("0.4.1.8")]
+ [assembly: AssemblyVersion("0.4.1.9")]
+ [assembly: AssemblyFileVersion("0.4.1.9")]
  [assembly: AssemblyDescription("$(ProjectDir)")]
