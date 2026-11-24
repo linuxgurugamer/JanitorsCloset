@@ -218,6 +218,7 @@ namespace JanitorsCloset
         void InitialPartsScan(List<AvailablePart> loadedParts)
         {
             Log.Info("ModFilterWindow.InitialPartsScan");
+            partKeyIndex.Clear();
 
             int index = 1;
             foreach (var part in loadedParts)
@@ -617,67 +618,78 @@ namespace JanitorsCloset
             return loadedParts;
         }
 
-        bool PartInResourceFilteredButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
+        // part -> keys of the filter hash that contain it, so the filters below don't have
+        // to loop over every button for every part on each part list refresh
+        private static readonly string[] noKeys = new string[0];
+        private static readonly Dictionary<SortedDictionary<string, HashSet<AvailablePart>>, Dictionary<AvailablePart, string[]>> partKeyIndex =
+            new Dictionary<SortedDictionary<string, HashSet<AvailablePart>>, Dictionary<AvailablePart, string[]>>();
+
+        static string[] PartKeys(AvailablePart part, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            Log.Info("part: " + part.name);
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
+            if (part == null)
+                return noKeys;
+
+            Dictionary<AvailablePart, string[]> index;
+            if (!partKeyIndex.TryGetValue(filterHash, out index))
             {
-                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
-                    continue;
-                try
+                var lists = new Dictionary<AvailablePart, List<string>>();
+                foreach (KeyValuePair<string, HashSet<AvailablePart>> entry in filterHash)
                 {
-                    if (filterHash[entry.Key].Contains(part))
+                    foreach (AvailablePart p in entry.Value)
                     {
-                        Log.Info("part: " + part.name + " has resource: " + entry.Key);
-                        return true;
+                        List<string> keys;
+                        if (!lists.TryGetValue(p, out keys))
+                            lists.Add(p, keys = new List<string>());
+                        keys.Add(entry.Key);
                     }
                 }
-                catch
-                {
-                    Log.Error("PartInResourceFilteredButtons, filter: " + filter + " entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
+                index = new Dictionary<AvailablePart, string[]>(lists.Count);
+                foreach (KeyValuePair<AvailablePart, List<string>> entry in lists)
+                    index.Add(entry.Key, entry.Value.ToArray());
+                partKeyIndex.Add(filterHash, index);
+            }
 
-                }
+            string[] result;
+            return index.TryGetValue(part, out result) ? result : noKeys;
+        }
 
+        static bool PartHasEnabledKey(AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            string[] keys = PartKeys(part, filterHash);
+            for (int i = 0; i < keys.Length; i++)
+            {
+                ToggleState state;
+                if (buttons.TryGetValue(keys[i], out state) && state.enabledState)
+                    return true;
             }
             return false;
+        }
+
+        static bool PartHasNoInverseKey(AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            string[] keys = PartKeys(part, filterHash);
+            for (int i = 0; i < keys.Length; i++)
+            {
+                ToggleState state;
+                if (buttons.TryGetValue(keys[i], out state) && state.inverse)
+                    return false;
+            }
+            return true;
+        }
+
+        bool PartInResourceFilteredButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
+        {
+            return PartHasEnabledKey(part, buttons, filterHash);
         }
 
         bool PartInFilteredButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
-            {
-                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
-                    continue;
-                try
-                {
-                    if (filterHash[entry.Key].Contains(part))
-                        return true;
-                }
-                catch
-                {
-                    Log.Error("PartInFilteredButtons, filter: " + filter + " entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
-                }
-            }
-            return false;
+            return PartHasEnabledKey(part, buttons, filterHash);
         }
 
         bool PartInResourseExcludeButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
-            {
-                if (!entry.Value.inverse)
-                    continue;
-                if (!filterHash.ContainsKey(entry.Key))
-                {
-                    Log.Error("PartInResourseExcludeButtons, filter: " + filter + ", filterHash does not contain key: " + entry.Key);
-                }
-                else
-                {
-                    if (filterHash[entry.Key].Contains(part))
-                        return false;
-                }
-            }
-            return true;
+            return PartHasNoInverseKey(part, buttons, filterHash);
         }
 
         bool PartInUnpurchasedButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
@@ -690,43 +702,12 @@ namespace JanitorsCloset
 
         bool PartInModuleButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
-            {
-                if (!entry.Value.enabledState || !filterHash.ContainsKey(entry.Key))
-                    continue;
-                try
-                {
-                    if (filterHash[entry.Key].Contains(part))
-                    {
-                        return true;
-                    }
-                }
-                catch
-                {
-                    Log.Error("PartInModuleButtons, filter: " + filter + ", entry.Key not in filterHash: " + entry.Key + ", part: " + part.name);
-                }
-            }
-            return false;
+            return PartHasEnabledKey(part, buttons, filterHash);
         }
 
         bool PartInModuleExcludeButtons(string filter, AvailablePart part, SortedDictionary<string, ToggleState> buttons, SortedDictionary<string, HashSet<AvailablePart>> filterHash)
         {
-            foreach (KeyValuePair<string, ToggleState> entry in buttons)
-            {
-                if (!entry.Value.inverse)
-                    continue;
-
-                if (!filterHash.ContainsKey(entry.Key))
-                {
-                    Log.Error("PartInModuleExcludeButtons, filter: " + filter + ", filterHash does not contain key: " + entry.Key);
-                }
-                else
-                {
-                    if (filterHash[entry.Key].Contains(part))
-                        return false;
-                }
-            }
-            return true;
+            return PartHasNoInverseKey(part, buttons, filterHash);
         }
 
         internal void DefineFilters()
